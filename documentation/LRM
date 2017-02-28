@@ -14,7 +14,7 @@ An identifier is a sequence of characters, all of which must be either alphanume
 
 The following identifiers are reserved as keywords and may not be used elsewhere: 
 
-graph, edge, node, string, int, double, char, void, boolean, if, else, while, for, return, to, from, sort, break, display, record, type, empty,	 free, print, size, true, and false
+graph, edge, node, string, int, in, double, char, void, boolean, if, else, while, for, return, to, from, sort, break, display, record, type, empty,	 free, print, size, true, and false
 
 2.3. Constants
 
@@ -44,9 +44,11 @@ Nodes are objects containing a key* and a variable-length record. They are refer
 
 Lists are arrays of primitives or objects of the same type. The type of a list is the type of the first element inserted into a list. If all the elements of a list are removed, it maintains its type.
 
-Edges connect two nodes and may be directed or undirected. They contain a record whose structure may not be altered (unlike those of nodes).
+Edge descriptor. An edge descriptor connects two nodes and can be directed or undirected. It can be declared irrespective of a graph.
 
-Graphs are collections of nodes (uniquely identified by keywords) and the edges connecting them (uniquely identified by their endpoints and direction). 
+Edge. An edge consists of an edge descriptor and a record. The record's structure (and field types) may not be altered, though its fields may be changed.
+
+Graphs are collections of nodes (uniquely identified by keywords) and the edges connecting them (uniquely identified by their endpoints and direction), with default edge fields defined.
 
 Strings are arrays of chars. While strings are stored internally as arrays, they act similarly to primitive types, as they can be declared with the keyword string and can be nodes of graphs.
 
@@ -54,21 +56,23 @@ Strings are arrays of chars. While strings are stored internally as arrays, they
 An object is a named region of storage; an lvalue is an expression referring to an object. An obvious example of an lvalue expression is an identifier with suitable type and storage class. The name ``lvalue'' comes from the assignment expression E1 = E2 in which the left operand E1 must be an lvalue expression. 
 
 Examples:
-my_list = ["Bob", "Diane", "Agnes"];
-my_record = {age:6, weight:15, size:{height:65, head:"big"}, children:my_list};
-my_node = {eleven:my_record};
+my_list = ["Bob", "Diane", "Agnes"];												//list
+my_record = {age:6, weight:15, size:{height:65, head:"big"}, children:my_list};		//record
+my_node = {eleven:my_record};														//node
 my_node = {7:{seen:[4,5,2]}};
-your_node = {7:{age:5, change:"were"}};
-fields = {weight:7, capacity:5, street:"Dawson"};
-my_edge = 
+your_node = {8:{age:5, change:"were"}};				
+my_fields = {weight:7, capacity:5, street:"Dawson"};									//record
+my_graph = (my_node, your_node, his_node, her_node, my_node -> your_node, his_node <- her_node, her_node -- my_node) with my_fields
+your_graph = () with {weight:1, capacity:1, street:""}
+my_graph = () with fields
+my_edge_desc = 	my_node -> your_node												//an edge descriptor
+my_edge = my_node -> your_node with {weight:1, capacity:1, street:""};				//an edge
+my_edge2 = her_node -> his_node with fields;
 
-
-
-
-
-
-num name = 3; //num is an lvalue
-graph g = {e, f, g}; //g is an object
+my_int = 3; 																			//int
+my_double = 3.0;																		//double
+g = {e, f, g} with {weight:1}															//default fields weight:1
+g = {h, i->j, k}																		//no edge fields
 
 5. Expressions
 Expressions, consisting of type-compatible operators or groups of operators separated by operands, are outlined below in descending order of precedence.
