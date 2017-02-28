@@ -28,6 +28,8 @@ Boolean constants (boolean) are represented by the keywords true and false. Bool
 
 String literals (string) are a series of characters delimited by double quotation marks. Strings cannot be nested, though a double quotation mark can appear inside a string by using the escape sequence \”.
 
+Keys are user-definable keywords in records and nodes, and can be any string of alphanumeric characters. (Up to 32 chars).
+
 3. Types
 
 3.1. Primitive Types
@@ -36,32 +38,35 @@ GRAIL has 5 primitive types: boolean, char, int, double, and void. A boolean is 
 
 3.2. Derived types
 
-Records are user-defineable data-structure consisting of comma-separated pairs of keys (which must be unique within the record) and data. The data may be any primitive or derived type. 
+Records are user-defineable data-structure consisting of comma-separated pairs of keys (which must be unique within the record) and data. The data may be any primitive or derived type. Nodes can be used as records, but only specially formatted records can be used as nodes.
 
-Nodes are objects containing a key and a record. They are referred to by their keys and can be connected by edges to other nodes.
-
-
+Nodes are objects containing a key* and a variable-length record. They are referred to by their keys and can be connected by edges to other nodes. 
 
 Lists are arrays of primitives or objects of the same type. The type of a list is the type of the first element inserted into a list. If all the elements of a list are removed, it maintains its type.
 
+Edges connect two nodes and may be directed or undirected. They contain a record whose structure may not be altered (unlike those of nodes).
+
+Graphs are collections of nodes (uniquely identified by keywords) and the edges connecting them (uniquely identified by their endpoints and direction). 
+
 Strings are arrays of chars. While strings are stored internally as arrays, they act similarly to primitive types, as they can be declared with the keyword string and can be nodes of graphs.
-
-Edges are types consisting of two nodes, which must be primitives or strings of the same type, which is the type of the graph or digraph they belong to, as well as a weight, which is a num.
-
-Graphs are collections of nodes and edges. Each graph has a type, which is either a string or a primitive type, and every node is an object of that type. Internally, the graph is represented as an ordered list of edges, and which can be iterated over and sorted by edge features.
-
-Digraphs are identical to graphs except that the edges in digraphs are directed. That is, while the choice of which node is stored as the source and which is the destination in an edge of a graph is arbitrary, in a digraph it is not.
-
-
-
-
-
-
 
 4. Objects and LValues
 An object is a named region of storage; an lvalue is an expression referring to an object. An obvious example of an lvalue expression is an identifier with suitable type and storage class. The name ``lvalue'' comes from the assignment expression E1 = E2 in which the left operand E1 must be an lvalue expression. 
 
 Examples:
+my_list = ["Bob", "Diane", "Agnes"];
+my_record = {age:6, weight:15, size:{height:65, head:"big"}, children:my_list};
+my_node = {eleven:my_record};
+my_node = {7:{seen:[4,5,2]}};
+your_node = {7:{age:5, change:"were"}};
+fields = {weight:7, capacity:5, street:"Dawson"};
+my_edge = 
+
+
+
+
+
+
 num name = 3; //num is an lvalue
 graph g = {e, f, g}; //g is an object
 
