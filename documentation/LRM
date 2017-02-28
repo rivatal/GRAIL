@@ -84,6 +84,16 @@ my_edge = my_graph["key1" -> "key2"]; //access one edge between these keys
 my_nodes = my_graph[x : x in ["first", "second", "third"]]; //access a list of nodes
 my_edges = my_graph[x -- y, x in my_list && y == "my_key"]; //access a list of edges that match the condition/s. If no conditions are supplied, yields all nodes.
 
+//Walking through the graph in order? Iterating through all edges, all nodes? Ordering nodes, edges
+for node in graph:		//python for.
+	dosomething(node);
+
+5.15. Dot Operator: Access fields of a record, or nodes of a graph
+
+my_node = my_graph.key;	//access a node by its keyword
+my_edge = mygraph.(my_node->your_node); 	//access an edge by its descriptor
+my_edge = mygraph.edge 						//what if this is an edge, not an edge descriptor?
+my_int = my_graph.key.thing;
 
 5.2. Unary Operators:
 expr* (di/graph) Refers to the node collection of the graph
