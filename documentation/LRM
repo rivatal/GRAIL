@@ -14,25 +14,33 @@ An identifier is a sequence of characters, all of which must be either alphanume
 
 The following identifiers are reserved as keywords and may not be used elsewhere: 
 
-graph, edge, node, string, int, double, char, void, boolean, if, else, while, for, return, to, from, sort, break, display, type, empty, free, print, size, true, and false
+graph, edge, node, string, int, double, char, void, boolean, if, else, while, for, return, to, from, sort, break, display, record, type, empty,	 free, print, size, true, and false
 
 2.3. Constants
 
-Numbers, denoted num, are sequences of digits that can contain a single decimal point. The decimal point must be followed by one or more characters.
+Integers, denoted int, are a 32 bit sequence of digits with no floating point.
+
+Double, denoted double, is a 64 bit floating point number.
 
 Characters, denoted char, are single characters enclosed by single quotation marks.
 
-Boolean constants are represented by the keywords true and false. Booleans may take on only these two values and void (and the last only on initialization).
+Boolean constants (boolean) are represented by the keywords true and false. Booleans may take on only these two values and void (and the last only on initialization).
 
-String literals are a series of characters delimited by double quotation marks. Strings cannot be nested, though a double quotation mark can appear inside a string by using the escape sequence \”.
+String literals (string) are a series of characters delimited by double quotation marks. Strings cannot be nested, though a double quotation mark can appear inside a string by using the escape sequence \”.
 
 3. Types
 
 3.1. Primitive Types
 
-GRAIL has 4 primitive types: boolean, char, num, and void. A boolean is a Boolean value. A char is a single member of the ASCII character set. (More complex character sets are not supported.) A num is a number. The void type is a null type, used in functions that return no variables and uninitialized primitives.
+GRAIL has 5 primitive types: boolean, char, int, double, and void. A boolean is a Boolean value. A char is a single member of the ASCII character set. (More complex character sets are not supported.) An int is an integer. A double is a floating point number. The void type is a null type, used in functions that return no variables and uninitialized primitives.
 
 3.2. Derived types
+
+Records are user-defineable data-structure consisting of comma-separated pairs of keys (which must be unique within the record) and data. The data may be any primitive or derived type. 
+
+Nodes are objects containing a key and a record. They are referred to by their keys and can be connected by edges to other nodes.
+
+
 
 Lists are arrays of primitives or objects of the same type. The type of a list is the type of the first element inserted into a list. If all the elements of a list are removed, it maintains its type.
 
@@ -43,6 +51,12 @@ Edges are types consisting of two nodes, which must be primitives or strings of 
 Graphs are collections of nodes and edges. Each graph has a type, which is either a string or a primitive type, and every node is an object of that type. Internally, the graph is represented as an ordered list of edges, and which can be iterated over and sorted by edge features.
 
 Digraphs are identical to graphs except that the edges in digraphs are directed. That is, while the choice of which node is stored as the source and which is the destination in an edge of a graph is arbitrary, in a digraph it is not.
+
+
+
+
+
+
 
 4. Objects and LValues
 An object is a named region of storage; an lvalue is an expression referring to an object. An obvious example of an lvalue expression is an identifier with suitable type and storage class. The name ``lvalue'' comes from the assignment expression E1 = E2 in which the left operand E1 must be an lvalue expression. 
