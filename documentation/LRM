@@ -78,19 +78,12 @@ g = {h, i->j, k}																		//no edge fields
 Expressions, consisting of type-compatible operators or groups of operators separated by operands, are outlined below in descending order of precedence.
 
 5.1. Subset Operators:
-expr[] (di/graph*, di/graph)
-di/graph*:
-Can be used several ways:
-a*[i] Yields the node (char, string, or int) stored at index i in di/graph* a.
-a*[x : x == 3] Yields a di/graph* of nodes x that match the condition/s. If no conditions are supplied, yields all nodes.
 
-graph:
-g[i] Yields the edge stored at index i in di/graph g
-g[x -- y: x == 3 && y > 4]
- Yields a graph of edges x, y with the appropriate connection (--, ->, or <-), where x and y match the conditions specified. If a condition is left out, yields all nodes that fit the remaining conditions. If all conditions are left out, yields the whole graph. In a digraph, -- is equivalent to connections in both directions.
+my_node = my_graph["key"];  //access a node by its keyword
+my_edge = my_graph["key1" -> "key2"]; //access one edge between these keys
+my_nodes = my_graph[x : x in ["first", "second", "third"]]; //access a list of nodes
+my_edges = my_graph[x -- y, x in my_list && y == "my_key"]; //access a list of edges that match the condition/s. If no conditions are supplied, yields all nodes.
 
-Ex: All nodes going to z:
-g[x -> y: y == z]
 
 5.2. Unary Operators:
 expr* (di/graph) Refers to the node collection of the graph
