@@ -79,14 +79,23 @@ Expressions, consisting of type-compatible operators or groups of operators sepa
 
 5.1. Subset Operators:
 
+Graphs:
 my_node = my_graph["key"];  //access a node by its keyword
-my_edge = my_graph["key1" -> "key2"]; //access one edge between these keys
+my_edge = my_graph[node1 -> node2]; //access the edge between the keys of those nodes.
+(my_edge = my_graph["key1" -> "key2"]; //access the edge between nodes with those keys?)
 my_nodes = my_graph[x : x in ["first", "second", "third"]]; //access a list of nodes
-my_edges = my_graph[x -- y, x in my_list && y == "my_key"]; //access a list of edges that match the condition/s. If no conditions are supplied, yields all nodes.
+my_edges = my_graph[x -- y: x in my_list && y == "my_key"]; //access a list of edges that match the condition/s. If no conditions are supplied, yields all nodes.
 
-//Walking through the graph in order? Iterating through all edges, all nodes? Ordering nodes, edges
-for node in graph:		//python for.
-	dosomething(node);
+Records:
+my_field = my_record["name_of_field"];
+
+Edges:
+my_weight = my_edge["weight"]; //access the weight in a node.
+b = "weight";				   //or
+my_child = my_edge[b];
+
+Nodes:
+my_friends = my_node["friends"];
 
 5.15. Dot Operator: Access fields of a record, or nodes of a graph
 
@@ -283,6 +292,7 @@ The Function declarator is formatted in the following way:
 
 FunctionName is the identifier of the function, followed by a left parenthesis, a list of function parameters(optional), and a right parenthesis. In the function parameter list, these parameters need to be separated by commas. 
 
+
 6.4 Initialization
 The general format of the initialization of variables is
 	lvalue = assignment expression / {initializer-list}
@@ -379,6 +389,54 @@ Function for displaying graphs and digraphs
 	display(digraph)
 
 10. Examples
+Sort a list of edges by their weight:
+function sort(my_list, feature){
+	sort(my_list, 0, size(my_list)-1, feature);
+}
+function sort(my_list, left, right, feat){
+	if(left < right){
+		pivot = my_list[right];
+		partition = partitionIt(my_list, left, right, pivot, feat);
+		sort(my_list, left, partition-1, feat);
+		sort(my_list, partition+1, right, feat);
+	}
+	return my_list;
+}
+function partitionIt(my_list, left, right, pivot, feat){
+	l = left;
+	r = right;
+	while(l < r){
+		while(a[l][feat] < pivot)
+			l++;
+		while(r > 0 && a[r][feat] > pivot)
+			r--;
+		if(r <= l)
+			break;
+		swap(my_list, r, l);
+	}
+	swap(a, l, right);
+	return l;
+}
+function swap(my_list, left, right){
+	temp = my_list[left];
+	my_list[left] = my_list[right];
+	my_list[right] = temp;
+}
+function main(){
+	f = {"Franklin":{}};
+	e = {"Englewood":{region: "24j2ioj"}};
+	d = {"Dawson":{region: "523io9852"}};
+	mygraph = {e, f, g, f->g, g<-f, f--e} with {weight:1};			//default fields weight:1
+	mygraph[f->g].weight = 3;
+	mygraph[g<-f].weight = 8;
+	
+	mylist = mygraph[x <> y :];
+	mylist = sort(my_list, "weight");
+}
+
+//Walking through the graph in order? Iterating through all edges, all nodes? Ordering nodes, edges
+my_edges = my_graph[x <> y :]	//grab all edges of any type in the graph and place in a list.
+
 The following program implements Djikstra’s Algorithm for finding a shortest path.
 
 list getclosestpaths(graph g, num s){
