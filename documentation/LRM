@@ -10,11 +10,15 @@ GRAIL tokens are separated by one or more whitespace characters. Comments delimi
 
 An identifier is a sequence of characters, all of which must be either alphanumeric or the underscore (_) character. The first character must be a letter. Uppercase and lowercase letters are considered distinct but the choice of case in identifiers holds no significance to the compiler.
 
-2.2. Keywords
+2.2. Reserved Words
 
-The following identifiers are reserved as keywords and may not be used elsewhere: 
+The following identifiers are reserved and may not be used elsewhere: 
 
-graph, edge, node, string, int, in, double, char, void, boolean, if, else, while, for, return, to, from, sort, break, display, record, type, empty,	 free, print, size, true, and false
+accio, boolean, break, char, display, double, edge, else, empty, false, for, free, from, graph, if, in, int, node, print, record, return, size, sort, string, to, true, type, void, while, with
+
+2.2.5. User-defined Keywords
+
+User-definable keywords appear in records and nodes, and can be any string of one or more alphanumeric characters. (Up to 32 chars).
 
 2.3. Constants
 
@@ -28,10 +32,7 @@ Boolean constants (boolean) are represented by the keywords true and false. Bool
 
 String literals (string) are a series of characters delimited by double quotation marks. Strings cannot be nested, though a double quotation mark can appear inside a string by using the escape sequence \”.
 
-Keys are user-definable keywords in records and nodes, and can be any string of alphanumeric characters. (Up to 32 chars).
-
 3. Types
-
 3.1. Primitive Types
 
 GRAIL has 5 primitive types: boolean, char, int, double, and void. A boolean is a Boolean value. A char is a single member of the ASCII character set. (More complex character sets are not supported.) An int is an integer. A double is a floating point number. The void type is a null type, used in functions that return no variables and uninitialized primitives.
@@ -40,13 +41,13 @@ GRAIL has 5 primitive types: boolean, char, int, double, and void. A boolean is 
 
 Records are user-defineable data-structure consisting of comma-separated pairs of keys (which must be unique within the record) and data. The data may be any primitive or derived type. Nodes can be used as records, but only specially formatted records can be used as nodes.
 
-Nodes are objects containing a key* and a variable-length record. They are referred to by their keys and can be connected by edges to other nodes. 
+Nodes are objects containing a key* and a variable-length record. They are referred to by their keys and can be connected by edges to other nodes.
 
-Lists are arrays of primitives or objects of the same type. The type of a list is the type of the first element inserted into a list. If all the elements of a list are removed, it maintains its type.
+Lists are arrays of primitives or objects of the same type. The type of a list has the type of the first element inserted into a list. If all the elements of a list are removed, it maintains its type.
 
-Edge descriptor. An edge descriptor connects two nodes and can be directed or undirected. It can be declared irrespective of a graph.
+Edge descriptor. An edge descriptor connects two nodes and can be directed or undirected, but contains no records. It can be declared irrespective of a graph.
 
-Edge. An edge consists of an edge descriptor and a record. The record's structure (and field types) may not be altered, though its fields may be changed.
+Edge. An edge consists of an edge descriptor and a record. The record's structure (including field types) may not be altered, though its fields may be changed.
 
 Graphs are collections of nodes (uniquely identified by keywords) and the edges connecting them (uniquely identified by their endpoints and direction), with default edge fields defined.
 
@@ -97,153 +98,47 @@ my_child = my_edge[b];
 Nodes:
 my_friends = my_node["friends"];
 
-5.15. Dot Operator: Access fields of a record, or nodes of a graph
+Lists:
+entry = list[0];				//can be accessed by 
 
-my_node = my_graph.key;	//access a node by its keyword
-my_edge = mygraph.(my_node->your_node); 	//access an edge by its descriptor
+(5.15. Dot Operator: Access fields of a record, or nodes of a graph
+
+my_node = my_graph.key;						//access a node by its keyword
 my_edge = mygraph.edge 						//what if this is an edge, not an edge descriptor?
-my_int = my_graph.key.thing;
+my_int = my_graph.key.thing; 
+)
+
 
 5.2. Unary Operators:
-expr* (di/graph) Refers to the node collection of the graph
+expr* (edge) Yields the edge descriptor of the edge, without the record.
 !expr  (booleans, boolean expr) Logical not. Yields the opposite value of the expression.
 -expr (num) Numeric negation. Yields the expression multiplied by negative one.
 
 5.3. Numeric Binary Operators
 Binary operators group left to right. 
 
-expr * expr (num, graph, digraph) Multiplication operator.
-expr / expr (num, graph, digraph) Division operator.
+expr * expr (int, double) Multiplication operator.
+expr / expr (int, double) Division operator.
 
+expr + expr (int, double) Addition operator.
+expr - expr (int, double) Subtraction operator.
 
-
-num
-graph
-digraph
-num
-Yields product (*) or quotient (/) (num)
-NS
-NS
-graph
-
-
-Yields a graph with the edges (and nodes) from both graphs. Duplicate edges are multiplied (*) or divided (/)
-NS
-digraph
-
-
-
-
-Yields a graph with the edges (and nodes) from both graphs. Duplicate edges in the same direction are multiplied (*) or divided (/)
-
-expr + expr (num, di/graph, di/graph*, edge): (commutative)
-
-
-num
-di/graph
-di/graph*
-edge
-num
-Yields sum
-
-
-Yields a di/graph* list with the num node added, if not already present
-
-
-di/graph
-
-
-Yields a graph with the edges (and nodes) from both (di)graphs. Duplicate edges (in the same direction) are summed
-
-
-Yields a graph with all the edges and from the di/graph and the edge and its associated nodes. If the edge already exists in the graph, they are summed.
-di/graph*
-
-
-
-
-Yields a di/graph* list containing the nodes in both di/graph*s
-
-
-edge
-
-
-
-
-
-
-
-
-
-expr - expr (num, graph, digraph) Weight Subtraction operator.
-
-
-
-num
-di/graph
-edge
-di/graph*
-num
-Yields difference
-
-
-
-
-Subtracts a num node and all associated edges from the di/graph list, if a num type di/graph
-di/graph
-
-
-Yields a di/graph with the edges (and nodes) from both di/graphs. In the case of duplicate edges, the edges weights from the second graph are subtracted from the first
-Yields a graph with all the edges and from the di/graph and the edge and its associated nodes. If the edge already exists in the graph, the one on the right is subtracted from the one on the left.
-Not Supported
-digraph
-
-
-Not Supported
-
-
-Yields a di/graph* list containing the nodes in the first and not in the second
-
-expr .+ expr (graph, digraph, edge) Left join operator
-
-
-
-di/graph
-edge
-digraph
-Yields a (di)graph with the edges (and nodes) from both graphs. In the case of duplicate edges (in the same direction), only those in the left are taken.
-Yields a (di)graph with the edges (and nodes) from graph and the edge. In the case of duplicate edges (in the same direction), only those on the left are taken.
-
-expr .- expr (graph, digraph) Subtraction Operator
-
-
-
-di/graph
-di/graph - edge (vv not supported)
-digraph
-Yields a (di)graph with the edges (and nodes) from the first graph and without the edges of the second.
-Yields a (di)graph with the edges (and nodes) from graph without the edge.
-
-expr & expr (graph, digraph) Intersection Operator
-
-
-
-di/graph
-digraph
-Yields a (di)graph with only the edges (and nodes) that appear in both graphs
+5.3.5 Graph, Edge, and Node Operators
+graph + node Yields a graph with the node added
+graph + edge Yields a graph with the edge added (if the edge is not already in the graph)
 
 5.4. Relational Operators
-expr < expr (num), less than
-expr > expr (num), greater than
-expr <= expr (num), less than or equal to
-expr >= expr (num), greater than or equal to
+expr < expr (int, double, string), less than
+expr > expr (int, double, string), greater than
+expr <= expr (int, double, string), less than or equal to
+expr >= expr (int, double, string), greater than or equal to
 Return true if the relation is true and false otherwise
 
 5.5. Equality Operators
-expr == expr (num) returns true if the numbers are equal, and false otherwise
-expr != expr (num) returns false if the numbers are equal, and true otherwise 
+expr == expr (int, double, string) returns true if the numbers are equal, and false otherwise
+expr != expr (int, double, string) returns false if the numbers are equal, and true otherwise 
 
-expr == expr (graph, digraph) returns true if both di/graphs contain the same nodes and edges
+expr == expr (graph) returns true if both graphs contain the same nodes and edges
 
 5.6. Logical Operators
 expr && expr (boolean), returns true if both booleans or boolean expressions are true and false otherwise
@@ -251,11 +146,15 @@ expr || expr (boolean), returns true if at least one of the booleans or boolean 
 
 5.7. Assignment
 lvalue = expr, replaces the value of the lvalue with the value of the expr, if they are the same type
+5.7 Edge Descriptor
+node -- node yields an edge connecting both nodes. The operator can be --, ->, <-
 
 5.8. Edge Operators
-expr --(w) expr, yields an edge connecting both expr’s (num, char, or string), with optional weight (in optional parens) w. 
-expr ->(w) expr, yields directed edge from the first expr (num, char, or string) to the second, with similarly optional weight conventions.
-expr <-(w) expr, yields directed edge from the second expr (num, char, or string) to the first, with similarly optional weight conventions.
+node -- node with record, yields an edge connecting both expr’s (num, char, or string), with the fields set according to the record.
+node -> node with record, yields directed edge from the first expr (num, char, or string), with the fields set according to the record.
+node <- node with record, yields directed edge from the second expr (num, char, or string), with the fields set according to the record.
+
+
 
 6. Declarations
 Declaration defines and specifies the properties of an identifier in a structured format. 
@@ -265,26 +164,16 @@ The type-specifiers in our language are:
 void
 char
 string
-num 	
+int
+double
+node
 edge 
 graph 
-digraph
 list 
-node
 
 These type specifiers define the type of the variables, parameters, and function return types. Num includes not only integers (int) but also floating numbers (double). Void is only allowed in the function return type.  
 
-6.2 Num, Edge and Graph Declarator 
-Num, Edge and Graph have their own declarators respectively, and they are formatted in the following way:
-num variableName;
-char variableName;
-string variableName;
-	num variableName;
-	edge variableName; 
-graph variableName; 	
-	digraph variableName;
-The variableName is the identifier of the num / edge / graph / digraph variable. 
-
+(6.2 Declarator)
 
 6.3 Function Declarator
 The Function declarator is formatted in the following way:
@@ -292,21 +181,37 @@ The Function declarator is formatted in the following way:
 
 FunctionName is the identifier of the function, followed by a left parenthesis, a list of function parameters(optional), and a right parenthesis. In the function parameter list, these parameters need to be separated by commas. 
 
-
 6.4 Initialization
-The general format of the initialization of variables is
-	lvalue = assignment expression / {initializer-list}
+The general format of the initialization of variables is:
+	variableName = assignment expression / {initializer-list}
 
-More specific, it can be applied to Num, Edge and Graph:
-N/A (when void is used)
-num variableName = numValue 
-num variableName = numValue binaryOperator assignment_expression
-edge = (node->node) | (node--node) | (node<-node)
-graph = {edge, edge, … } | {list of edges}
+	Primitives:
+	variableName = value;
+
+	Records: //Records have literal declaration:
+	accio(space);		//or something
+	myRecord = {field1:val1, field2:val2...};
+
+	Nodes:
+	accio(space);
+	myNode = {key:myrecord};
+
+	Edge-Descriptor:
+	mydesc = node -> node;
+	mydesc = node <- node;
+	mydesc = node -- node;	//undirected edge is technically two edges, one in each direction, with the same record
+
+	Edges:
+	accio(space);
+	myEdge = edge_desc with myrecord;
+	
+	Graph:	//a graph can take any number of edges and nodes or lists of edges and nodes
+	accio(space);
+	graph = {edge, node, … } with myrecord | {list of edges} with myrecord
 	
 The following examples shows the declaration and initialization of graphs and nodes:
 
-num graph g = {1->2,2->3,3->4};
+g = {1->2,2->3,3->4} with {weight:1};
 g* += 5;	//Adding an element to a node list
 g += 4<-(2.5)5;	//Adding weighted edge to a graph
 
@@ -429,7 +334,7 @@ function main(){
 	mygraph = {e, f, g, f->g, g<-f, f--e} with {weight:1};			//default fields weight:1
 	mygraph[f->g].weight = 3;
 	mygraph[g<-f].weight = 8;
-	
+
 	mylist = mygraph[x <> y :];
 	mylist = sort(my_list, "weight");
 }
