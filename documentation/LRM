@@ -105,15 +105,20 @@ Records:
 my_field = my_record["name_of_field"];
 
 Edges:
-my_weight = my_edge["weight"]; //access the weight in a node.
+my_weight = my_edge["weight"]; //access a feature in an edge
 b = "weight";				   //or
 my_child = my_edge[b];
 
 Nodes:
-my_friends = my_node["friends"];	//gets a feature of the node.
+my_street = my_node["street"];		//gets a feature of the node.
 my_graph = my_node.graph;			//A node can only be in one graph at once.
+my_friends = my_node.graph[x<>y:x == my_node]	//one (ugly) way to get all the neighbors of a node.
+my_friends = my_node.friends		//syntactic shorthand for this. No graph? No luck, buddy.
+my_friends = my_node.to 			//Everything going to my_node. 
+my_friends = my_node.from 			//Everything going from my node
 
-
+**what about --? **
+**Also begs the question can you do my_node.graph = h; I suppose if the node has no graph, yes (and it will also add the node to the graph on its side). Otherwise, error. A node can't just jump from graph to graph. **
 
 Lists:
 entry = list[0];				//can be accessed by 
