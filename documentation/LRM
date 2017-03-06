@@ -227,10 +227,26 @@ The general format of the initialization of variables is:
 The following examples shows the declaration and initialization of graphs and nodes:
 
 g = (1->2,2->3,3->4) with {weight:1};
+g = (2->3 with {weight:2, capacity:7}) with {weight:1, capacity:8};
+//or
+g = (2->3 {2,7}) with {weight:1, capacity:8};
+
 g += u -> v; //add an edge between u and v with weight:1
 g += n -- m with {weight:7}  //add an edge with a different record;
-g += 
+g += o -- p with {weight:7, capacity:6} //illegal! Error!
+g += a;		//adds the node to the node list of g.
 
+//what about adding something already in the graph? If it's a relation it'll stay, if it's an edge it'll throw up an error? You'll have to fetch the edge yourself and change its fields? 
+
+6.5 Update
+Edges:
+	e = 2--3 with {weight:4, height:7};	//initialize
+	e.rel = 4--3;						//update edges
+	e.to = 5;							//e.rel = 4--5 (does it cause problems to remember which is from and which to?)
+	e = e.rel {4,6};					//update the height to 7 **what about e = e.rel {record} ? Do we need a with?**
+	e.height = 5;						//update the height to 5.
+
+**we still need a way to grab all the nodes or edges that a node is connected to irrespective of the graph. **
 
 7. Statements
 	Statements executes in sequence. They do not have values and are executed for their effects. The statements in our language are classified in the following groups:
