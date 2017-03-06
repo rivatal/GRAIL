@@ -45,7 +45,15 @@ Nodes are objects containing a key* and a variable-length record. They are refer
 
 Lists are arrays of primitives or objects of the same type. The type of a list has the type of the first element inserted into a list. If all the elements of a list are removed, it maintains its type.
 
-Edge descriptor. An edge descriptor connects two nodes and can be directed or undirected, but contains no records. It can be declared irrespective of a graph.
+Edge descriptor. The primitive edge.  
+An edge descriptor connects two nodes and can be directed or undirected, but contains no records. It is what you get when you declare an edge without a with field and irrespective of a graph:
+
+e = 1->2;
+
+
+
+
+
 
 Edge. An edge consists of an edge descriptor and a record. The record's structure (including field types) may not be altered, though its fields may be changed.
 
@@ -83,9 +91,11 @@ Expressions, consisting of type-compatible operators or groups of operators sepa
 Graphs:
 my_node = my_graph["key"];  //access a node by its keyword
 my_edge = my_graph[node1 -> node2]; //access the edge between the keys of those nodes.
-(my_edge = my_graph["key1" -> "key2"]; //access the edge between nodes with those keys?)
-my_nodes = my_graph[x : x in ["first", "second", "third"]]; //access a list of nodes
-my_edges = my_graph[x -- y: x in my_list && y == "my_key"]; //access a list of edges that match the condition/s. If no conditions are supplied, yields all nodes.
+my_nodes = my_graph[x : x in [u, v, w]]; //access a list of nodes
+my_nodes = my_graph[x : x.key in ["first", "second", "third"]]; //access a list of nodes by key
+my_edges = my_graph[x -- y: x in my_list && y == "my_key"]; //access a list of edges that match the condition/s. If no conditions are supplied, yields all edges.
+
+**Currently-- no way to access an edge by edge fields**
 
 Records:
 my_field = my_record["name_of_field"];
@@ -216,7 +226,7 @@ g* += 5;	//Adding an element to a node list
 g += 4<-(2.5)5;	//Adding weighted edge to a graph
 
 7. Statements
-Statements executes in sequence. They do not have values and are executed for their effects. The statements in our language are classified in the following groups:
+	Statements executes in sequence. They do not have values and are executed for their effects. The statements in our language are classified in the following groups:
 Assignment statement
 	Function-call statement
 	Sequence statement
