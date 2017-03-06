@@ -45,19 +45,23 @@ Nodes are objects containing a key* and a variable-length record. They are refer
 
 Lists are arrays of primitives or objects of the same type. The type of a list has the type of the first element inserted into a list. If all the elements of a list are removed, it maintains its type.
 
-Edge descriptor. The primitive edge.  
+Edge descriptor. 
 An edge descriptor connects two nodes and can be directed or undirected, but contains no records. It is what you get when you declare an edge without a with field and irrespective of a graph:
 
-e = 1->2;
+e = u->v; //where u and v are nodes.
+
+This is a way of defining edges before you know the record, and adding the relation (and nodes) to different graphs.
+
+**we will have to decide if two edge-descriptors with the same nodes literally point to the same node or not (what if they're in the same graph? What if they're in different graphs?)**
 
 
+Edge. An edge consists of an edge descriptor and a record. The record's structure (including field types) may not be altered, though its fields may be changed. An edge always has "hidden" to, from, and rel fields.
 
+**what about undirected edges? What should to/from return?**
 
+Graphs are collections of nodes (uniquely identified by keywords) and the edges connecting them (uniquely identified by their endpoints and direction), with default edge fields defined. Edge fields on a graph cannot be updated, but the relations or edges can be copied to another graph.
 
-
-Edge. An edge consists of an edge descriptor and a record. The record's structure (including field types) may not be altered, though its fields may be changed.
-
-Graphs are collections of nodes (uniquely identified by keywords) and the edges connecting them (uniquely identified by their endpoints and direction), with default edge fields defined.
+**what if you wanted to take an edge, extract its record, change it, and put that in a different edge?**
 
 Strings are arrays of chars. While strings are stored internally as arrays, they act similarly to primitive types, as they can be declared with the keyword string and can be nodes of graphs.
 
@@ -74,14 +78,14 @@ my_fields = {weight:7, capacity:5, street:"Dawson"};									//record
 my_graph = (my_node, your_node, his_node, her_node, my_node -> your_node, his_node <- her_node, her_node -- my_node) with my_fields
 your_graph = () with {weight:1, capacity:1, street:""}
 my_graph = () with fields
+his_graph = 
 my_edge_desc = 	my_node -> your_node												//an edge descriptor
 my_edge = my_node -> your_node with {weight:1, capacity:1, street:""};				//an edge
 my_edge2 = her_node -> his_node with fields;
 
 my_int = 3; 																			//int
 my_double = 3.0;																		//double
-g = {e, f, g} with {weight:1}															//default fields weight:1
-g = {h, i->j, k}																		//no edge fields
+g = (e, f, g) with {weight:1}				//where e, f, and g are edges or edge descriptors. Default fields weight:1
 
 5. Expressions
 Expressions, consisting of type-compatible operators or groups of operators separated by operands, are outlined below in descending order of precedence.
@@ -111,13 +115,14 @@ my_friends = my_node["friends"];
 Lists:
 entry = list[0];				//can be accessed by 
 
-(5.15. Dot Operator: Access fields of a record, or nodes of a graph
-
-my_node = my_graph.key;						//access a node by its keyword
-my_edge = mygraph.edge 						//what if this is an edge, not an edge descriptor?
+5.15. Dot Operator: Access fields of a record, or nodes of a graph
+(*
+my_node = my_graph.nodes["cheese"];						//access a node by its keyword
+my_edge = mygraph.edges 						//what if this is an edge, not an edge descriptor?
 my_int = my_graph.key.thing; 
-)
+*)
 
+**There's always a danger of silently returning a list instead of a single node or edge...**
 
 5.2. Unary Operators:
 expr* (edge) Yields the edge descriptor of the edge, without the record.
