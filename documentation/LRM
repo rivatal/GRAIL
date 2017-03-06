@@ -99,7 +99,7 @@ my_nodes = my_graph[x : x in [u, v, w]]; //access a list of nodes
 my_nodes = my_graph[x : x.key in ["first", "second", "third"]]; //access a list of nodes by key
 my_edges = my_graph[x -- y: x in my_list && y == "my_key"]; //access a list of edges that match the condition/s. If no conditions are supplied, yields all edges.
 
-**Currently-- no way to access an edge by edge fields**
+**Currently-- no way to access edges by edge fields**
 
 Records:
 my_field = my_record["name_of_field"];
@@ -116,13 +116,16 @@ Lists:
 entry = list[0];				//can be accessed by 
 
 5.15. Dot Operator: Access fields of a record, or nodes of a graph
-(*
+(*WIP
 my_node = my_graph.nodes["cheese"];						//access a node by its keyword
 my_edge = mygraph.edges 						//what if this is an edge, not an edge descriptor?
 my_int = my_graph.key.thing; 
+my_edge_rel = my_edge.rel; 						//to get 2--3 out of an edge. Especially important for undirected.
+my_edge_rec = my_edge*;							//We had to get the * somewhere. This grabs the record out of the edge, sans hidden to/from/rel fields.
+
 *)
 
-**There's always a danger of silently returning a list instead of a single node or edge...**
+**danger of silently returning a list instead of a single node or edge...**
 
 5.2. Unary Operators:
 expr* (edge) Yields the edge descriptor of the edge, without the record.
@@ -170,7 +173,6 @@ node -> node with record, yields directed edge from the first expr (num, char, o
 node <- node with record, yields directed edge from the second expr (num, char, or string), with the fields set according to the record.
 
 
-
 6. Declarations
 Declaration defines and specifies the properties of an identifier in a structured format. 
 
@@ -188,8 +190,6 @@ list
 
 These type specifiers define the type of the variables, parameters, and function return types. Num includes not only integers (int) but also floating numbers (double). Void is only allowed in the function return type.  
 
-(6.2 Declarator)
-
 6.3 Function Declarator
 The Function declarator is formatted in the following way:
 	functionName(param, param, … )
@@ -198,7 +198,7 @@ FunctionName is the identifier of the function, followed by a left parenthesis, 
 
 6.4 Initialization
 The general format of the initialization of variables is:
-	variableName = assignment expression / {initializer-list}
+	variableName = assignment expression / { list of edges or edge-relations }
 
 	Primitives:
 	variableName = value;
@@ -226,9 +226,11 @@ The general format of the initialization of variables is:
 	
 The following examples shows the declaration and initialization of graphs and nodes:
 
-g = {1->2,2->3,3->4} with {weight:1};
-g* += 5;	//Adding an element to a node list
-g += 4<-(2.5)5;	//Adding weighted edge to a graph
+g = (1->2,2->3,3->4) with {weight:1};
+g += u -> v; //add an edge between u and v with weight:1
+g += n -- m with {weight:7}  //add an edge with a different record;
+g += 
+
 
 7. Statements
 	Statements executes in sequence. They do not have values and are executed for their effects. The statements in our language are classified in the following groups:
