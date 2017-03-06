@@ -52,8 +52,8 @@ e = u->v; //where u and v are nodes.
 
 This is a way of defining edges before you know the record, and adding the relation (and nodes) to different graphs.
 
-**we will have to decide if two edge-descriptors with the same nodes literally point to the same node or not (what if they're in the same graph? What if they're in different graphs?)**
-
+**It's not exactly primitive-- edge descriptors really contain copies of their nodes. However, when they're added to graphs that already contain nodes with the same keywords, they either throw up an error (if the nodes are different objects), or add the edge between the already present nodes. 
+(It would be more primitive if we only allowed adding edge relations when the nodes already exist in the graph but that would wreak havoc with our constructor syntax. Clear and less error prone or needlessly annoying?)**
 
 Edge. An edge consists of an edge descriptor and a record. The record's structure (including field types) may not be altered, though its fields may be changed. An edge always has "hidden" to, from, and rel fields.
 
@@ -110,7 +110,10 @@ b = "weight";				   //or
 my_child = my_edge[b];
 
 Nodes:
-my_friends = my_node["friends"];
+my_friends = my_node["friends"];	//gets a feature of the node.
+my_graph = my_node.graph;			//A node can only be in one graph at once.
+
+
 
 Lists:
 entry = list[0];				//can be accessed by 
