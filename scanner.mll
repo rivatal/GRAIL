@@ -34,28 +34,19 @@ rule token = parse
 | "->"    { RARROW }
 | "<-"     { LARROW }
 | ':'      { COLON }
-| "accio"  {ACCIO}
+| "accio"  { ACCIO }
 | "boolean" { BOOLEAN }
 | "break"  { BREAK }
-| "char"   { CHAR }
-| "double" { DOUBLE }
-| "edge"   { EDGE }
 | "else"   { ELSE }
-| "empty"  { EMPTY }
 | "false"  { FALSE }
 | "for"    { FOR }
 | "free"   { FREE }
 | "from"   { FROM }
-| "graph"  { GRAPH }
 | "if"     { IF }
 | "in"     { IN }
-| "int"    { INT }
-| "node"   { NODE }
-| "record" { RECORD }
 | "return" { RETURN }
 | "true"   { TRUE }
 | "type"   { TYPE }
-| "void"   { VOID }
 | "while"  { WHILE }
 | "with"   { WITH }
 | ['0'-'9']+ as lxm { INTLIT(int_of_string lxm) }
