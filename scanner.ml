@@ -2180,7 +2180,7 @@ let
 # 2181 "scanner.ml"
 = Lexing.sub_lexeme lexbuf lexbuf.Lexing.lex_start_pos lexbuf.Lexing.lex_curr_pos in
 # 61 "scanner.mll"
-                    ( INT(int_of_string lxm) )
+                    ( INTLIT(int_of_string lxm) )
 # 2185 "scanner.ml"
 
   | 56 ->
@@ -2190,7 +2190,7 @@ let
 # 2191 "scanner.ml"
 = Lexing.sub_lexeme lexbuf lexbuf.Lexing.lex_start_pos lexbuf.Lexing.lex_curr_pos in
 # 62 "scanner.mll"
-                                 ( DOUBLE(float_of_string) )
+                                 ( DOUBLELIT(float_of_string) )
 # 2195 "scanner.ml"
 
   | 57 ->
@@ -2210,7 +2210,7 @@ let
 # 2211 "scanner.ml"
 = Lexing.sub_lexeme_char lexbuf (lexbuf.Lexing.lex_start_pos + 1) in
 # 64 "scanner.mll"
-                       ( CHAR(mychar) )
+                       ( CHARLIT(mychar) )
 # 2215 "scanner.ml"
 
   | 59 ->
@@ -2271,7 +2271,7 @@ and __ocaml_lex_str_rec strbuf lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
 # 77 "scanner.mll"
-      ( STRING( Buffer.contents strbuf ) )
+      ( STRINGLIT( Buffer.contents strbuf ) )
 # 2276 "scanner.ml"
 
   | 1 ->
