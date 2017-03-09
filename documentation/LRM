@@ -1,3 +1,6 @@
+**make everything mutable (including endpoints and fields but no record structure), 
+no heterogeneity-- define a graph with a node structure in there already**
+
 1. Introduction
 
 This manual describes GRAIL, a language optimized for building and performing computations on graphs. The syntax is streamlined to facilitate easily constructing, accessing, searching, and modifying graphs, nodes, and edges.
@@ -41,7 +44,7 @@ GRAIL has 5 primitive types: boolean, char, int, double, and void. A boolean is 
 
 Records are user-defineable data-structure consisting of comma-separated pairs of keys (which must be unique within the record) and data. The data may be any primitive or derived type. Nodes can be used as records, but only specially formatted records can be used as nodes.
 
-Nodes are objects containing a key* and a variable-length record. They are referred to by their keys and can be connected by edges to other nodes.
+Nodes are objects containing a key* and a record. They are referred to by their keys and can be connected by edges to other nodes.
 
 Lists are arrays of primitives or objects of the same type. The type of a list has the type of the first element inserted into a list. If all the elements of a list are removed, it maintains its type.
 
@@ -85,7 +88,8 @@ my_edge2 = her_node -> his_node with fields;
 
 my_int = 3; 																			//int
 my_double = 3.0;																		//double
-g = (e, f, g) with {weight:1}				//where e, f, and g are edges or edge descriptors. Default fields weight:1
+g = (e, f, g) with {weight:1} 
+//where e, f, and g are edges, edge descriptors, or nodes of the same type. The field after with is the default edge record
 
 5. Expressions
 Expressions, consisting of type-compatible operators or groups of operators separated by operands, are outlined below in descending order of precedence.
@@ -111,14 +115,9 @@ my_child = my_edge[b];
 
 Nodes:
 my_street = my_node["street"];		//gets a feature of the node.
-my_graph = my_node.graph;			//A node can only be in one graph at once.
-my_friends = my_node.graph[x<>y:x == my_node]	//one (ugly) way to get all the neighbors of a node.
-my_friends = my_node.friends		//syntactic shorthand for this. No graph? No luck, buddy.
-my_friends = my_node.to 			//Everything going to my_node. 
-my_friends = my_node.from 			//Everything going from my node
 
-**what about --? **
-**Also begs the question can you do my_node.graph = h; I suppose if the node has no graph, yes (and it will also add the node to the graph on its side). Otherwise, error. A node can't just jump from graph to graph. **
+**what about --? Two nodes in both directions. Do we need <> notation to make sure we get it? It would distinguish between only undirected edges and both. **
+**Also begs the question can you do my_node.graph = h; And the answer is no.**
 
 Lists:
 entry = list[0];				//can be accessed by 
@@ -127,10 +126,18 @@ entry = list[0];				//can be accessed by
 (*WIP
 my_node = my_graph.nodes["cheese"];						//access a node by its keyword
 my_edge = mygraph.edges 						//what if this is an edge, not an edge descriptor?
-my_int = my_graph.key.thing; 
+my_int = my_graph.cheese.; 
 my_edge_rel = my_edge.rel; 						//to get 2--3 out of an edge. Especially important for undirected.
-my_edge_rec = my_edge*;							//We had to get the * somewhere. This grabs the record out of the edge, sans hidden to/from/rel fields.
+my_edge_rec = my_edge*;							//We had to get the * somewhere. This grabs the record out of the edge, 
 
+sans hidden to/from/rel fields. **should we have the same thing for nodes? yes because the node might have more than the user-defined record?**
+
+Nodes:
+my_graph = my_node.graph;			//A node can only be in one graph at once.
+my_friends = my_node.graph[x<>y:x == my_node]	//one (ugly) way to get all the neighbors of a node.
+my_friends = my_node.friends		//syntactic shorthand for this. No graph? No luck, buddy.
+my_friends = my_node.to 			//Everything going to my_node. 
+my_friends = my_node.from 			//Everything going from my node
 *)
 
 **danger of silently returning a list instead of a single node or edge...**
@@ -196,7 +203,7 @@ edge
 graph 
 list 
 
-These type specifiers define the type of the variables, parameters, and function return types. Num includes not only integers (int) but also floating numbers (double). Void is only allowed in the function return type.  
+These type specifiers define the type of the variables, parameters, and function return types. Void is only allowed in the function return type.  
 
 6.3 Function Declarator
 The Function declarator is formatted in the following way:
