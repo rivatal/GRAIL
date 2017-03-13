@@ -11,34 +11,34 @@ GRAIL tokens are separated by one or more whitespace characters. Comments delimi
 
 2.1. Identifiers
 
-An identifier is a sequence of characters, all of which must be either alphanumeric or the underscore (_) character. The first character must be a letter. Uppercase and lowercase letters are considered distinct but the choice of case in identifiers holds no significance to the compiler. Identifiers are used in naming variables or features of records.
+An identifier is a sequence of characters, all of which must be either alphanumeric or the underscore (_) character. The first character must be a letter. Uppercase and lowercase letters are considered distinct but the choice of case in identifiers holds no significance to the compiler. Identifiers can be used for variables or features of records. (Up to 32 chars).
 
 2.2. Reserved Words
 
 The following identifiers are reserved and may not be used elsewhere: 
 
-accio, break, else, false, for, free, from, if, in, record, return, size, sort, to, true, type, void, while, with
-
-2.2.5. User-defined Keywords
-
-User-definable keywords appear in records and nodes, and can be any string of one or more alphanumeric characters. (Up to 32 chars).
+accio, break, else, false, for, free, from, if, in, record, return, size, to, true, type, void, while, with
 
 2.3. Constants
 
-Integers, denoted int, are a 32 bit sequence of digits with no floating point.
+Integers are a 32 bit sequence of digits with no floating point:
+var = 3;
 
-Double, denoted double, is a 64 bit floating point number.
+Double is a 64 bit floating point number:
+var = 3.0;
 
-Characters, denoted char, are single characters enclosed by single quotation marks.
+Characters are single characters enclosed by single quotation marks.
+var = 'a';
 
-Boolean constants (boolean) are represented by the keywords true and false. Booleans may take on only these two values and void (and the last only on initialization).
+Boolean constants are represented by the keywords true and false. Booleans may take on only these two values.
+var = false;
 
 String literals (string) are a series of characters delimited by double quotation marks. Strings cannot be nested, though a double quotation mark can appear inside a string by using the escape sequence \”.
 
 3. Types
 3.1. Primitive Types
 
-GRAIL has 5 primitive types: boolean, char, int, double, and void. A boolean is a Boolean value. A char is a single member of the ASCII character set. (More complex character sets are not supported.) An int is an integer. A double is a floating point number. The void type is a null type, used in functions that return no variables and uninitialized primitives.
+GRAIL has 5 primitive types: boolean, character, integer, double, and void. A boolean is a true/false Boolean value. A char is a single member of the ASCII character set. (More complex character sets are not supported.) An int is an integer. A double is a floating point number. The void type is a null type, used in functions that return no variables and uninitialized primitives.
 
 3.2. Derived types
 
