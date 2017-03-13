@@ -133,30 +133,34 @@ graph = node.graph;			//A node can only be in one graph at once.
 my_friends = node.friends		//Gets all nodes connected by an edge to this node in any direction.
 my_friends = node.to 			//Every node connected by an edge going to the node. 
 my_friends = node.from 			//Every node connected by an edge going from the node.
+			
 
-**danger of silently returning a list instead of a single node or edge...**
+**What if we want edges connected to nodes? We can do it through graph, but can we do it through nodes?**
+**danger of silently returning a list instead of a single node or edge?**
 
 5.2. Unary Operators:
 !expr  (booleans, boolean expr) Logical not. Yields the opposite value of the expression.
 -expr (int, double) Numeric negation. Yields the expression multiplied by negative one.
 
 5.3. Numeric Binary Operators
-Binary operators group left to right. 
+Binary operators group left to right. Double operators are .operator, the opposite order of ocaml
 
 int * int 			//Integer Multiplication operator
-double *. double 	//Double Multiplication operator
+double .* double 	//Double Multiplication operator
 int / int 		//Integer Division operator
-double /. double 		//Double Division operator
+double ./ double 		//Double Division operator
 
 
 int + int 				//Integer Addition operator
-double +. double 		//Double Addition operator
+double .+ double 		//Double Addition operator
 int - int 				//Integer Subtraction operator
-int -. int 				//Double Subtraction operator
+int .- int 				//Double Subtraction operator
+
+double .+= double 			//syntactic sugar for double = double + double;
 
 5.3.5 Graph, Edge, and Node Operators
 graph & node Yields a graph with the node added
-graph &. edge Yields a graph with the edge added (if the edge is not already in the graph)
+graph .& edge Yields a graph with the edge added (if the edge is not already in the graph)
 
 5.4. Relational Operators
 expr < expr (int, double, string), less than
@@ -211,7 +215,7 @@ node <- node with record, yields directed edge from the second expr (num, char, 
 6. Declarations
 Declarations are done through initialization. Type is inferred. 
 
-6.3 Function Declarator
+6.1 Function Declarator
 The Function declarator is formatted in the following way:
 	function functionName(param, param, … )
 
@@ -219,23 +223,23 @@ FunctionName is the identifier of the function, followed by a left parenthesis, 
 
 6.4 Initialization
 The general format of the initialization of variables is:
-	variableName = assignment expression / { list of edges or edge-relations }
+	variableName = assignment expression
 
 	Primitives:
 	variableName = value;
 
-	Records: //Records have literal declaration:
-	accio(space);		//or something
+	Records: 			//Records have literal declaration.
+	accio(space);		
 	myRecord = {field1:val1, field2:val2...};
 
 	Nodes:
 	accio(space);
 	myNode = {key:myrecord};
 
-	Edge-Descriptor:
+	Edge-Descriptor:		//an edge with a void object
 	mydesc = node -> node;
 	mydesc = node <- node;
-	mydesc = node -- node;	//undirected edge is technically two edges, one in each direction, with the same record
+	mydesc = node -- node;
 
 	Edges:
 	accio(space);
@@ -243,31 +247,44 @@ The general format of the initialization of variables is:
 	
 	Graph:	//a graph can take any number of edges and nodes or lists of edges and nodes
 	accio(space);
-	graph = {edge, node, … } with myrecord | {list of edges} with myrecord
+	graph = {edge, node, … } with myrecord | {list of edges} with myrecord | {list of nodes} with myrecord 
 	
 The following examples shows the declaration and initialization of graphs and nodes:
 
-g = (1->2,2->3,3->4) with {weight:1};
-g = (2->3 with {weight:2, capacity:7}) with {weight:1, capacity:8};
-//or
-g = (2->3 {2,7}) with {weight:1, capacity:8};
+graph = (edge, your_node, his_node, her_node, node -> your_node, his_node <- her_node, her_node -- node) with {weight:1};
+u = {nitwit:my_record};														//node
+v = {blubber:my_record}
+n = {oddment:my_record}
+m = {tweak:my_record}
 
-g += u -> v; //add an edge between u and v with weight:1
-g += n -- m with {weight:7}  //add an edge with a different record;
-g += o -- p with {weight:7, capacity:6} //illegal! Error!
-g += a;		//adds the node to the node list of g.
+g &= u -> v; //add an edge between u and v with weight:1
+g .&= n -- m with {weight:7}  //add an edge with a different record;
+g .&= v -- m with {weight:7, capacity:6} //illegal! Error!
+g &= a;		//adds the node to the node list of g.
 
-//what about adding something already in the graph? If it's a relation it'll stay, if it's an edge it'll throw up an error? You'll have to fetch the edge yourself and change its fields? 
+**what if you add something already in the graph? 
+	If it's a relation (edge with a void record) it'll stay. 
+	If it's an edge it'll throw up an error. 
+	You can always change an edge's to, from, and rel fields, however.**
 
 6.5 Update
-Edges:
-	e = 2--3 with {weight:4, height:7};	//initialize
-	e.rel = 4--3;						//update edges
-	e.to = 5;							//e.rel = 4--5 (does it cause problems to remember which is from and which to?)
-	e = e.rel {4,6};					//update the height to 7 **what about e = e.rel {record} ? Do we need a with?**
-	e.height = 5;						//update the height to 5.
+Edges:									//let u, v, and w be already initialized nodes
+	e = u--v with {weight:4, height:7};	//initialize
+	g = w--v with {weight:3, height:3}; 
+	h = w--v with {height:2}			
+	h -> g;								//error. Nodes must have the same record structure to be connected.
 
-**we still need a way to grab all the nodes or edges that a node is connected to irrespective of the graph. **
+	e.rel = u--w;						//update edges
+	e.to = u;							//e = u--u
+
+	e.weight = 5;						//To adjust only one field
+	e = e.rel {4,6};					//To update all fields. Note no need for keywords or with on update.
+	e = e.rel {weight:4, height:6};		//Also okay. **with is unique to declaration~?**
+	f = e.rel {4,6}						//error, since f has not been declared with fields yet.
+	f = e.rel with g*;					//f = u--u {weight:3, height:3};
+	f = e.rel with {weight:4, height:6};//f = u--u {weight:4, height:6};
+
+	**is there a practical difference between updating everything (e = e.rel {4,6} and reinitializing (just above)?)**
 
 7. Statements
 	Statements executes in sequence. They do not have values and are executed for their effects. The statements in our language are classified in the following groups:
