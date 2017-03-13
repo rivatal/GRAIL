@@ -213,7 +213,7 @@ Declarations are done through initialization. Type is inferred.
 
 6.3 Function Declarator
 The Function declarator is formatted in the following way:
-	functionName(param, param, … )
+	function functionName(param, param, … )
 
 FunctionName is the identifier of the function, followed by a left parenthesis, a list of function parameters(optional), and a right parenthesis. In the function parameter list, these parameters need to be separated by commas. 
 
