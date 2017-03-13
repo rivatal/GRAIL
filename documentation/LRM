@@ -38,7 +38,7 @@ String literals (string) are a series of characters delimited by double quotatio
 3. Types
 3.1. Primitive Types
 
-GRAIL has 5 primitive types: boolean, character, integer, double, and void. A boolean is a true/false Boolean value. A char is a single member of the ASCII character set. (More complex character sets are not supported.) An int is an integer. A double is a floating point number. The void type is a null type, used in functions that return no variables and uninitialized primitives.
+GRAIL has 5 primitive types: boolean, character, integer, double, and void. A boolean is a true/false Boolean value. A char is a single member of the ASCII character set. An integer is any mathematical integer. A double is a rational non-integer number. The void type is a null type, used in functions that return no variables.
 
 3.2. Derived types
 
