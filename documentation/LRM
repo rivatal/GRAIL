@@ -86,29 +86,6 @@ What if you wanted to take an edge, extract its record, change it, and put that 
 
 Strings are arrays of chars.
 
-4. Objects and LValues
-An object is a named region of storage; an lvalue is an expression referring to an object. An obvious example of an lvalue expression is an identifier with suitable type and storage class. The name ``lvalue'' comes from the assignment expression E1 = E2 in which the left operand E1 must be an lvalue expression. 
-
-Examples:
-my_list = ["Bob", "Diane", "Agnes"];												//list
-my_record = {age:6, weight:15, size:{height:65, head:"big"}, children:my_list};		//record
-my_node = {eleven:my_record};														//node
-my_node = {7:{seen:[4,5,2]}};
-your_node = {8:{age:5, change:"were"}};				
-my_fields = {weight:7, capacity:5, street:"Dawson"};									//record
-my_graph = (my_node, your_node, his_node, her_node, my_node -> your_node, his_node <- her_node, her_node -- my_node) with my_fields
-your_graph = () with {weight:1, capacity:1, street:""}
-my_graph = () with fields
-his_graph = 
-my_edge_desc = 	my_node -> your_node												//an edge descriptor
-my_edge = my_node -> your_node with {weight:1, capacity:1, street:""};				//an edge
-my_edge2 = her_node -> his_node with fields;
-
-my_int = 3; 																			//int
-my_double = 3.0;																		//double
-g = (e, f, g) with {weight:1} 
-//where e, f, and g are edges, edge descriptors, or nodes of the same type. The field after with is the default edge record
-
 5. Expressions
 Expressions, consisting of type-compatible operators or groups of operators separated by operands, are outlined below in descending order of precedence.
 5.1. Subset Operators:
