@@ -49,7 +49,7 @@ An edge descriptor connects two nodes and can be directed or undirected, but con
 
 e = u->v; //where u and v are nodes.
 
-This is a way of defining edges before you know the record, and adding the relation (and nodes) to different graphs.
+This is a way of defining edges before you know the record, and adding the relation (and nodes) to different graphs. (Really just an edge with a void record).
 
 It's not exactly a primitive operation-- edge descriptors really contain copies of their nodes. However, when they're added to graphs that already contain nodes with the same keywords, they either throw up an error (if the nodes are different objects), or add the edge between the already present nodes.
 	
@@ -88,51 +88,53 @@ Strings are arrays of chars.
 
 5. Expressions
 Expressions, consisting of type-compatible operators or groups of operators separated by operands, are outlined below in descending order of precedence.
+
 5.1. Subset Operators:
-
 Graphs:
-my_node = my_graph["key"];  //access a node by its keyword
-my_edge = my_graph[node1 -> node2]; //access the edge between the keys of those nodes.
-my_nodes = my_graph[x : x in [u, v, w]]; //access a list of nodes
-my_nodes = my_graph[x : x.key in ["first", "second", "third"]]; //access a list of nodes by key
-my_edges = my_graph[x -- y: x in my_list && y == "my_key"]; //access a list of edges that match the condition/s. If no conditions are supplied, yields all edges.
-
-**Currently-- no way to access edges by edge fields**
+node = graph.nodes["key"];  									//access a node by its keyword
+edge = graph.edges[node1 -> node2]; 							//access the edge between the keys of those nodes.
+nodes = graph.nodes[x : x in [u, v, w]];						//access a list of nodes
+nodes = graph.nodes[x : x.key in ["first", "second", "third"]]; //access a list of nodes by key
+/*access a list of edge-descriptors that match the condition/s. If no conditions are supplied, yields all edges.*/
+edgedesc = graph.edges[x -- y: x in my_list && y == "my_key"]; 	//all undirected edge-descriptors
+edgedesc = graph.edges[x <> y: x in my_list && y == "my_key"];	//all edges regardless of direction.		
+edges = graph.edges[x -e- y : e.school == "Dawson"];			//How to get edges by edge features.
+nodes = graph.nodes[x -e- y : e.weight > 5];					//get all nodes whose edges' weights are greater than 5.
 
 Records:
 my_field = my_record["name_of_field"];
 
 Edges:
-my_weight = my_edge["weight"]; //access a feature in an edge
+my_weight = edge["weight"]; //access a feature in an edge
 b = "weight";				   //or
-my_child = my_edge[b];
+my_child = edge[b];
 
 Nodes:
-my_street = my_node["street"];		//gets a feature of the node.
-
-**what about --? Two nodes in both directions. Do we need <> notation to make sure we get it? It would distinguish between only undirected edges and both. **
-**Also begs the question can you do my_node.graph = h; And the answer is no.**
+my_street = node["street"];		//gets a feature of the node. Same syntax as getting a feature of an edge.
 
 Lists:
 entry = list[0];				//can be accessed by 
 
 5.15. Dot Operator: Access fields of a record, or nodes of a graph
-(*WIP
-my_node = my_graph.nodes["cheese"];						//access a node by its keyword
-my_edge = mygraph.edges 						//what if this is an edge, not an edge descriptor?
-my_int = my_graph.cheese.; 
-my_edge_rel = my_edge.rel; 						//to get 2--3 out of an edge. Especially important for undirected.
-my_edge_rec = my_edge*;							//We had to get the * somewhere. This grabs the record out of the edge, 
+node = graph.nodes["Chicago"];				//access a node by its keyword
+edges = graph.edges 						//what if this is an edge, not an edge descriptor?
+numschools = node.schools;
+edge_rel = edge.rel; 						//to get 2--3 out of an edge.
+edge_rec = edge*;							//We had to get the * somewhere. This grabs the record out of the edge, 
+node = edge.to;
+node2 = edge.from;
+
 
 sans hidden to/from/rel fields. **should we have the same thing for nodes? yes because the node might have more than the user-defined record?**
 
 Nodes:
-my_graph = my_node.graph;			//A node can only be in one graph at once.
-my_friends = my_node.graph[x<>y:x == my_node]	//one (ugly) way to get all the neighbors of a node.
-my_friends = my_node.friends		//syntactic shorthand for this. No graph? No luck, buddy.
-my_friends = my_node.to 			//Everything going to my_node. 
-my_friends = my_node.from 			//Everything going from my node
-*)
+graph = node.graph;			//A node can only be in one graph at once.
+//Traversing the graph from node to node
+my_friends = node.friends		//Gets all nodes connected by an edge to this node in any direction.
+my_friends = node.to 			//Every node connected by an edge going to the node. 
+my_friends = node.from 			//Every node connected by an edge going from the node.
+
+
 
 **danger of silently returning a list instead of a single node or edge...**
 
@@ -175,6 +177,28 @@ expr || expr (boolean), returns true if at least one of the booleans or boolean 
 variable = expr, replaces the value of your variable with the value of the expr.
 variable .= object, makes a copy of object and puts in variable.
 
+
+Examples:
+my_list = ["Bob", "Diane", "Agnes"];												//list
+your_list .= my_list;
+my_record = {age:6, weight:15, size:{height:65, head:"big"}, children:my_list};		//record
+node = {eleven:my_record};														//node
+node = {7:{seen:[4,5,2]}};
+your_node = {8:{age:5, change:"were"}};				
+my_fields = {weight:7, capacity:5, street:"Dawson"};									//record
+graph = (node, your_node, his_node, her_node, node -> your_node, his_node <- her_node, her_node -- node) with my_fields
+your_graph = () with {weight:1, capacity:1, street:""}
+graph = () with fields
+his_graph = 
+edge_desc = 	node -> your_node												//an edge descriptor
+edge = node -> your_node with {weight:1, capacity:1, street:""};				//an edge
+edge2 = her_node -> his_node with fields;
+
+my_int = 3; 																			//int
+my_double = 3.0;																		//double
+g = (e, f, g) with {weight:1} 
+//where e, f, and g are edges, edge descriptors, or nodes of the same type. The field after with is the default edge record
+
 5.7 Edge Descriptor
 node -- node yields an edge connecting both nodes. The operator can be --, ->, <-
 
@@ -182,7 +206,6 @@ node -- node yields an edge connecting both nodes. The operator can be --, ->, <
 node -- node with record, yields an edge connecting both expr’s (num, char, or string), with the fields set according to the record.
 node -> node with record, yields directed edge from the first expr (num, char, or string), with the fields set according to the record.
 node <- node with record, yields directed edge from the second expr (num, char, or string), with the fields set according to the record.
-
 
 6. Declarations
 Declaration defines and specifies the properties of an identifier in a structured format. 
@@ -387,7 +410,7 @@ function main(){
 }
 
 //Walking through the graph in order? Iterating through all edges, all nodes? Ordering nodes, edges
-my_edges = my_graph[x <> y :]	//grab all edges of any type in the graph and place in a list.
+edges = graph[x <> y :]	//grab all edges of any type in the graph and place in a list.
 
 The following program implements Djikstra’s Algorithm for finding a shortest path.
 
