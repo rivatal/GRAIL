@@ -41,32 +41,50 @@ String literals (string) are a series of characters delimited by double quotatio
 GRAIL has 5 primitive types: boolean, character, integer, double, and void. A boolean is a true/false Boolean value. A char is a single member of the ASCII character set. An integer is any mathematical integer. A double is a rational non-integer number. The void type is a null type, used in functions that return no variables.
 
 3.2. Derived types
+Record:
+Records are user-defineable data-structure consisting of comma-separated pairs of keys (which must be unique within the record) and data. The data may be any primitive or derived type. 
 
-Records are user-defineable data-structure consisting of comma-separated pairs of keys (which must be unique within the record) and data. The data may be any primitive or derived type. Nodes can be used as records, but only specially formatted records can be used as nodes.
-
-Nodes are objects containing a key* and a record. They are referred to by their keys and can be connected by edges to other nodes.
-
-Lists are arrays of primitives or objects of the same type. The type of a list has the type of the first element inserted into a list. If all the elements of a list are removed, it maintains its type.
-
-Edge descriptor. 
+Edge Descriptor:
 An edge descriptor connects two nodes and can be directed or undirected, but contains no records. It is what you get when you declare an edge without a with field and irrespective of a graph:
 
 e = u->v; //where u and v are nodes.
 
 This is a way of defining edges before you know the record, and adding the relation (and nodes) to different graphs.
 
-**It's not exactly primitive-- edge descriptors really contain copies of their nodes. However, when they're added to graphs that already contain nodes with the same keywords, they either throw up an error (if the nodes are different objects), or add the edge between the already present nodes. 
-(It would be more primitive if we only allowed adding edge relations when the nodes already exist in the graph but that would wreak havoc with our constructor syntax. Clear and less error prone or needlessly annoying?)**
+It's not exactly a primitive operation-- edge descriptors really contain copies of their nodes. However, when they're added to graphs that already contain nodes with the same keywords, they either throw up an error (if the nodes are different objects), or add the edge between the already present nodes.
+	
+Edge: 
+An edge consists of an edge descriptor and a record. The record's structure (including field types) may not be altered, though its fields may be changed. An edge always has "hidden" to, from, and rel fields that yield the node pointed to by the edge (or the first node in an undirected edge), the node that extends from the edge (or the second node in an undirected edge), and the edge descriptor for the edge respectively.
 
-Edge. An edge consists of an edge descriptor and a record. The record's structure (including field types) may not be altered, though its fields may be changed. An edge always has "hidden" to, from, and rel fields.
+Nodes:
+Nodes can be used as records, but only specially formatted records can be used as nodes. 
+**So you can turn a node into an edge:
+	node = {mynode:{street:Dawson, trees:100}};
+	graph = (u->v, edge2, edge3, node2, node3) with node;
+Is that going to screw us over?**
 
-**what about undirected edges? What should to/from return?**
+Nodes are objects containing a key and a record. They can be referred to by their keys and connected by edges to other nodes. Nodes in a graph must contain the same record structure (the same field names and types).
 
-Graphs are collections of nodes (uniquely identified by keywords) and the edges connecting them (uniquely identified by their endpoints and direction), with default edge fields defined. Edge fields on a graph cannot be updated, but the relations or edges can be copied to another graph.
+Lists:
+Lists are arrays of primitives or objects of the same type. The type of a list has the type of the first element inserted into a list. If all the elements of a list are removed, it maintains its type.
 
-**what if you wanted to take an edge, extract its record, change it, and put that in a different edge?**
+Graphs:
+Graphs are collections of nodes (uniquely identified by keywords) and the edges connecting them (uniquely identified by their endpoints and direction*), with default edge fields defined. Edge fields on a graph cannot be updated, but the relations or edges can be copied to another graph.
 
-Strings are arrays of chars. While strings are stored internally as arrays, they act similarly to primitive types, as they can be declared with the keyword string and can be nodes of graphs.
+*
+  e = node1--node2;
+  f = node1->node2;
+  g += e;	//good
+  g += f;	//error.
+*
+**
+What if you wanted to take an edge, extract its record, change it, and put that in a different edge?
+	edge2 .= edge1;	//copy edge1
+	edge2.to = u;
+	edge2.from = v;
+**
+
+Strings are arrays of chars.
 
 4. Objects and LValues
 An object is a named region of storage; an lvalue is an expression referring to an object. An obvious example of an lvalue expression is an identifier with suitable type and storage class. The name ``lvalue'' comes from the assignment expression E1 = E2 in which the left operand E1 must be an lvalue expression. 
@@ -93,7 +111,6 @@ g = (e, f, g) with {weight:1}
 
 5. Expressions
 Expressions, consisting of type-compatible operators or groups of operators separated by operands, are outlined below in descending order of precedence.
-
 5.1. Subset Operators:
 
 Graphs:
@@ -178,7 +195,9 @@ expr && expr (boolean), returns true if both booleans or boolean expressions are
 expr || expr (boolean), returns true if at least one of the booleans or boolean expressions is true and false otherwise
 
 5.7. Assignment
-lvalue = expr, replaces the value of the lvalue with the value of the expr, if they are the same type
+variable = expr, replaces the value of your variable with the value of the expr.
+variable .= object, makes a copy of object and puts in variable.
+
 5.7 Edge Descriptor
 node -- node yields an edge connecting both nodes. The operator can be --, ->, <-
 
@@ -340,6 +359,9 @@ Prints strings to standard output.
 Function for displaying graphs and digraphs
 	display(graph)
 	display(digraph)
+
+9.3 Dir
+Function for getting the direction of an edge. Will return -1, 0, or 1 for <-, --, or ->
 
 10. Examples
 Sort a list of edges by their weight:
