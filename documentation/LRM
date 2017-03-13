@@ -238,7 +238,11 @@ The general format of the initialization of variables is:
 	Graph:	//a graph can take any number of edges and nodes or lists of edges and nodes
 	accio(space);
 	graph = {edge, node, … } with myrecord | {list of edges} with myrecord | {list of nodes} with myrecord 
-	
+
+	List:
+	list = [5];			//a list of length 5;
+	list = {a,b,c,d,e};	//direct list declaration of type a.
+
 The following examples shows the declaration and initialization of graphs and nodes:
 
 graph = (edge, your_node, his_node, her_node, node -> your_node, his_node <- her_node, her_node -- node) with {weight:1};
@@ -364,18 +368,24 @@ function addtograph(graph, node){
 9. Library Functions
 9.1 Print 
 Prints strings to standard output. 
-	print (list of string statement)
+	print (list of string statement);
 
 9.2 Display
 Function for displaying graphs and digraphs
-	display(graph)
-	display(digraph)
+	display(graph);
+	display(digraph);
 
 9.3 Dir
 Function for getting the direction of an edge. Will return -1, 0, or 1 for <-, --, or ->
+	dir(edge);
+
+9.4 Type
+Function for getting the type of something
+	type(edge);			//will hopefully return "edge", unless you name your variables very confusingly
 
 10. Examples
-Sort a list of edges by their weight:
+**Trouble-- distinguish a list of nodes from a list of edges**
+Sort a list of edges or nodes by their weight:
 function sort(my_list, feature){
 	sort(my_list, 0, size(my_list)-1, feature);
 }
@@ -393,9 +403,9 @@ function partitionIt(my_list, left, right, pivot, feat){
 	r = right;
 	while(l < r){
 		while(a[l][feat] < pivot)
-			l++;
+			l+=1;
 		while(r > 0 && a[r][feat] > pivot)
-			r--;
+			r-=1;
 		if(r <= l)
 			break;
 		swap(my_list, r, l);
@@ -413,10 +423,10 @@ function main(){
 	e = {"Englewood":{region: "24j2ioj"}};
 	d = {"Dawson":{region: "523io9852"}};
 	mygraph = {e, f, g, f->g, g<-f, f--e} with {weight:1};			//default fields weight:1
-	mygraph[f->g].weight = 3;
-	mygraph[g<-f].weight = 8;
+	mygraph.edges[f->g].weight = 3;
+	mygraph.edges[g<-f].weight = 8;
 
-	mylist = mygraph[x <> y :];
+	mylist = mygraph.edges[x <> y :];
 	mylist = sort(my_list, "weight");
 }
 
@@ -429,7 +439,7 @@ list getclosestpaths(graph g, num s){
 
 g.sort(weight, asc);
 list dist = [size(g)]; 
-list prev= [size(g)];
+list prev = [size(g)];
 list visited = [size(g)];
 
 num inf = Grail.Math.INF;
