@@ -11,7 +11,7 @@ GRAIL tokens are separated by one or more whitespace characters. Comments delimi
 
 2.1. Identifiers
 
-An identifier is a sequence of characters, all of which must be either alphanumeric or the underscore (_) character. The first character must be a letter. Uppercase and lowercase letters are considered distinct but the choice of case in identifiers holds no significance to the compiler. Identifiers can be used for variables or features of records. (Up to 32 chars).
+An identifier is a sequence of characters, all of which must be either alphanumeric or the underscore (_) character. The first character must be a letter. Uppercase and lowercase letters are considered distinct but the choice of case in identifiers holds no significance to the compiler. Identifiers can be used for variables or features of records. (Up to 32 chars), but features of records can also begin with a number.
 
 2.2. Reserved Words
 
@@ -69,6 +69,9 @@ Nodes are objects containing a key and a record. They can be referred to by thei
 Lists:
 Lists are arrays of primitives or objects of the same type. The type of a list has the type of the first element inserted into a list. If all the elements of a list are removed, it maintains its type.
 
+Associative Arrays:
+Associative arrays are hashmaps. They are the type of graph.edges, for instance.
+
 Graphs:
 Graphs are collections of nodes (uniquely identified by keywords) and the edges connecting them (uniquely identified by their endpoints and direction*), with default edge fields defined. Edge fields on a graph cannot be updated, but the relations or edges can be copied to another graph.
 
@@ -94,8 +97,12 @@ Expressions, consisting of type-compatible operators or groups of operators sepa
 Graphs:
 node = graph.nodes["key"];  									//access a node by its keyword
 edge = graph.edges[node1 -> node2]; 							//access the edge between the keys of those nodes.
-nodes = graph.nodes[x : x in [u, v, w]];						//access a list of nodes
+nodes = graph.nodes[x : x in [u, v, w]];						//in the list
 nodes = graph.nodes[x : x.key in ["first", "second", "third"]]; //access a list of nodes by key
+nodes = graph.nodes[x : x not in [u, v, w]];					//not in the list
+
+nodes = node.friends[x : x == 5];				//Can also be used on a list of nodes from nodes
+
 /*access a list of edge-descriptors that match the condition/s. If no conditions are supplied, yields all edges.*/
 edgedesc = graph.edges[x -- y: x in my_list && y == "my_key"]; 	//all undirected edge-descriptors
 edgedesc = graph.edges[x <> y: x in my_list && y == "my_key"];	//all edges regardless of direction.		
@@ -116,6 +123,9 @@ my_street = node["street"];		//gets a feature of the node. Same syntax as gettin
 Lists:
 entry = list[0];				//can be accessed by 
 
+Associative Array:
+array["hey"] = "three";			
+
 5.15. Dot Operator: Access fields of a record, or nodes of a graph
 node = graph.nodes["Chicago"];				//access a node by its keyword
 edges = graph.edges 						//what if this is an edge, not an edge descriptor?
@@ -130,10 +140,9 @@ node2 = edge.from;							//the node that extends from the edge
 Nodes:
 graph = node.graph;			//A node can only be in one graph at once.
 //Traversing the graph from node to node
-my_friends = node.friends		//Gets all nodes connected by an edge to this node in any direction.
-my_friends = node.to 			//Every node connected by an edge going to the node. 
-my_friends = node.from 			//Every node connected by an edge going from the node.
-			
+my_friends = node.friends;		//Gets all nodes connected by an edge to this node
+my_friends = node.in;			//Gets all nodes whose edges point to this node
+my_friends = node.out;			//Gets all nodes that this node points to
 
 **What if we want edges connected to nodes? We can do it through graph, but can we do it through nodes?**
 **danger of silently returning a list instead of a single node or edge?**
@@ -430,65 +439,41 @@ function main(){
 	mylist = sort(my_list, "weight");
 }
 
-//Walking through the graph in order? Iterating through all edges, all nodes? Ordering nodes, edges
-edges = graph[x <> y :]	//grab all edges of any type in the graph and place in a list.
-
 The following program implements Djikstra’s Algorithm for finding a shortest path.
+**Not sure this works, but at least you can see the syntax.**
+function getshortestpath(graph, source){ //graph is a graph, source is a node
+	high = INFINITY;
+	settledNodes = [size(g.nodes)];		//list
+	unsettledNodes = [size(g.nodes)];	//g.nodes assoc array
+	dist = [size(g.nodes)];
+	dist[source] = 0;					//assoc
 
-list getclosestpaths(graph g, num s){
+	//go through all nodes in g and add to unsettled.
+	for(node in g.nodes){
+		unsettledNodes.add(node);
+	}
+	unsettledNodes = sort(unsettledNodes, time, asc);	//sort by time.
 
-g.sort(weight, asc);
-list dist = [size(g)]; 
-list prev = [size(g)];
-list visited = [size(g)];
+	for(i = 0; i < size(g.nodes); i+=1){	//go through unsettled nodes
+		currnode = unsettledNodes[i];		//shortest so far
+		settledNodes.add(currnode);
+		evaluatedNeighbors(currnode, settledNodes, unsettledNodes, dist);
+	}
 
-num inf = Grail.Math.INF;
-
-for(num i = 0; i < size(dist); i+=1){
-dist[i] = inf;
-visited[i] = false;
+	evaluatedNeighbors(node, settled, unsettled, dist){
+		friends = node.out[x : x not in settled];
+		for(n in friends){
+			edgedist = node.graph[node->n].time;
+			newdist = dist[node] + edgedist;
+			if(dist[n] > newdist){
+				dist[n] = newDist;
+				unsettled.add(n);
+			}
+		}
+	}
 }
-dist[s] = 0;
-
-for(num i = 0; i < size(g); i+=1){
-next = closestNode(dist, visited);
-visited[next] = true;
-neighbors = g[x --> y : x == next]; //Get all nodes from x
-
-for(num j = 0; j < size(neighbors); j+=1){
-num n = neighbors[j];
-num d = neighbors[j].weight + dist[next];
-
-if(dist[n] > d){
-dist[n] = d;
-prev[n] = next;
-}
-}
-}
-return pred;
-}
-
-num closestNode(list dist, list visited){
-num d = Grail.Math.INF;
-num n;
-for(num i = 0; i < size(dist); i++){
-if(v[i] == false && dist[i] < d){
-n = i;
-d = dist[i];
-}
-}
-return n;
-}
-
-//initialize a graph, add a node and an edge, and run closest paths algorithm
-
-graph g = {1->2,2->3,3->4};
-g* += 5;
-g += 4->5;
-
 list allPaths = getClosestPaths(g,1);
 
-11. Recapitulation
-GRAIL is possessed of several types, denoted by keywords such as num and 
-
+//Walking through the graph in order? Iterating through all edges, all nodes? Ordering nodes, edges
+edges = graph[x <> y :]	//grab all edges of any type in the graph and place in a list.
 
