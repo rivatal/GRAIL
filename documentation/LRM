@@ -56,6 +56,7 @@ It's not exactly a primitive operation-- edge descriptors really contain copies 
 Edge: 
 An edge consists of an edge descriptor and a record. The record's structure (including field types) may not be altered, though its fields may be changed. An edge always has "hidden" to, from, and rel fields that yield the node pointed to by the edge (or the first node in an undirected edge), the node that extends from the edge (or the second node in an undirected edge), and the edge descriptor for the edge respectively.
 
+
 Nodes:
 Nodes can be used as records, but only specially formatted records can be used as nodes. 
 **So you can turn a node into an edge:
@@ -80,8 +81,8 @@ Graphs are collections of nodes (uniquely identified by keywords) and the edges 
 **
 What if you wanted to take an edge, extract its record, change it, and put that in a different edge?
 	edge2 .= edge1;	//copy edge1
-	edge2.to = u;
-	edge2.from = v;
+	edge2.to = u; 	
+	edge2.from = v; 
 **
 
 Strings are arrays of chars.
@@ -106,7 +107,7 @@ my_field = my_record["name_of_field"];
 
 Edges:
 my_weight = edge["weight"]; //access a feature in an edge
-b = "weight";				   //or
+b = "weight";				//or
 my_child = edge[b];
 
 Nodes:
@@ -119,13 +120,12 @@ entry = list[0];				//can be accessed by
 node = graph.nodes["Chicago"];				//access a node by its keyword
 edges = graph.edges 						//what if this is an edge, not an edge descriptor?
 numschools = node.schools;
+
+Edges:
 edge_rel = edge.rel; 						//to get 2--3 out of an edge.
-edge_rec = edge*;							//We had to get the * somewhere. This grabs the record out of the edge, 
-node = edge.to;
-node2 = edge.from;
+node = edge.to;								//the node pointed to by the edge
+node2 = edge.from;							//the node that extends from the edge
 
-
-sans hidden to/from/rel fields. **should we have the same thing for nodes? yes because the node might have more than the user-defined record?**
 
 Nodes:
 graph = node.graph;			//A node can only be in one graph at once.
@@ -134,27 +134,29 @@ my_friends = node.friends		//Gets all nodes connected by an edge to this node in
 my_friends = node.to 			//Every node connected by an edge going to the node. 
 my_friends = node.from 			//Every node connected by an edge going from the node.
 
-
-
 **danger of silently returning a list instead of a single node or edge...**
 
 5.2. Unary Operators:
-expr* (edge) Yields the edge descriptor of the edge, without the record.
 !expr  (booleans, boolean expr) Logical not. Yields the opposite value of the expression.
--expr (num) Numeric negation. Yields the expression multiplied by negative one.
+-expr (int, double) Numeric negation. Yields the expression multiplied by negative one.
 
 5.3. Numeric Binary Operators
 Binary operators group left to right. 
 
-expr * expr (int, double) Multiplication operator.
-expr / expr (int, double) Division operator.
+int * int 			//Integer Multiplication operator
+double *. double 	//Double Multiplication operator
+int / int 		//Integer Division operator
+double /. double 		//Double Division operator
 
-expr + expr (int, double) Addition operator.
-expr - expr (int, double) Subtraction operator.
+
+int + int 				//Integer Addition operator
+double +. double 		//Double Addition operator
+int - int 				//Integer Subtraction operator
+int -. int 				//Double Subtraction operator
 
 5.3.5 Graph, Edge, and Node Operators
-graph + node Yields a graph with the node added
-graph + edge Yields a graph with the edge added (if the edge is not already in the graph)
+graph & node Yields a graph with the node added
+graph &. edge Yields a graph with the edge added (if the edge is not already in the graph)
 
 5.4. Relational Operators
 expr < expr (int, double, string), less than
@@ -179,28 +181,27 @@ variable .= object, makes a copy of object and puts in variable.
 
 
 Examples:
-my_list = ["Bob", "Diane", "Agnes"];												//list
-your_list .= my_list;
-my_record = {age:6, weight:15, size:{height:65, head:"big"}, children:my_list};		//record
+list = ["Bob", "Diane", "Agnes"];												//list
+yourlist .= list;
+record = {age:6, weight:15, size:{height:65, head:"big"}, children:my_list};		//record
 node = {eleven:my_record};														//node
 node = {7:{seen:[4,5,2]}};
-your_node = {8:{age:5, change:"were"}};				
-my_fields = {weight:7, capacity:5, street:"Dawson"};									//record
-graph = (node, your_node, his_node, her_node, node -> your_node, his_node <- her_node, her_node -- node) with my_fields
-your_graph = () with {weight:1, capacity:1, street:""}
-graph = () with fields
-his_graph = 
-edge_desc = 	node -> your_node												//an edge descriptor
+node = {8:{age:5, change:"were"}};				
+fields = {weight:7, capacity:5, street:"Dawson"};									//record
+graph = (node, your_node, his_node, her_node, node -> your_node, his_node <- her_node, her_node -- node) with my_fields;
+graph = () with {weight:1, capacity:1, street:""};
+graph = () with fields;
+edge_desc = node -> your_node;												//an edge descriptor
 edge = node -> your_node with {weight:1, capacity:1, street:""};				//an edge
 edge2 = her_node -> his_node with fields;
 
 my_int = 3; 																			//int
 my_double = 3.0;																		//double
-g = (e, f, g) with {weight:1} 
+g = (e, f, g) with {weight:1};
 //where e, f, and g are edges, edge descriptors, or nodes of the same type. The field after with is the default edge record
 
 5.7 Edge Descriptor
-node -- node yields an edge connecting both nodes. The operator can be --, ->, <-
+node -- node yields an edge-descriptor connecting both nodes. The operator can be --, ->, <-
 
 5.8. Edge Operators
 node -- node with record, yields an edge connecting both expr’s (num, char, or string), with the fields set according to the record.
@@ -208,7 +209,7 @@ node -> node with record, yields directed edge from the first expr (num, char, o
 node <- node with record, yields directed edge from the second expr (num, char, or string), with the fields set according to the record.
 
 6. Declarations
-Declaration defines and specifies the properties of an identifier in a structured format. 
+Declarations are done through initialization. Type is inferred. 
 
 6.1 Type specifiers:
 The type-specifiers in our language are:
