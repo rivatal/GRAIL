@@ -211,20 +211,6 @@ node <- node with record, yields directed edge from the second expr (num, char, 
 6. Declarations
 Declarations are done through initialization. Type is inferred. 
 
-6.1 Type specifiers:
-The type-specifiers in our language are:
-void
-char
-string
-int
-double
-node
-edge 
-graph 
-list 
-
-These type specifiers define the type of the variables, parameters, and function return types. Void is only allowed in the function return type.  
-
 6.3 Function Declarator
 The Function declarator is formatted in the following way:
 	functionName(param, param, … )
