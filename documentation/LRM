@@ -211,7 +211,7 @@ node <- node with record, yields directed edge from the second expr (num, char, 
 6. Declarations
 Declarations are done through initialization. Type is inferred. 
 	
-6.4 Initialization
+6.1 Initialization
 The general format of the initialization of variables is:
 	variableName = assignment expression
 
@@ -295,13 +295,11 @@ This statement is used for initialization of variables or expressions.
 7.2 Function-Call Statement 
 The function-call statement is used when a defined function is called. It is formatted in the following format. Parameters can be any of the primitive types or objects or expressions that evaluate to those types or objects.
 
-function functionName (parameter, parameter, ...);
-
+function functionName (parameter, parameter, ...){}
 
 7.3 Sequence Statement 
 Statements can be written one after another. This is seen as the sequence statement and is formatted in the following format:
 	statement; statement; statement; …
-
 
 7.4 Control-Flow Statement
 The control-flow statements use the expression as conditional test to decide which block of statements will get executed. They have the following formats:
@@ -337,13 +335,31 @@ continue can be used to continue to the next round of the loop if a certain cond
 		....
 	}
 
-8. Scope
-A declared entity is a class type, member (class, field, or function) of a reference type, type parameter (of a class, function or constructor), parameter (to a function, constructor), or local variable.
-Every declaration that introduces a name has a scope, which is the part of the program text within which the declared entity can be referred to by a simple name.
-The scope of a declaration is the region of the program within which the entity declared by the declaration can be referred to using a simple name. 
-A declaration is said to be in scope at a particular point in a program if and only if the declaration's scope includes that point.
+8. Scope  				
+Every declaration has a scope. A declaration is said to be in scope at a particular point in a program if and only if the declaration's scope includes that point.
 The scope of a formal parameter of a function or constructor is the entire body of the function or constructor. 
 The scope of a function's type parameter  is the entire declaration of the function, including the type parameter section, but excluding the function modifiers. 
+
+
+Example:
+
+myint = 5;
+function addtovar(var){				
+	var += 3;						//var = 8
+}
+addtovar(myint);
+									//var = 5
+function addtovar(){
+	myint = 8;						//declares a new variable called myint that has nothing to do with the outer myint
+}
+function addtovar(){				//illegal, since it has no access to outer myint
+	myint += 5;
+}
+
+//Objects are passed by reference
+function addtograph(graph, node){
+	graph &= node;						//the changes will feature in graph and node
+}
 
 9. Library Functions
 9.1 Print 
