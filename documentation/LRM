@@ -179,10 +179,6 @@ expr == expr (graph) returns true if both graphs contain the same nodes and edge
 expr && expr (boolean), returns true if both booleans or boolean expressions are true and false otherwise
 expr || expr (boolean), returns true if at least one of the booleans or boolean expressions is true and false otherwise
 
-5.7. Assignment
-variable = expr, replaces the value of your variable with the value of the expr.
-variable .= object, makes a copy of object and puts in variable.
-
 
 Examples:
 list = ["Bob", "Diane", "Agnes"];												//list
@@ -214,13 +210,7 @@ node <- node with record, yields directed edge from the second expr (num, char, 
 
 6. Declarations
 Declarations are done through initialization. Type is inferred. 
-
-6.1 Function Declarator
-The Function declarator is formatted in the following way:
-	function functionName(param, param, … )
-
-FunctionName is the identifier of the function, followed by a left parenthesis, a list of function parameters(optional), and a right parenthesis. In the function parameter list, these parameters need to be separated by commas. 
-
+	
 6.4 Initialization
 The general format of the initialization of variables is:
 	variableName = assignment expression
@@ -298,13 +288,14 @@ Assignment statement
 
 7.1 Assignment Statement 
 Assignment statement is used to assign identifier with the value of the expression. It is formatted in the following format:
-	identifierName = expression;
-This statement is commonly used for initialization of variables or expressions. 
+		variable = expr 	//replaces the value of your variable with the value of the expr.
+		variable .= object  //makes a copy of object and puts in variable.
+This statement is used for initialization of variables or expressions. 
 
 7.2 Function-Call Statement 
 The function-call statement is used when a defined function is called. It is formatted in the following format. Parameters can be any of the primitive types or objects or expressions that evaluate to those types or objects.
 
-type functionName (parameter, parameter, ...);
+function functionName (parameter, parameter, ...);
 
 
 7.3 Sequence Statement 
