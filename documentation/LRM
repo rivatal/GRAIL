@@ -1,9 +1,9 @@
 **make everything mutable (including endpoints and fields but no record structure), 
-no heterogeneity-- define a graph with a node structure in there already**
+no heterogeneity--**
 
 1. Introduction
 
-This manual describes GRAIL, a language optimized for building and performing computations on graphs. The syntax is streamlined to facilitate easily constructing, accessing, searching, and modifying graphs, nodes, and edges.
+This manual describes GRAIL, a language optimized for building and performing computations on graphs. The syntax is streamlined to facilitate easily constructing, accessing, searching, and modifying graphs, nodes, and edges, as well as representing user-defined data within those constructs.
 
 2. Tokens
 
@@ -11,13 +11,13 @@ GRAIL tokens are separated by one or more whitespace characters. Comments delimi
 
 2.1. Identifiers
 
-An identifier is a sequence of characters, all of which must be either alphanumeric or the underscore (_) character. The first character must be a letter. Uppercase and lowercase letters are considered distinct but the choice of case in identifiers holds no significance to the compiler.
+An identifier is a sequence of characters, all of which must be either alphanumeric or the underscore (_) character. The first character must be a letter. Uppercase and lowercase letters are considered distinct but the choice of case in identifiers holds no significance to the compiler. Identifiers are used in naming variables or features of records.
 
 2.2. Reserved Words
 
 The following identifiers are reserved and may not be used elsewhere: 
 
-accio, boolean, break, char, display, double, edge, else, empty, false, for, free, from, graph, if, in, int, node, print, record, return, size, sort, string, to, true, type, void, while, with
+accio, break, else, false, for, free, from, if, in, record, return, size, sort, to, true, type, void, while, with
 
 2.2.5. User-defined Keywords
 
