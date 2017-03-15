@@ -11,7 +11,7 @@ GRAIL tokens are separated by one or more whitespace characters. Comments delimi
 
 2.1. Identifiers
 
-An identifier is a sequence of characters, all of which must be either alphanumeric or the underscore (_) character. The first character must be a letter. Uppercase and lowercase letters are considered distinct but the choice of case in identifiers holds no significance to the compiler. Identifiers can be used for variables or features of records. (Up to 32 chars), but features of records can also begin with a number.
+An identifier is a sequence of characters, all of which must be either alphanumeric or the underscore (_) character. The first character must be a letter. Uppercase and lowercase letters are considered distinct but the choice of case in identifiers holds no significance to the compiler. Identifiers can be used for variables or features of records. (Up to 32 chars). Features of records cannot begin with a number.
 
 2.2. Reserved Words
 
