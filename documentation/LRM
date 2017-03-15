@@ -58,11 +58,8 @@ An edge consists of an edge descriptor and a record. The record's structure (inc
 
 
 Nodes:
-Nodes can be used as records, but only specially formatted records can be used as nodes. 
-**So you can turn a node into an edge:
-	node = {mynode:{street:Dawson, trees:100}};
+	node = mynode:{street:Dawson, trees:100};
 	graph = (u->v, edge2, edge3, node2, node3) with node;
-Is that going to screw us over?**
 
 Nodes are objects containing a key and a record. They can be referred to by their keys and connected by edges to other nodes. Nodes in a graph must contain the same record structure (the same field names and types).
 
@@ -193,9 +190,9 @@ Examples:
 list = ["Bob", "Diane", "Agnes"];												//list
 yourlist .= list;
 record = {age:6, weight:15, size:{height:65, head:"big"}, children:my_list};		//record
-node = {eleven:my_record};														//node
-node = {7:{seen:[4,5,2]}};
-node = {8:{age:5, change:"were"}};				
+node = eleven:my_record;														//node
+node = 7:{seen:[4,5,2]};
+node = 8:{age:5, change:"were"};				
 fields = {weight:7, capacity:5, street:"Dawson"};									//record
 graph = (node, your_node, his_node, her_node, node -> your_node, his_node <- her_node, her_node -- node) with my_fields;
 graph = () with {weight:1, capacity:1, street:""};
@@ -233,7 +230,7 @@ The general format of the initialization of variables is:
 
 	Nodes:
 	accio(space);
-	myNode = {key:myrecord};
+	myNode = key:myrecord;
 
 	Edge-Descriptor:		//an edge with a void object
 	mydesc = node -> node;
@@ -255,10 +252,10 @@ The general format of the initialization of variables is:
 The following examples shows the declaration and initialization of graphs and nodes:
 
 graph = (edge, your_node, his_node, her_node, node -> your_node, his_node <- her_node, her_node -- node) with {weight:1};
-u = {nitwit:my_record};														//node
-v = {blubber:my_record}
-n = {oddment:my_record}
-m = {tweak:my_record}
+u = nitwit:my_record;														//node
+v = blubber:my_record
+n = oddment:my_record
+m = tweak:my_record
 
 g &= u -> v; //add an edge between u and v with weight:1
 g .&= n -- m with {weight:7}  //add an edge with a different record;
@@ -428,9 +425,9 @@ function swap(my_list, left, right){
 	my_list[right] = temp;
 }
 function main(){
-	f = {"Franklin":{}};
-	e = {"Englewood":{region: "24j2ioj"}};
-	d = {"Dawson":{region: "523io9852"}};
+	f = "Franklin":{};
+	e = "Englewood":{region: "24j2ioj"};
+	d = "Dawson":{region: "523io9852"};
 	mygraph = {e, f, g, f->g, g<-f, f--e} with {weight:1};			//default fields weight:1
 	mygraph.edges[f->g].weight = 3;
 	mygraph.edges[g<-f].weight = 8;
