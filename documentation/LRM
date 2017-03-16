@@ -33,7 +33,7 @@ var = 'a';
 Boolean constants are represented by the keywords true and false. Booleans may take on only these two values.
 var = false;
 
-String literals (string) are a series of characters delimited by double quotation marks. Strings cannot be nested, though a double quotation mark can appear inside a string by using the escape sequence \”.
+String literals (string) are a series of characters delimited by double quotation marks. Strings cannot be nested, though a double quotation mark can appear inside a string by using the escape sequence \”. Backslashes must similarly be escaped with another backslash. ("\\")
 
 3. Types
 3.1. Primitive Types
