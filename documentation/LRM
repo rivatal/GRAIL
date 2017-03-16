@@ -281,7 +281,7 @@ Edges:									//let u, v, and w be already initialized nodes
 	e = e.rel {4,6};					//To update all fields. Note no need for keywords or with on update.
 	e = e.rel {weight:4, height:6};		//Also okay. **with is unique to declaration~?**
 	f = e.rel {4,6}						//error, since f has not been declared with fields yet.
-	f = e.rel with g*;					//f = u--u {weight:3, height:3};
+	f = e.rel with g.nodes;					//f = u--u {weight:3, height:3};
 	f = e.rel with {weight:4, height:6};//f = u--u {weight:4, height:6};
 
 	**is there a practical difference between updating everything (e = e.rel {4,6} and reinitializing (just above)?)**
