@@ -164,7 +164,7 @@ int .- int 				//Double Subtraction operator
 
 double .+= double 			//syntactic sugar for double = double + double;
 
-5.3.5 Graph, Edge, and Node Operators
+5.3.5 Graph, Edge, and Node Operators **what about graph & graph? Impossible.**
 graph & node Yields a graph with the node added
 graph .& edge Yields a graph with the edge added (if the edge is not already in the graph)
 
@@ -348,7 +348,7 @@ continue can be used to continue to the next round of the loop if a certain cond
 8. Scope  				
 Every declaration has a scope. A declaration is said to be in scope at a particular point in a program if and only if the declaration's scope includes that point.
 The scope of a formal parameter of a function or constructor is the entire body of the function or constructor. 
-The scope of a function's type parameter  is the entire declaration of the function, including the type parameter section, but excluding the function modifiers. 
+The scope of a function's type parameter  is the entire declaration of the function, including the type parameter section, but excluding the function modifiers. Every program must contain a main function (defined function main()) that contains the top level scope for that function.
 
 
 Example:
