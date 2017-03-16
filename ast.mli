@@ -1,7 +1,7 @@
 type eop = To | From | Dash
 
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq |
-          And | Or
+          And | Or | In
 
 type uop = Neg | Not | Star
 
@@ -19,23 +19,23 @@ type expr =
 |    Dot of expr * string
 |    Unop of uop * expr
 |    Binop of expr * op * expr
-|    Edge of expr * eop * expr * (string * float) list
-|    Graph of expr list
+|    Edge of expr * eop * expr * expr
+|    Graph of expr list * expr
 |    Record of (string * expr) list
 |    Noexpr
 
 
 type stmt =
-    Seq of stmt list
-|    Asn of string * expr
-|    If of expr * stmt * stmt * stmt
+     Asn of string * expr
+|    If of expr * stmt * stmt
 |    While of expr * stmt
 |    For of expr * expr * expr * stmt
+|    Return of expr
 |    Break
 |    Continue
   
 
-type func_dec = string * expr list
+type func_dec = string * string list
 
 type func = func_dec * stmt list
 
