@@ -27,9 +27,9 @@ type expr =
 
 type stmt =
      Asn of string * expr
-|    If of expr * stmt * stmt
-|    While of expr * stmt
-|    For of expr * expr * expr * stmt
+|    If of expr * stmt list * stmt list
+|    While of expr * stmt list
+|    For of expr * expr * expr * stmt list
 |    Return of expr
 |    Break
 |    Continue

@@ -1632,7 +1632,7 @@ let
 # 1633 "scanner.ml"
 = Lexing.sub_lexeme lexbuf lexbuf.Lexing.lex_start_pos lexbuf.Lexing.lex_curr_pos in
 # 54 "scanner.mll"
-                                 ( DOUBLELIT(float_of_string) )
+                                 ( DOUBLELIT(float_of_string lxm) )
 # 1637 "scanner.ml"
 
   | 49 ->
@@ -1728,7 +1728,7 @@ and __ocaml_lex_str_rec strbuf lexbuf __ocaml_lex_state =
 
   | 3 ->
 # 72 "scanner.mll"
-                ( Buffer.add_string strbuf (Lexing.lexeme lexbuf); )
+                ( Buffer.add_string strbuf (Lexing.lexeme lexbuf); str strbuf lexbuf )
 # 1733 "scanner.ml"
 
   | 4 ->

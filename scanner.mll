@@ -51,7 +51,7 @@ rule token = parse
 | "while"  { WHILE }
 | "with"   { WITH }
 | ['0'-'9']+ as lxm { INTLIT(int_of_string lxm) }
-| ['0'-'9']*'.'['0'-'9']* as lxm { DOUBLELIT(float_of_string) }
+| ['0'-'9']*'.'['0'-'9']* as lxm { DOUBLELIT(float_of_string lxm) }
 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
 | '''(_ as mychar) ''' { CHARLIT(mychar) }
 | eof { EOF }
@@ -69,6 +69,6 @@ and str strbuf = parse
   '"' { STRINGLIT( Buffer.contents strbuf ) }
 | '\\' '"' { Buffer.add_char strbuf '"'; str strbuf lexbuf}
 | '\\'  { Buffer.add_char strbuf '\\'; str strbuf lexbuf}
-| [^ '\\' '"']+ { Buffer.add_string strbuf (Lexing.lexeme lexbuf); }
+| [^ '\\' '"']+ { Buffer.add_string strbuf (Lexing.lexeme lexbuf); str strbuf lexbuf }
 | eof { raise (Failure ("Unterminated String")) }
 | _ { raise ( Failure("Problem with string")) }

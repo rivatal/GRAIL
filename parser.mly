@@ -48,10 +48,10 @@ decls:
  | decls stmt { fst $1, ($2 :: snd $1) }
 
 func:
-   func_dec LBRACE  stmt_list RBRACE { func($1, List.rev $3) }
+   func_dec LBRACE  stmt_list RBRACE { $1, List.rev $3 }
 
 func_dec:
-	ID LPAREN formals_opt RPAREN { func_dec($1, $3) }
+	ID LPAREN formals_opt RPAREN { $1, $3 }
 
 formals_opt:
     /* nothing */ { [] }
@@ -69,11 +69,11 @@ stmt_list:
   RETURN expr SEMI { Return $2 }
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE { If($3, $6, []) }
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE   { If($3, $6, List.rev $10) }
-  | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE IF LPAREN expr RPAREN LBRACE stmt_list RBRACE  { If($3, List.rev $6, If($11, List.rev $14)) }
+  | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE IF LPAREN expr RPAREN LBRACE stmt_list RBRACE  { If($3, List.rev $6, [If($11, List.rev $14, [])]) }
   | FOR LPAREN expr SEMI expr SEMI expr RPAREN LBRACE stmt_list RBRACE
      { For($3, $5, $7, List.rev $10) }
-  | ID ASSIGN expr SEMI { Assign($1, $3) }
-  | WHILE LPAREN expr RPAREN stmt SEMI { While($3, $5) }
+  | ID ASSIGN expr SEMI { Asn($1, $3) }
+  | WHILE LPAREN expr RPAREN stmt_list SEMI { While($3, $5) }
   | BREAK SEMI{ Break }
   | CONTINUE SEMI{ Continue }
 
@@ -130,5 +130,5 @@ rec_opt:
   | rec_list  { List.rev $1 }
 
 rec_list:
-    expr                    { [$1] }
-  | rec_list COMMA expr COLON expr { ($3, $5) :: $1 }
+    ID COLON expr                    { [($1, $3)] }
+  | rec_list COMMA ID COLON expr { ($3, $5) :: $1 }
