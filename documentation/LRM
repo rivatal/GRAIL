@@ -56,6 +56,7 @@ It's not exactly a primitive operation-- edge descriptors really contain copies 
 Edge: 
 An edge consists of an edge descriptor and a record. The record's structure (including field types) may not be altered, though its fields may be changed. An edge always has "hidden" to, from, and rel fields that yield the node pointed to by the edge (or the first node in an undirected edge), the node that extends from the edge (or the second node in an undirected edge), and the edge descriptor for the edge respectively.
 
+**don't split the edge syntax: (u->v) with {} is a graph, not an edge.**
 
 Nodes:
 	node = mynode:{street:Dawson, trees:100};
@@ -113,6 +114,7 @@ Edges:
 my_weight = edge["weight"]; //access a feature in an edge
 b = "weight";				//or
 my_child = edge[b];
+
 
 Nodes:
 my_street = node["street"];		//gets a feature of the node. Same syntax as getting a feature of an edge.
