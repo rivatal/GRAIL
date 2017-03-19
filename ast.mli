@@ -1,3 +1,6 @@
+(* Unknown type of the identifier used by infer.ml*)
+type uId = string
+
 type eop = To | From | Dash
 
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq |
@@ -6,9 +9,9 @@ type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq |
 type uop = Neg | Not | Star
 
 type primitiveType = 
-    | TInt 
+     TInt 
     | TBool
-    | T of String
+    | T of string
 
 type expr =
     IntLit of int
@@ -32,8 +35,8 @@ type expr =
 (*Annotated Expressions*)
 type aexpr =
   AIntLit of int * primitiveType
-| ABoolLit of int * primitiveType
-| AId of String * primitiveType
+| ABoolLit of bool * primitiveType
+| AId of string * primitiveType
 | ABinop of aexpr * op * aexpr * primitiveType
 
 type stmt =

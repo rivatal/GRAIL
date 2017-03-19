@@ -5,7 +5,7 @@ module NameMap = Map.Make(String)
 type environment = primitiveType NameMap.t
 
 (* Unknown type,  resolved type. eg.[(T, TNum); (U, TBool)] *)
-type substitutions = (id * primitiveType) list
+type substitutions = (uId * primitiveType) list
 
 let type_variable = ref (Char.code 'a')
 
