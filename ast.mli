@@ -5,6 +5,11 @@ type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq |
 
 type uop = Neg | Not | Star
 
+type primitiveType = 
+    | TInt 
+    | TBool
+    | T of String
+
 type expr =
     IntLit of int
 |    BoolLit of bool
@@ -24,6 +29,12 @@ type expr =
 |    Record of (string * expr) list
 |    Noexpr
 
+(*Annotated Expressions*)
+type aexpr =
+  AIntLit of int * primitiveType
+| ABoolLit of int * primitiveType
+| AId of String * primitiveType
+| ABinop of aexpr * op * aexpr * primitiveType
 
 type stmt =
      Asn of string * expr
