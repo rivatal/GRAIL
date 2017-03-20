@@ -7,9 +7,11 @@ open Ast
 %token PLUS MINUS DIVIDE ASSIGN NOT DOT COLON
 %token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR
 %token RETURN IF ELSE FOR WHILE INT BOOLEAN VOID
-%token STAR LBRACKET RBRACKET DASH RARROW LARROW
+%token TIMES LBRACKET RBRACKET DASH RARROW LARROW
 %token ACCIO BREAK CHAR DOUBLE EDGE EMPTY CONTINUE
 %token TO FROM IN NODE RECORD TYPE WITH FREE
+%token FPLUS FMINUS FTIMES FDIVIDE ADD EADD
+%token PLUSEQ FPLUSEQ ADDEQ EADDEQ COPY
 %token <int> INTLIT
 %token <char> CHARLIT
 %token <float> DOUBLELIT
@@ -19,18 +21,19 @@ open Ast
 
 %nonassoc NOELSE
 %nonassoc ELSE
-%right ASSIGN
+%right ASSIGN COPY PLUSEQ FPLUSEQ ADDEQ EADDEQ
+%nonassoc COLON
 %left OR
 %left AND
 %left EQ NEQ
 %left LT GT LEQ GEQ IN
-%left STAR
+%left ADD EADD
 %right DOT
 %nonassoc NOWITH
 %nonassoc WITH
 %nonassoc LARROW RARROW DASH
-%left PLUS MINUS
-%left TIMES DIVIDE
+%left PLUS MINUS FPLUS FMINUS
+%left TIMES DIVIDE FTIMES FDIVIDE
 %right NOT NEG
 
 %start program
@@ -43,9 +46,12 @@ program:
   decls EOF { $1 }
 
 decls:
-   /* nothing */ { [], [] }
- | decls func { ($2 :: fst $1), snd $1 }
- | decls stmt { fst $1, ($2 :: snd $1) }
+   /* nothing */ { [] }
+ | decls_list { List.rev $1 }
+
+ decls_list:
+   func { [$1] }
+ | decls_list func { $2::$1 }
 
 func:
    func_dec LBRACE  stmt_list RBRACE { $1, List.rev $3 }
@@ -72,7 +78,12 @@ stmt_list:
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE IF LPAREN expr RPAREN LBRACE stmt_list RBRACE  { If($3, List.rev $6, [If($11, List.rev $14, [])]) }
   | FOR LPAREN expr SEMI expr SEMI expr RPAREN LBRACE stmt_list RBRACE
      { For($3, $5, $7, List.rev $10) }
-  | ID ASSIGN expr SEMI { Asn($1, $3) }
+  | ID ASSIGN expr SEMI { Asn($1, $3, true) }
+  | ID COPY expr SEMI { Asn($1, $3, false) }
+  | ID PLUSEQ expr SEMI { Asn($1, Binop(Id($1), Add, $3), true) }
+  | ID FPLUSEQ expr SEMI { Asn($1, Binop(Id($1), Fadd, $3), true) }
+  | ID ADDEQ expr SEMI { Asn($1, Binop(Id($1), Gadd, $3), true) }
+  | ID EADDEQ expr SEMI { Asn($1, Binop(Id($1), Eadd, $3), true) }
   | WHILE LPAREN expr RPAREN stmt_list SEMI { While($3, $5) }
   | BREAK SEMI{ Break }
   | CONTINUE SEMI{ Continue }
@@ -94,6 +105,10 @@ stmt_list:
   | expr MINUS  expr { Binop($1, Sub,   $3) }
   | expr TIMES  expr { Binop($1, Mult,  $3) }
   | expr DIVIDE expr { Binop($1, Div,   $3) }
+  | expr FPLUS   expr { Binop($1, Fadd,   $3) }
+  | expr FMINUS  expr { Binop($1, Fsub,   $3) }
+  | expr FTIMES  expr { Binop($1, Fmult,  $3) }
+  | expr FDIVIDE expr { Binop($1, Fdiv,   $3) }
   | expr EQ     expr { Binop($1, Equal, $3) }
   | expr NEQ    expr { Binop($1, Neq,   $3) }
   | expr LT     expr { Binop($1, Less,  $3) }
@@ -103,15 +118,18 @@ stmt_list:
   | expr AND    expr { Binop($1, And,   $3) }
   | expr OR     expr { Binop($1, Or,    $3) }
   | expr IN     expr { Binop($1, In,    $3) }
+  | expr ADD    expr { Binop($1, Gadd, $3) }
+  | expr EADD   expr { Binop($1, Eadd, $3) }  
   | MINUS expr %prec NEG { Unop(Neg, $2) }
   | NOT expr         { Unop(Not, $2) }
-  | expr STAR        { Unop(Star, $1) }
   | expr LARROW expr with_opt { Edge($1, To, $3, $4) }
   | expr RARROW expr with_opt { Edge($1, From, $3, $4) }
   | expr DASH expr with_opt  { Edge($1, Dash, $3, $4) }
-  | LPAREN actuals_opt RPAREN with_opt { Graph($2, $4) }
+  | LPAREN actuals_opt RPAREN WITH expr { Graph($2, $5) }
+  | ID COLON expr { Node($1, $3) }
   | LBRACE rec_opt RBRACE { Record($2) }
   | LPAREN expr RPAREN { $2 }
+
 
 with_opt:
   /* nothing */ %prec NOWITH { Noexpr }
