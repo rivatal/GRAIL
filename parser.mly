@@ -30,7 +30,10 @@ open Ast
 %left ADD EADD
 %right DOT
 %nonassoc NOWITH
+%nonassoc GRAPH
 %nonassoc WITH
+%nonassoc NODE
+%nonassoc RBRACKET
 %nonassoc LARROW RARROW DASH
 %left PLUS MINUS FPLUS FMINUS
 %left TIMES DIVIDE FTIMES FDIVIDE
@@ -125,10 +128,12 @@ stmt_list:
   | expr LARROW expr with_opt { Edge($1, To, $3, $4) }
   | expr RARROW expr with_opt { Edge($1, From, $3, $4) }
   | expr DASH expr with_opt  { Edge($1, Dash, $3, $4) }
-  | LPAREN actuals_opt RPAREN WITH expr { Graph($2, $5) }
-  | ID COLON expr { Node($1, $3) }
+  | LPAREN RPAREN WITH expr { Graph([], $4) }
+  | LPAREN expr RPAREN WITH expr { Graph([$2], $5) }
+  | LPAREN graph_list RPAREN WITH expr { Graph($2, $5) }
+  | ID COLON expr %prec NODE { Node($1, $3) }
   | LBRACE rec_opt RBRACE { Record($2) }
-  | LPAREN expr RPAREN { $2 }
+  | LPAREN expr RPAREN %prec NOWITH { $2 }
 
 
 with_opt:
@@ -142,6 +147,12 @@ actuals_opt:
 actuals_list:
     expr                    { [$1] }
   | actuals_list COMMA expr { $3 :: $1 }
+
+
+graph_list:
+    expr COMMA expr       { [$3; $1] }
+  | graph_list COMMA expr { $3 :: $1 }
+
 
 rec_opt:
     /* nothing */ { [] }
