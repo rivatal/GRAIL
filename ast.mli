@@ -1,17 +1,9 @@
-(* Unknown type of the identifier used by infer.ml*)
-type uId = string
-
 type eop = To | From | Dash
 
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq |
-          And | Or | In
+          And | Or | In | Fadd | Fsub | Fmult | Fdiv | Gadd | Eadd
 
-type uop = Neg | Not | Star
-
-type primitiveType = 
-     TInt 
-    | TBool
-    | T of string
+type uop = Neg | Not 
 
 type expr =
     IntLit of int
@@ -29,18 +21,14 @@ type expr =
 |    Binop of expr * op * expr
 |    Edge of expr * eop * expr * expr
 |    Graph of expr list * expr
+|    Node of string * expr
 |    Record of (string * expr) list
 |    Noexpr
 
-(*Annotated Expressions*)
-type aexpr =
-  AIntLit of int * primitiveType
-| ABoolLit of bool * primitiveType
-| AId of string * primitiveType
-| ABinop of aexpr * op * aexpr * primitiveType
+
 
 type stmt =
-     Asn of string * expr
+     Asn of string * expr * bool
 |    If of expr * stmt list * stmt list
 |    While of expr * stmt list
 |    For of expr * expr * expr * stmt list
@@ -53,4 +41,4 @@ type func_dec = string * string list
 
 type func = func_dec * stmt list
 
-type program = func list * stmt list
+type program = func list
