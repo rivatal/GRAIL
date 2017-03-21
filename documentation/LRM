@@ -1,5 +1,5 @@
 **make everything mutable (including endpoints and fields but no record structure), 
-no heterogeneity--**
+no heterogeneity**
 
 1. Introduction
 
