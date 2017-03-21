@@ -5,14 +5,31 @@ type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq |
 
 type uop = Neg | Not 
 
+type primitiveType =
+    | TInt
+    | TBool
+    | TString
+    | T of string
+    | TFun of primitiveType * primitiveType
+
+    (* annotated expr -> expr with types *)
+type aexpr =
+    | AIntLit of int * primitiveType
+    | ABoolLit of bool * primitiveType
+    | AStrLit of string * primitiveType
+    | AId of string * primitiveType
+    | ABinop of aexpr * op * aexpr * primitiveType
+    | AFun of string * aexpr * primitiveType
+;;
 type expr =
-    IntLit of int
+     IntLit of int
 |    BoolLit of bool
 |    StrLit of string
 |    CharLit of char 
 |    FloatLit of float
 |    Id of string
 |    List of expr list
+|    Fun of string * expr (* Lambda Function *)
 |    Call of string * expr list
 |    Item of string * expr
 |    Subset of string * string * expr
