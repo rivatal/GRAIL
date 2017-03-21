@@ -30,7 +30,7 @@ type token =
   | INT
   | BOOLEAN
   | VOID
-  | STAR
+  | TIMES
   | LBRACKET
   | RBRACKET
   | DASH
@@ -51,6 +51,17 @@ type token =
   | TYPE
   | WITH
   | FREE
+  | FPLUS
+  | FMINUS
+  | FTIMES
+  | FDIVIDE
+  | ADD
+  | EADD
+  | PLUSEQ
+  | FPLUSEQ
+  | ADDEQ
+  | EADDEQ
+  | COPY
   | INTLIT of (int)
   | CHARLIT of (char)
   | DOUBLELIT of (float)
