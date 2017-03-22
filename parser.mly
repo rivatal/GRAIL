@@ -39,8 +39,8 @@ open Ast
 %left TIMES DIVIDE FTIMES FDIVIDE
 %right NOT NEG
 
-%start expr
-%type <Ast.expr> expr
+%start stmt
+%type <Ast.stmt> stmt
 
 %%
 
@@ -74,7 +74,7 @@ stmt_list:
     /* nothing */  { [] }
   | stmt_list stmt { $2 :: $1 }
 
-  stmt:
+stmt:
   RETURN expr SEMI { Return $2 }
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE { If($3, $6, []) }
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE   { If($3, $6, List.rev $10) }

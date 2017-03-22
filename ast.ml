@@ -47,6 +47,8 @@ type expr =
 |    Record of (string * expr) list
 |    Noexpr
 
+type astmt =
+| AAsn of string * aexpr * bool * primitiveType
 
 
 type stmt =

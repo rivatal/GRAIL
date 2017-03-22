@@ -41,6 +41,24 @@ let rec annotate_expr (e: expr) (env: environment) : aexpr =
             | ABinop(_, _, _, t) -> t
             | AFun(_, _, t) -> t
 
+
+(*Make an annotate function/statement.
+  Annotate statements and recursively annotate its expressions.
+*)
+let rec annotate_stmt (e: stmt) (env: environment) : astmt =
+  match e with
+    | Asn(id, expr, switch) -> 
+        let aexpr = annotate_expr expr env
+        and t = 
+          if NameMap.mem id env
+          then NameMap.find id env
+         else raise (failwith "variable not defined")
+     in AAsn(id, aexpr, switch, t)
+    and type_of_stmt (a: astmt): primitiveType = 
+       match a with
+      | AAsn(_, _, _, t) -> t
+
+
 let rec collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
     match ae with
         | AIntLit(_) | ABoolLit(_) | AStrLit(_) -> []  (* no constraints to impose on literals *)
@@ -61,6 +79,12 @@ let rec collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
             | TFun(idt, ret_type) -> (collect_expr ae) @ [(type_of ae, ret_type)]
             | _ -> raise (failwith "not a function"))
       
+let collect_stmt (a: astmt) : (primitiveType * primitiveType) list =
+   match a with
+    | AAsn(id, aexpr, switch, t) ->
+      collect_expr aexpr @ [(type_of aexpr , t)]
+
+
 
 let rec substitute (u: primitiveType) (x: id) (t: primitiveType) : primitiveType =
   match t with
@@ -93,6 +117,7 @@ and unify_one (t1: primitiveType) (t2: primitiveType) : substitutions =
   | _ -> raise (failwith "mismatched types")
 ;;
 
+
 (* applies a final set of substitutions on the annotated expr *)
 let rec apply_expr (subs: substitutions) (ae: aexpr): aexpr =
   match ae with
@@ -104,15 +129,21 @@ let rec apply_expr (subs: substitutions) (ae: aexpr): aexpr =
   | AFun(id, e, t) -> AFun(id, apply_expr subs e, apply subs t)
 ;;
 
+let rec apply_stmt (subs: substitutions) (a: astmt): astmt = 
+  match a with
+  | AAsn(id, aexpr, switch, t) -> 
+    AAsn(id, apply_expr subs aexpr, switch, apply subs t) 
+
+
 let print_constraints (x,y) =
     print_endline (string_of_type(x) ^ ":" ^ string_of_type(y)) 
 
-let infer (env: environment) (e: expr) =
-  let annotated_expr = annotate_expr e env in
-  let constraints = collect_expr annotated_expr in 
+let infer (env: environment) (e: stmt) : astmt =
+  let annotated_stmt = annotate_stmt e env in
+  let constraints = collect_stmt annotated_stmt in 
     (*List.iter print_constraints constraints;*)
     let subs = unify constraints in
     (* reset the type counter after completing inference *)
     type_variable := (Char.code 'a');
-    apply_expr subs annotated_expr
+    apply_stmt subs annotated_stmt
  

@@ -14,6 +14,7 @@ type primitiveType =
     | TString
     | T of string
     | TFun of primitiveType * primitiveType
+    | TStmt of primitiveType * primitiveType
 
     (* annotated expr -> expr with types *)
 type aexpr =
@@ -45,10 +46,12 @@ type expr =
 |    Record of (string * expr) list
 |    Noexpr
 
+type astmt =
+| AAsn of id * aexpr * bool * primitiveType
 
 
 type stmt =
-     Asn of string * expr * bool
+     Asn of id * expr * bool
 |    If of expr * stmt list * stmt list
 |    While of expr * stmt list
 |    For of expr * expr * expr * stmt list

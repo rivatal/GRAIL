@@ -55,3 +55,4 @@ let rec string_of_expr (e: expr): string =
     Printf.sprintf "(%s %s %s)" s1 sop s2
   | Fun(id, e) ->
     let s1 = string_of_expr e in Printf.sprintf "(fun %s -> %s)" id s1 
+
