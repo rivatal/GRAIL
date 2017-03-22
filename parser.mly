@@ -39,8 +39,8 @@ open Ast
 %left TIMES DIVIDE FTIMES FDIVIDE
 %right NOT NEG
 
-%start stmt
-%type <Ast.stmt> stmt
+%start stmt_list
+%type <Ast.stmt_list> stmt_list
 
 %%
 

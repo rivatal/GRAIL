@@ -49,7 +49,6 @@ type expr =
 type astmt =
 | AAsn of id * aexpr * bool * primitiveType
 
-
 type stmt =
      Asn of id * expr * bool
 |    If of expr * stmt list * stmt list
@@ -59,6 +58,7 @@ type stmt =
 |    Break
 |    Continue
   
+type stmt_list = stmt list
 
 type func_dec = string * string list
 

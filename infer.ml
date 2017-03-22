@@ -6,7 +6,6 @@ type environment = primitiveType NameMap.t
 
 (* Unknown type,  resolved type. eg.[(T, TInt); (U, TBool)] *)
 type substitutions = (id * primitiveType) list
-
 let type_variable = ref (Char.code 'a')
 
 (* generates a new unknown type placeholder.
@@ -58,6 +57,11 @@ let rec annotate_stmt (e: stmt) (env: environment) : astmt =
        match a with
       | AAsn(_, _, _, t) -> t
 
+(* Annotate a statement list *)
+let  rec annotate_stmt_list(st : stmt list ) (env : environment) : astmt list =
+    match st with 
+        | [] -> []
+        | hd :: tl -> (annotate_stmt hd env) ::  (annotate_stmt_list  tl env)
 
 let rec collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
     match ae with
@@ -84,7 +88,12 @@ let collect_stmt (a: astmt) : (primitiveType * primitiveType) list =
     | AAsn(id, aexpr, switch, t) ->
       collect_expr aexpr @ [(type_of aexpr , t)]
 
+(* Collect statement list *)
 
+let rec collect_stmt_list (astlist: astmt list) : (primitiveType * primitiveType) list = 
+    match astlist with 
+    | [] -> []
+    | hd :: tl -> (collect_stmt hd) @ collect_stmt_list tl 
 
 let rec substitute (u: primitiveType) (x: id) (t: primitiveType) : primitiveType =
   match t with
@@ -135,15 +144,20 @@ let rec apply_stmt (subs: substitutions) (a: astmt): astmt =
     AAsn(id, apply_expr subs aexpr, switch, apply subs t) 
 
 
+let rec apply_stmt_list (subs:substitutions) (astlist : astmt list) : astmt list = 
+    match astlist with 
+    | [] -> []
+    | hd :: tl -> (apply_stmt subs hd) ::  apply_stmt_list subs tl
+
 let print_constraints (x,y) =
     print_endline (string_of_type(x) ^ ":" ^ string_of_type(y)) 
 
-let infer (env: environment) (e: stmt) : astmt =
-  let annotated_stmt = annotate_stmt e env in
-  let constraints = collect_stmt annotated_stmt in 
+let infer (env: environment) (e: stmt list) : astmt list =
+  let annotated_stmtlist = annotate_stmt_list e env in
+  let constraints = collect_stmt_list annotated_stmtlist in 
     (*List.iter print_constraints constraints;*)
     let subs = unify constraints in
     (* reset the type counter after completing inference *)
     type_variable := (Char.code 'a');
-    apply_stmt subs annotated_stmt
+    apply_stmt_list subs annotated_stmtlist
  
