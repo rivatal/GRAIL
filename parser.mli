@@ -5,6 +5,7 @@ type token =
   | LBRACE
   | RBRACE
   | COMMA
+  | FUN
   | PLUS
   | MINUS
   | DIVIDE
@@ -69,5 +70,5 @@ type token =
   | ID of (string)
   | EOF
 
-val program :
+val expr :
   (Lexing.lexbuf  -> token) -> Lexing.lexbuf -> Ast.expr

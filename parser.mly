@@ -3,7 +3,7 @@
 open Ast
 %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA
+%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA FUN
 %token PLUS MINUS DIVIDE ASSIGN NOT DOT COLON
 %token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR
 %token RETURN IF ELSE FOR WHILE INT BOOLEAN VOID
@@ -22,7 +22,7 @@ open Ast
 %nonassoc NOELSE
 %nonassoc ELSE
 %right ASSIGN COPY PLUSEQ FPLUSEQ ADDEQ EADDEQ
-%nonassoc COLON
+%nonassoc COLON 
 %left OR
 %left AND
 %left EQ NEQ
@@ -39,8 +39,8 @@ open Ast
 %left TIMES DIVIDE FTIMES FDIVIDE
 %right NOT NEG
 
-%start program
-%type <Ast.expr> program
+%start expr
+%type <Ast.expr> expr
 
 %%
 
@@ -100,6 +100,7 @@ stmt_list:
   | DOUBLELIT        { FloatLit($1) }      
   | ID               { Id($1) }
   | LBRACKET actuals_opt RBRACKET { List($2)}
+  | LPAREN FUN ID COLON COLON expr RPAREN { Fun($3, $6) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | ID LBRACKET expr RBRACKET { Item($1, $3) }
   | ID LBRACKET ID COLON expr RBRACKET { Subset($1, $3, $5) }

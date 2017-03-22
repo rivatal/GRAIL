@@ -1,7 +1,7 @@
 open Ast
 
 let parse (s: string) : Ast.expr =
-    Parser.program Scanner.token (Lexing.from_string s)
+    Parser.expr Scanner.token (Lexing.from_string s)
 
 module NameMap = Map.Make(String)
 
@@ -35,11 +35,10 @@ let rec grail () =
     else print_endline msg; grail ()
   | _ -> print_endline "Error"; grail ()
 
-
-
-let say = 
+let say() = 
  let str = "Welcome to Grail"  in 
- 	print_string (str);
+    print_string str; 
+;;
 
-say;
+say();
 grail();

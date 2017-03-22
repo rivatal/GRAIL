@@ -2,8 +2,6 @@ module CharMap = Map.Make(String)
 type genericMap = int CharMap.t
 
 type id = string
-
-
 type eop = To | From | Dash
 
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq |
