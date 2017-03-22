@@ -1,4 +1,5 @@
 open Ast
+open Astutils
 
 let parse (s: string) : Ast.expr =
     Parser.expr Scanner.token (Lexing.from_string s)
@@ -17,7 +18,7 @@ let rec get_ids (e: expr): string list =
            | Binop(e1, _, e2) -> (get_ids e1) @ (get_ids e2) in
     dedup ids
 
-let infer (e: Ast.expr) =
+let infer (e: Ast.expr) : Ast.aexpr  =
 	 let vals = get_ids e in
 	 let env = List.fold_left (fun m x -> NameMap.add x (Infer.gen_new_type ()) m) NameMap.empty vals in
 	 Infer.infer env e
@@ -27,7 +28,9 @@ let rec grail () =
     let input = read_line () in
   if input = "" then () else
   try
-    let e = parse input in infer e;
+    let e = parse input in 
+    let aexpr = infer e in
+    print_endline (string_of_type (Infer.type_of aexpr));
     grail ();
   with
   | Failure(msg) ->
