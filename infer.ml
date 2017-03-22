@@ -4,7 +4,7 @@ open Ast
 module NameMap = Map.Make(String)
 type environment = primitiveType NameMap.t
 
-(* Unknown type,  resolved type. eg.[(T, TNum); (U, TBool)] *)
+(* Unknown type,  resolved type. eg.[(T, TInt); (U, TBool)] *)
 type substitutions = (uId * primitiveType) list
 
 let type_variable = ref (Char.code 'a')
@@ -37,4 +37,18 @@ let rec annotate_expr (e: expr) (env: environment) : aexpr =
             | ABinop(_, _, _, t) -> t
 ;;
 
-
+let rec collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
+    match ae with
+        | AIntLit(_) | ABoolLit(_) -> []  (* no constraints to impose on literals *)
+        | AId(_) -> []                   (* single occurence of val gives us no info *)
+        | ABinop(ae1, op, ae2, t) ->
+                let et1 = type_of ae1 and et2 = type_of ae2 in
+                (* impose constraints based on binary operator *)
+                let opc = match op with
+                    | Add | Mult -> [(et1, TInt); (et2, TInt); (t, TInt)]
+                    (* we return et1, et2 since these are generic operators *)
+                    | Greater | Less | Geq | Leq | Neq -> [(et1, et2); (t, TBool)]
+                    | And | Or -> [(et1, TBool); (et2, TBool); (t, TBool)]
+                in
+                    (* opc appended at the rightmost since we apply substitutions right to left *)
+                    (collect_expr ae1) @ (collect_expr ae2) @ opc
