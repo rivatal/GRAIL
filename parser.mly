@@ -40,7 +40,7 @@ open Ast
 %right NOT NEG
 
 %start program
-%type <Ast.program> program
+%type <Ast.expr> program
 
 %%
 

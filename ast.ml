@@ -1,4 +1,8 @@
+module CharMap = Map.Make(String)
+type genericMap = int CharMap.t
+
 type id = string
+
 
 type eop = To | From | Dash
 
@@ -64,3 +68,29 @@ type func = func_dec * stmt list
 type program = func list
 
 
+(*Let the strings begin *)
+(* let string_of_op (op: op) =
+  match op with
+  | Add -> "+" | Mult -> "*" | Less -> "<" | Greater -> ">"
+  | Or -> "||" | And -> "&&"
+
+let string_of_type (t: primitiveType) =
+  let rec aux (t: primitiveType) (chr: int) (map: genericMap) =
+    match t with
+    | TInt -> "int", chr, map
+    | TBool -> "bool", chr, map
+    | TString -> "str", chr, map
+    | T(x) ->
+      let gen_chr, new_chr, new_map = if CharMap.mem x map
+        then Char.escaped (Char.chr (CharMap.find x map)), chr, map
+        else
+          let c = Char.escaped (Char.chr chr) in
+          c, (chr + 1), CharMap.add x chr map
+      in
+      Printf.sprintf "'%s" gen_chr, new_chr, new_map
+    | TFun(t1, t2) -> let (st1, c1, m1) = aux t1 chr map in
+      let (st2, c2, m2) = aux t2 c1 m1 in
+      (Printf.sprintf "(%s -> %s)" st1 st2), c2, m2 in
+  let s, _, _ = aux t 97 CharMap.empty in s
+
+ *)
