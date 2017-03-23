@@ -161,19 +161,19 @@ let print_constraints (x,y) =
     print_endline (string_of_type(x) ^ ":" ^ string_of_type(y)) 
 
 
-let rec update_map (alist : astmt list) (env: environment) : unit =
+let rec update_map (alist : astmt list) (env: environment) =
   match alist with
     | [] -> ()
     | hd :: tl ->
       match hd with
       AAsn(id, aexpr, _, t) ->
-      ignore(NameMap.add id t env);
+      ignore(NameMap.add id (T(string_of_type t)) env);
       match aexpr with
       | AId(s, t) -> 
         ignore(NameMap.add s (T(string_of_type t)) env);
       | AFun(id, _, t) -> 
         ignore(NameMap.add id (T(string_of_type t)) env);
-      ignore(update_map tl);
+      ignore(update_map tl env)
 
 let infer_stmt_list (env: environment) (e: stmt list) : astmt list =
   let annotated_stmtlist = annotate_stmt_list e env in
@@ -182,9 +182,42 @@ let infer_stmt_list (env: environment) (e: stmt list) : astmt list =
     let subs = unify constraints in
     (* reset the type counter after completing inference *)
     type_variable := (Char.code 'a');
-    apply_stmt_list subs annotated_stmtlist;
-    update_map(astmts);
-  
+    let retlist = apply_stmt_list subs annotated_stmtlist
+    in 
+        update_map retlist env;
+        retlist
+
+let rec grab_returns (r: astmt list) : primitiveType list =
+   match r with
+    | [] -> []
+    | h :: tail -> 
+        match h with
+          |AReturn(_, t) -> t :: grab_returns tail
+          | _ -> grab_returns tail
+
+
+(*Checks that return statements are consistent and returns the type*)
+let get_return_type(r: astmt list) : primitiveType =
+  let returns = grab_returns r in
+  let rec find_type l = 
+  match l with
+  | [] -> TVoid
+  | [t] -> t 
+  | x :: y :: tail -> 
+    if x = y
+    then find_type (y :: tail)
+    else raise (failwith "mismatched returns")
+   in find_type returns
+
+
+let rec infer_formals (f: string list) (env: environment):  primitiveType list=
+    match f with
+    |[] -> []
+    | h :: tail -> 
+    let t = if NameMap.mem h env
+            then NameMap.find h env
+             else raise (failwith "formal not used") in t :: infer_formals tail env
+
 (*Infer the type of the statements in the function*)
 let infer_func (f: func) (env: environment): afunc =
   match f with
@@ -192,52 +225,18 @@ let infer_func (f: func) (env: environment): afunc =
         let astmts = 
            infer_stmt_list env stmts
         in let ret_type =
-          grab_returns astmts            
-        in let aformals = 
+            get_return_type astmts            
+        in  
             match decl with
-            |Fdecl(_, formals) ->           (*annotate the formals*)
-            infer_formals formals env
-        in let name = 
-            match decl with 
-            |Fdecl(name, _) -> 
-            if NameMap.mem name env
-            then NameMap.find name env
-            else raise (failwith "function not defined")
-        in AFbody(Adecl(name, aformals, ret_type), astmts);
-
-
-let infer_formals (f: string list) (env: environment):  aexpr list=
-    match f with
-    |[] -> []
-    | h :: tail -> 
-    let t = if NameMap.mem h env
-            then NameMap.find h env
-            else raise (failwith "formal not used") in t :: infer_formals tail env;
-
-(*Checks that return statements are consistent and returns the type*)
-let rec get_return_type(r: astmt list) : astmt =
-  let returns = grab_returns r in
-  match returns with
-  | [] -> TVoid
-  | [x] -> x 
-  | x :: y :: tail -> 
-    if x = y
-    then get_return_type (y :: tail)
-    else raise (failwith "mismatched returns");
-
-
-let rec grab_returns (r: astmt list) : stmt list =
-   match r with
-    | [] -> []
-    | h :: tail -> 
-      let rettype = 
-        match h with
-          |AReturn(_, t) -> t
-          |_ -> []
-      in h :: grab_returns tail
+            |Fdecl(name, formals) ->           (*annotate the formals*)
+                if NameMap.mem name env
+                then ignore(NameMap.add name (T(string_of_type ret_type)) env)
+                else raise (failwith "function not defined");
+                let aformals = infer_formals formals env  
+                in AFbody(AFdecl(name, aformals, ret_type), astmts)
 
 (* Annotate an expression list *)
 let rec annotate_expr_list(e : expr list ) (env : environment) : aexpr list =
     match e with 
         | [] -> []
-        | hd :: tl -> ((annotate_expr hd env) @ (annotate_expr_list tl env))
+        | hd :: tl -> ((annotate_expr hd env) :: (annotate_expr_list tl env))
