@@ -166,48 +166,64 @@ let rec update_map (alist : astmt list) (env: environment) =
     | [] -> ()
     | hd :: tl ->
       match hd with
-      AAsn(id, aexpr, _, t) ->
-      ignore(NameMap.add id (T(string_of_type t)) env);
-      match aexpr with
-      | AId(s, t) -> 
-        ignore(NameMap.add s (T(string_of_type t)) env);
-      | AFun(id, _, t) -> 
-        ignore(NameMap.add id (T(string_of_type t)) env);
+      |AAsn(id, aexpr, _, t) ->
+      ignore(NameMap.add id (T(string_of_type t)) env)
+      |AReturn(aexpr,t) -> ignore(); 
+      let rec update_expr_map aexpr = 
+          match aexpr with
+            | AId(s, t) -> 
+                ignore(NameMap.add s (T(string_of_type t)) env);
+            | AFun(id, _, t) -> 
+                ignore(NameMap.add id (T(string_of_type t)) env);
+            | ABinop(et1, op, et2, t) -> 
+                    update_expr_map et1 ;
+                    update_expr_map et2 
+      in update_expr_map aexpr;
       ignore(update_map tl env)
 
 let infer_stmt_list (env: environment) (e: stmt list) : astmt list =
   let annotated_stmtlist = annotate_stmt_list e env in
-  let constraints = collect_stmt_list annotated_stmtlist in 
-    (*List.iter print_constraints constraints;*)
+  let constraints =
+      List.iter (fun a -> (print_endline (string_of_type (type_of_stmt a)))) annotated_stmtlist;
+      collect_stmt_list annotated_stmtlist in 
+        List.iter print_constraints constraints;
     let subs = unify constraints in
     (* reset the type counter after completing inference *)
     type_variable := (Char.code 'a');
     let retlist = apply_stmt_list subs annotated_stmtlist
     in 
+        List.iter (fun a -> (print_endline (string_of_type (type_of_stmt a)))) retlist;
+        print_string "reached before updating map";
         update_map retlist env;
+        print_string "reached at the end of infering statment list";
         retlist
 
 let rec grab_returns (r: astmt list) : primitiveType list =
-   match r with
+    print_string "In grab returns";
+    match r with
     | [] -> []
     | h :: tail -> 
         match h with
-          |AReturn(_, t) -> t :: grab_returns tail
+          |AReturn(_, t) ->
+                  print_string "matched return";
+                  t :: grab_returns tail
           | _ -> grab_returns tail
 
 
 (*Checks that return statements are consistent and returns the type*)
 let get_return_type(r: astmt list) : primitiveType =
   let returns = grab_returns r in
-  let rec find_type l = 
-  match l with
-  | [] -> TVoid
-  | [t] -> t 
-  | x :: y :: tail -> 
-    if x = y
-    then find_type (y :: tail)
-    else raise (failwith "mismatched returns")
-   in find_type returns
+  let rec find_type l =
+      print_string "Reached in find type" ;
+      List.iter (fun x -> print_endline (string_of_type x)) returns;
+      match l with
+        | [] | _ -> TVoid
+        | [t] -> t 
+        | x :: y :: tail -> 
+            if x = y
+            then find_type (y :: tail)
+            else raise (failwith "mismatched returns")
+    in find_type returns
 
 
 let rec infer_formals (f: string list) (env: environment):  primitiveType list=
@@ -223,9 +239,12 @@ let infer_func (f: func) (env: environment): afunc =
   match f with
         |Fbody(decl, stmts) ->  
         let astmts = 
-           infer_stmt_list env stmts
+            infer_stmt_list env stmts
         in let ret_type =
+            List.iter (fun a -> (print_endline (string_of_type (type_of_stmt a)))) astmts;
+            print_string "reached before getting return type";
             get_return_type astmts            
+
         in  
             match decl with
             |Fdecl(name, formals) ->           (*annotate the formals*)
