@@ -53,9 +53,12 @@ let rec annotate_stmt (e: stmt) (env: environment) : astmt =
           then NameMap.find id env
          else raise (failwith "variable not defined")
      in AAsn(id, aexpr, switch, t)
+    | Return(expr) ->
+      let aexpr = annotate_expr expr env in AReturn(aexpr, gen_new_type())
     and type_of_stmt (a: astmt): primitiveType = 
        match a with
       | AAsn(_, _, _, t) -> t
+      | AReturn(_, t) -> t
 
 (* Annotate a statement list *)
 let  rec annotate_stmt_list(st : stmt list ) (env : environment) : astmt list =
@@ -87,13 +90,16 @@ let collect_stmt (a: astmt) : (primitiveType * primitiveType) list =
    match a with
     | AAsn(id, aexpr, switch, t) ->
       collect_expr aexpr @ [(type_of aexpr , t)]
+    | AReturn(aexpr, t) ->
+      collect_expr aexpr @ [(type_of aexpr , t)]
 
 (* Collect statement list *)
-
 let rec collect_stmt_list (astlist: astmt list) : (primitiveType * primitiveType) list = 
     match astlist with 
     | [] -> []
     | hd :: tl -> (collect_stmt hd) @ collect_stmt_list tl 
+
+
 
 let rec substitute (u: primitiveType) (x: id) (t: primitiveType) : primitiveType =
   match t with
@@ -142,6 +148,8 @@ let rec apply_stmt (subs: substitutions) (a: astmt): astmt =
   match a with
   | AAsn(id, aexpr, switch, t) -> 
     AAsn(id, apply_expr subs aexpr, switch, apply subs t) 
+  | AReturn(aexpr, t) ->
+     AReturn(apply_expr subs aexpr, apply subs t) 
 
 
 let rec apply_stmt_list (subs:substitutions) (astlist : astmt list) : astmt list = 
@@ -152,12 +160,84 @@ let rec apply_stmt_list (subs:substitutions) (astlist : astmt list) : astmt list
 let print_constraints (x,y) =
     print_endline (string_of_type(x) ^ ":" ^ string_of_type(y)) 
 
-let infer (env: environment) (e: stmt list) : astmt list =
+
+let rec update_map (alist : astmt list) (env: environment) : unit =
+  match alist with
+    | [] -> ()
+    | hd :: tl ->
+      match hd with
+      AAsn(id, aexpr, _, t) ->
+      ignore(NameMap.add id t env);
+      match aexpr with
+      | AId(s, t) -> 
+        ignore(NameMap.add s (T(string_of_type t)) env);
+      | AFun(id, _, t) -> 
+        ignore(NameMap.add id (T(string_of_type t)) env);
+      ignore(update_map tl);
+
+let infer_stmt_list (env: environment) (e: stmt list) : astmt list =
   let annotated_stmtlist = annotate_stmt_list e env in
   let constraints = collect_stmt_list annotated_stmtlist in 
     (*List.iter print_constraints constraints;*)
     let subs = unify constraints in
     (* reset the type counter after completing inference *)
     type_variable := (Char.code 'a');
-    apply_stmt_list subs annotated_stmtlist
- 
+    apply_stmt_list subs annotated_stmtlist;
+    update_map(astmts);
+  
+(*Infer the type of the statements in the function*)
+let infer_func (f: func) (env: environment): afunc =
+  match f with
+        |Fbody(decl, stmts) ->  
+        let astmts = 
+           infer_stmt_list env stmts
+        in let ret_type =
+          grab_returns astmts            
+        in let aformals = 
+            match decl with
+            |Fdecl(_, formals) ->           (*annotate the formals*)
+            infer_formals formals env
+        in let name = 
+            match decl with 
+            |Fdecl(name, _) -> 
+            if NameMap.mem name env
+            then NameMap.find name env
+            else raise (failwith "function not defined")
+        in AFbody(Adecl(name, aformals, ret_type), astmts);
+
+
+let infer_formals (f: string list) (env: environment):  aexpr list=
+    match f with
+    |[] -> []
+    | h :: tail -> 
+    let t = if NameMap.mem h env
+            then NameMap.find h env
+            else raise (failwith "formal not used") in t :: infer_formals tail env;
+
+(*Checks that return statements are consistent and returns the type*)
+let rec get_return_type(r: astmt list) : astmt =
+  let returns = grab_returns r in
+  match returns with
+  | [] -> TVoid
+  | [x] -> x 
+  | x :: y :: tail -> 
+    if x = y
+    then get_return_type (y :: tail)
+    else raise (failwith "mismatched returns");
+
+
+let rec grab_returns (r: astmt list) : stmt list =
+   match r with
+    | [] -> []
+    | h :: tail -> 
+      let rettype = 
+        match h with
+          |AReturn(_, t) -> t
+          |_ -> []
+      in h :: grab_returns tail
+
+(* Annotate an expression list *)
+let rec annotate_expr_list(e : expr list ) (env : environment) : aexpr list =
+    match e with 
+        | [] -> []
+        | hd :: tl -> ((annotate_expr hd env) @ (annotate_expr_list tl env))

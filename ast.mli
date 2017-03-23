@@ -9,6 +9,7 @@ type uop = Neg | Not
 
 
 type primitiveType =
+    | TVoid
     | TInt
     | TBool
     | TString
@@ -48,6 +49,7 @@ type expr =
 
 type astmt =
 | AAsn of id * aexpr * bool * primitiveType
+| AReturn of aexpr * primitiveType
 
 type stmt =
      Asn of id * expr * bool
@@ -60,9 +62,13 @@ type stmt =
   
 type stmt_list = stmt list
 
-type func_dec = string * string list
+type func_dec = Fdecl of id * id list
+(*name, formals, return type*)
+type afunc_dec = AFdecl of id * primitiveType list * primitiveType
 
-type func = func_dec * stmt list
+
+type func = Fbody of func_dec * stmt list
+type afunc = AFbody of afunc_dec * astmt list
 
 type program = func list
 

@@ -39,8 +39,8 @@ open Ast
 %left TIMES DIVIDE FTIMES FDIVIDE
 %right NOT NEG
 
-%start stmt_list
-%type <Ast.stmt_list> stmt_list
+%start func
+%type <Ast.func> func
 
 %%
 
@@ -57,16 +57,16 @@ decls:
  | decls_list func { $2::$1 }
 
 func:
-   func_dec LBRACE  stmt_list RBRACE { $1, List.rev $3 }
+   func_dec LBRACE  stmt_list RBRACE { Fbody($1, List.rev $3) }
 
 func_dec:
-	ID LPAREN formals_opt RPAREN { $1, $3 }
+	ID LPAREN formals_opt RPAREN { Fdecl($1, $3) }
 
 formals_opt:
     /* nothing */ { [] }
   | formal_list   { List.rev $1 }
 
-formal_list:
+formal_list:  /*Changed to id because they're ids*/
     ID                   { [$1] }
   | formal_list COMMA ID { $3 :: $1 }
 
@@ -75,7 +75,7 @@ stmt_list:
   | stmt_list stmt { $2 :: $1 }
 
 stmt:
-  RETURN expr SEMI { Return $2 }
+  RETURN expr SEMI { Return($2) }
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE { If($3, $6, []) }
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE   { If($3, $6, List.rev $10) }
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE IF LPAREN expr RPAREN LBRACE stmt_list RBRACE  { If($3, List.rev $6, [If($11, List.rev $14, [])]) }
