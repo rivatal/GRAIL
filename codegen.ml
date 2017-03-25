@@ -31,7 +31,7 @@ let translate (globals, functions) =
 
        (* Declare printf(), which the print built-in function will call *)
         let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
-        let printf_func = L.declare_function "printf" printf_t the_module in
+        let printf_func = L.declare_function "print" printf_t the_module in
 
        (* Define each function (arguments and return type) so we can call it *)
        (* let function_decls = ... *)
