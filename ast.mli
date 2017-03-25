@@ -29,6 +29,7 @@ type expr =
 
 type stmt =
      Asn of string * expr * bool
+|    Expr of expr
 |    If of expr * stmt list * stmt list
 |    While of expr * stmt list
 |    For of expr * expr * expr * stmt list
