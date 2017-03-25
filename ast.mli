@@ -38,8 +38,10 @@ type stmt =
 |    Continue
   
 
-type func_dec = string * string list
-
-type func = func_dec * stmt list
+type func = {
+    fname : string;
+    formals : string list;
+    body : stmt list;
+  }
 
 type program = func list
