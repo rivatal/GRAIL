@@ -161,51 +161,53 @@ let print_constraints (x,y) =
     print_endline (string_of_type(x) ^ ":" ^ string_of_type(y)) 
 
 
-let rec update_map (alist : astmt list) (env: environment) =
-  match alist with
-    | [] -> ()
+let rec update_map (alist : astmt list) (env: environment) : environment =
+    (*List.iter (fun a -> (print_endline ("astmt ->" ^ (string_of_type (type_of_stmt a))))) alist;*)
+    match alist with
+    | [] -> env
     | hd :: tl ->
+      let rec update_expr_map aexpr env = 
+          match aexpr with
+            | AIntLit(_,_) | ABoolLit(_,_) | AStrLit(_,_) -> env
+            | AId(s, t) ->
+                let env = NameMap.add s t env in 
+                env
+            | AFun(id, _, t) -> 
+                NameMap.add id t env
+            | ABinop(et1, op, et2, t) -> 
+                    let env = update_expr_map et1 env
+                    in update_expr_map et2 env
+      in 
       match hd with
       |AAsn(id, aexpr, _, t) ->
-      ignore(NameMap.add id (T(string_of_type t)) env)
-      |AReturn(aexpr,t) -> ignore(); 
-      let rec update_expr_map aexpr = 
-          match aexpr with
-            | AId(s, t) -> 
-                ignore(NameMap.add s (T(string_of_type t)) env);
-            | AFun(id, _, t) -> 
-                ignore(NameMap.add id (T(string_of_type t)) env);
-            | ABinop(et1, op, et2, t) -> 
-                    update_expr_map et1 ;
-                    update_expr_map et2 
-      in update_expr_map aexpr;
-      ignore(update_map tl env)
+              let env = NameMap.add id t env
+              in let env = update_expr_map aexpr env
+              in update_map tl env
+      |AReturn(aexpr,t) -> 
+              let env = update_expr_map aexpr env
+              in update_map tl env
 
-let infer_stmt_list (env: environment) (e: stmt list) : astmt list =
+let infer_stmt_list (env: environment) (e: stmt list)  =
   let annotated_stmtlist = annotate_stmt_list e env in
   let constraints =
-      List.iter (fun a -> (print_endline (string_of_type (type_of_stmt a)))) annotated_stmtlist;
+      (*List.iter (fun a -> (print_endline (string_of_type (type_of_stmt a)))) annotated_stmtlist;*)
       collect_stmt_list annotated_stmtlist in 
-        List.iter print_constraints constraints;
+        (*List.iter print_constraints constraints;*)
     let subs = unify constraints in
     (* reset the type counter after completing inference *)
     type_variable := (Char.code 'a');
     let retlist = apply_stmt_list subs annotated_stmtlist
     in 
-        List.iter (fun a -> (print_endline (string_of_type (type_of_stmt a)))) retlist;
-        print_string "reached before updating map";
-        update_map retlist env;
-        print_string "reached at the end of infering statment list";
-        retlist
+        (*List.iter (fun a -> (print_endline (string_of_type (type_of_stmt a)))) retlist;*)
+        let env = update_map retlist env in 
+        (retlist,env)
 
 let rec grab_returns (r: astmt list) : primitiveType list =
-    print_string "In grab returns";
     match r with
     | [] -> []
     | h :: tail -> 
         match h with
           |AReturn(_, t) ->
-                  print_string "matched return";
                   t :: grab_returns tail
           | _ -> grab_returns tail
 
@@ -214,10 +216,8 @@ let rec grab_returns (r: astmt list) : primitiveType list =
 let get_return_type(r: astmt list) : primitiveType =
   let returns = grab_returns r in
   let rec find_type l =
-      print_string "Reached in find type" ;
-      List.iter (fun x -> print_endline (string_of_type x)) returns;
       match l with
-        | [] | _ -> TVoid
+        | [] -> TVoid
         | [t] -> t 
         | x :: y :: tail -> 
             if x = y
@@ -225,24 +225,24 @@ let get_return_type(r: astmt list) : primitiveType =
             else raise (failwith "mismatched returns")
     in find_type returns
 
-
 let rec infer_formals (f: string list) (env: environment):  primitiveType list=
     match f with
     |[] -> []
     | h :: tail -> 
     let t = if NameMap.mem h env
-            then NameMap.find h env
+            then ( 
+                print_endline ("\n" ^ h ^ "->" ^ (string_of_type (NameMap.find h env)));
+                NameMap.find h env )
              else raise (failwith "formal not used") in t :: infer_formals tail env
 
 (*Infer the type of the statements in the function*)
 let infer_func (f: func) (env: environment): afunc =
   match f with
         |Fbody(decl, stmts) ->  
-        let astmts = 
+        let (astmts,env) = 
             infer_stmt_list env stmts
         in let ret_type =
-            List.iter (fun a -> (print_endline (string_of_type (type_of_stmt a)))) astmts;
-            print_string "reached before getting return type";
+            (*List.iter (fun a -> (print_endline (string_of_type (type_of_stmt a)))) astmts;*)
             get_return_type astmts            
 
         in  
@@ -251,8 +251,8 @@ let infer_func (f: func) (env: environment): afunc =
                 if NameMap.mem name env
                 then ignore(NameMap.add name (T(string_of_type ret_type)) env)
                 else raise (failwith "function not defined");
-                let aformals = infer_formals formals env  
-                in AFbody(AFdecl(name, aformals, ret_type), astmts)
+                let aformals = infer_formals formals env in   
+                AFbody(AFdecl(name, aformals, ret_type), astmts)
 
 (* Annotate an expression list *)
 let rec annotate_expr_list(e : expr list ) (env : environment) : aexpr list =

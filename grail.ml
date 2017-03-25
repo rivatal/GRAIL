@@ -30,7 +30,6 @@ let rec get_all_ids (e: stmt list): string list =
 let get_all_formals_ids (e: func): string list =
     match e with 
         |Fbody(Fdecl(name, formals), stmts) ->
-         print_string "matched";
         let rec dedup = function
             | [] -> []
             | x :: y :: xs when x = y -> y :: dedup xs
@@ -44,23 +43,17 @@ let get_all_formals_ids (e: func): string list =
 
 
 let infer (e: Ast.func) : Ast.afunc =
-     print_string "reached here 3";
      let vals = get_all_formals_ids e in
-     print_string "reached here 4";
 	 let env = List.fold_left (fun m x -> NameMap.add x (Infer.gen_new_type ()) m) NameMap.empty vals in
-     print_string "reached here 5";
      Infer.infer_func e env
 
 let rec grail () =
   print_string "> ";
     let input = read_line () in
-    print_string input;
   if input = "" then () else
   try
     let e = parse input in 
-    print_string "reached here 1";
     let afunc = infer e in
-    print_string "reached here 2";
     match afunc with
      AFbody(AFdecl(name, formals, t), astmts) -> 
          print_endline ("Function " ^ name ^ " " ^ string_of_type t);
