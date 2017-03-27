@@ -25,6 +25,8 @@ type aexpr =
     | AId of string * primitiveType
     | ABinop of aexpr * op * aexpr * primitiveType
     | AFun of id * aexpr * primitiveType
+    | ACall of string * aexpr list * primitiveType
+
 
 type expr =
      IntLit of int
@@ -66,10 +68,11 @@ type func_dec = Fdecl of id * id list
 (*name, formals, return type*)
 type afunc_dec = AFdecl of id * primitiveType list * primitiveType
 
-
 type func = Fbody of func_dec * stmt list
 type afunc = AFbody of afunc_dec * astmt list
 
 type program = func list
+
+
 
 

@@ -70,5 +70,5 @@ type token =
   | ID of (string)
   | EOF
 
-val func :
-  (Lexing.lexbuf  -> token) -> Lexing.lexbuf -> Ast.func
+val program :
+  (Lexing.lexbuf  -> token) -> Lexing.lexbuf -> Ast.program

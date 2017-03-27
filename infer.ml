@@ -14,7 +14,6 @@ let gen_new_type () =
     let c1 = !type_variable in
     incr type_variable; T(Char.escaped (Char.chr c1))
 
-
 let rec annotate_expr (e: expr) (env: environment) : aexpr =
     match e with
         | IntLit(n) -> AIntLit(n, TInt)
@@ -33,12 +32,22 @@ let rec annotate_expr (e: expr) (env: environment) : aexpr =
           let t = NameMap.find id env in
           AFun(id, ae, TFun(t, gen_new_type ()))
         (* returns the type of an annotated expression *)
+        | Call(id, elist) ->    (*Function calls derive their type from the function declaration*)
+          let t = if NameMap.mem id env
+                  then NameMap.find id env
+                  else raise (failwith "function not defined") in
+          ACall(id, annotate_expr_list elist env, t)
         and type_of (ae: aexpr): primitiveType =
             match ae with
             | AIntLit(_, t) | ABoolLit(_, t) | AStrLit(_,t) -> t
             | AId(_, t) -> t
             | ABinop(_, _, _, t) -> t
             | AFun(_, _, t) -> t
+            | ACall(_, _, t) -> t
+        and annotate_expr_list(e : expr list ) (env : environment) : aexpr list =
+           match e with 
+            | [] -> []
+            | hd :: tl -> ((annotate_expr hd env) :: (annotate_expr_list tl env))
 
 
 (*Make an annotate function/statement.
@@ -85,6 +94,12 @@ let rec collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
            (match t with
             | TFun(idt, ret_type) -> (collect_expr ae) @ [(type_of ae, ret_type)]
             | _ -> raise (failwith "not a function"))
+         | ACall(_, aelist, _) -> collect_expr_list aelist
+        and collect_expr_list (ae: aexpr list) : (primitiveType * primitiveType) list =
+          match ae with 
+          | [] -> []
+          | hd :: tl -> (collect_expr hd) @ (collect_expr_list tl)
+
       
 let collect_stmt (a: astmt) : (primitiveType * primitiveType) list =
    match a with
@@ -132,7 +147,6 @@ and unify_one (t1: primitiveType) (t2: primitiveType) : substitutions =
   | _ -> raise (failwith "mismatched types")
 ;;
 
-
 (* applies a final set of substitutions on the annotated expr *)
 let rec apply_expr (subs: substitutions) (ae: aexpr): aexpr =
   match ae with
@@ -142,7 +156,13 @@ let rec apply_expr (subs: substitutions) (ae: aexpr): aexpr =
   | AId(s, t) -> AId(s, apply subs t)
   | ABinop(e1, op, e2, t) -> ABinop(apply_expr subs e1, op, apply_expr subs e2, apply subs t)
   | AFun(id, e, t) -> AFun(id, apply_expr subs e, apply subs t)
+  | ACall(id, elist, t) -> ACall(id, apply_expr_list elist subs, t)
+  and apply_expr_list (ae: aexpr list) (subs: substitutions) : aexpr list =
+    match ae with 
+    | [] -> []
+    | hd :: tl -> (apply_expr subs hd) :: apply_expr_list tl subs 
 ;;
+
 
 let rec apply_stmt (subs: substitutions) (a: astmt): astmt = 
   match a with
@@ -177,6 +197,11 @@ let rec update_map (alist : astmt list) (env: environment) : environment =
             | ABinop(et1, op, et2, t) -> 
                     let env = update_expr_map et1 env
                     in update_expr_map et2 env
+            | ACall(id, elist, t) -> update_expr_map_list elist env
+        and update_expr_map_list (ae: aexpr list) (env: environment): environment =
+        match ae with
+        [] -> env
+        |hd :: tl -> let env = update_expr_map hd env in update_expr_map_list tl env
       in 
       match hd with
       |AAsn(id, aexpr, _, t) ->
@@ -184,7 +209,7 @@ let rec update_map (alist : astmt list) (env: environment) : environment =
               in let env = update_expr_map aexpr env
               in update_map tl env
       |AReturn(aexpr,t) -> 
-              let env = update_expr_map aexpr env
+              let env = update_expr_map aexpr env     
               in update_map tl env
 
 let infer_stmt_list (env: environment) (e: stmt list)  =
@@ -253,9 +278,3 @@ let infer_func (f: func) (env: environment): afunc =
                 else raise (failwith "function not defined");
                 let aformals = infer_formals formals env in   
                 AFbody(AFdecl(name, aformals, ret_type), astmts)
-
-(* Annotate an expression list *)
-let rec annotate_expr_list(e : expr list ) (env : environment) : aexpr list =
-    match e with 
-        | [] -> []
-        | hd :: tl -> ((annotate_expr hd env) :: (annotate_expr_list tl env))

@@ -39,8 +39,8 @@ open Ast
 %left TIMES DIVIDE FTIMES FDIVIDE
 %right NOT NEG
 
-%start func
-%type <Ast.func> func
+%start program
+%type <Ast.program> program
 
 %%
 
@@ -53,7 +53,7 @@ decls:
  | decls_list { List.rev $1 }
 
  decls_list:
-   func { [$1] }
+   func { [$1] } 
  | decls_list func { $2::$1 }
 
 func:
