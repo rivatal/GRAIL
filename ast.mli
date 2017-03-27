@@ -1,3 +1,5 @@
+type id = string
+
 type eop = To | From | Dash
 
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq |
@@ -5,14 +7,36 @@ type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq |
 
 type uop = Neg | Not 
 
+
+type primitiveType =
+    | TVoid
+    | TInt
+    | TBool
+    | TString
+    | T of string
+    | TFun of primitiveType * primitiveType
+    | TStmt of primitiveType * primitiveType
+
+    (* annotated expr -> expr with types *)
+type aexpr =
+    | AIntLit of int * primitiveType
+    | ABoolLit of bool * primitiveType
+    | AStrLit of string * primitiveType
+    | AId of string * primitiveType
+    | ABinop of aexpr * op * aexpr * primitiveType
+    | AFun of id * aexpr * primitiveType
+    | ACall of string * aexpr list * primitiveType
+
+
 type expr =
-    IntLit of int
+     IntLit of int
 |    BoolLit of bool
 |    StrLit of string
 |    CharLit of char 
 |    FloatLit of float
 |    Id of string
 |    List of expr list
+|    Fun of id * expr (* Lambda Function *)
 |    Call of string * expr list
 |    Item of string * expr
 |    Subset of string * string * expr
@@ -25,7 +49,9 @@ type expr =
 |    Record of (string * expr) list
 |    Noexpr
 
-
+type astmt =
+| AAsn of id * aexpr * bool * primitiveType
+| AReturn of aexpr * primitiveType
 
 type stmt =
      Asn of string * expr * bool
@@ -37,6 +63,16 @@ type stmt =
 |    Break
 |    Continue
   
+type stmt_list = stmt list
+
+
+type program = func list
+
+type afunc = {
+	fname : string;
+	formals : (string * primitiveType) list;
+	body: astmt list
+}
 
 type func = {
     fname : string;
@@ -44,4 +80,3 @@ type func = {
     body : stmt list;
   }
 
-type program = func list

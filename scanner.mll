@@ -61,6 +61,7 @@ rule token = parse
 | "type"   { TYPE }
 | "while"  { WHILE }
 | "with"   { WITH }
+| "fun"    { FUN }
 | ['0'-'9']+ as lxm { INTLIT(int_of_string lxm) }
 | ['0'-'9']*'.'['0'-'9']* as lxm { DOUBLELIT(float_of_string lxm) }
 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
