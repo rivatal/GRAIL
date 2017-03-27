@@ -253,13 +253,15 @@ let get_return_type(r: astmt list) : primitiveType =
             else raise (failwith "mismatched returns")
     in find_type returns
 
+
+
 let rec infer_formals (f: string list) (env: environment):  primitiveType list=
     match f with
     |[] -> []
     | h :: tail -> 
     let t = if NameMap.mem h env
             then ( 
-                print_endline ("\n" ^ h ^ "->" ^ (string_of_type (NameMap.find h env)));
+(*                 print_endline ("\n" ^ h ^ "->" ^ (string_of_type (NameMap.find h env))); *)
                 NameMap.find h env )
              else raise (failwith "formal not used") in t :: infer_formals tail env
 

@@ -44,11 +44,8 @@ let get_all_formals_ids (e: func): (string list * string) =
             | x :: xs -> x :: dedup xs
         in 
         let ids1 = get_all_ids stmts 
-        in List.iter (fun x ->print_string x) ids1;
-        let ids2 = get_ids_formals formals
-        in List.iter (fun x ->print_string x) ids2;
-        (dedup (ids1 @ ids2),name)
-
+        in let ids2 = get_ids_formals formals
+        in (dedup (ids1 @ ids2),name)
 
 let infer (e: Ast.func) (genv : genvironment) : (Ast.afunc * genvironment) =
      let vals, fname = get_all_formals_ids e in
@@ -56,37 +53,76 @@ let infer (e: Ast.func) (genv : genvironment) : (Ast.afunc * genvironment) =
      let genv = GlobalMap.add fname (Infer.gen_new_type (),[]) genv in 
      Infer.infer_func e env genv
 
-let infer_func (e: Ast.func) (genv :  genvironment): genvironment = 
-    let (afunc,genv) = infer e genv in
+let print_func (afunc: Ast.afunc): unit =
     match afunc with
     AFbody(AFdecl(name, formals, t), astmts) -> 
       print_endline ("Function " ^ name ^ " " ^ string_of_type t);
-          List.iter (fun a -> (print_endline (string_of_type (a)))) formals;
-          List.iter (fun a -> (print_endline (string_of_type (Infer.type_of_stmt a)))) astmts;
-          genv
-    
-let rec grail () : unit =
+      List.iter (fun a -> (print_endline (string_of_type (a)))) formals;
+      List.iter (fun a -> (print_endline (string_of_type (Infer.type_of_stmt a)))) astmts
+
+
+let infer_func (e: Ast.func) (genv :  genvironment): (genvironment * Ast.afunc) = 
+    let (afunc,genv) = infer e genv in
+(*     print_func afunc; *)
+    (genv, afunc)
+
+
+let rec print_func_list (ast: Ast.afunc list): unit =
+    match ast with
+    [] -> ()
+    |hd :: tl ->
+    print_func hd; 
+    print_func_list tl
+
+let grail (ast: Ast.afunc list) (input: string) : Ast.afunc list =
+    let rec do_program(p: Ast.program) (genv : genvironment) : Ast.afunc list  =   
+        match p with
+        [] -> []
+        |hd :: tl -> let (genv, afunc) = infer_func hd genv 
+                                         in afunc :: do_program tl genv
+    in do_program (parse input) GlobalMap.empty
+
+
+(* let proglist = 
+ *)
+let read_file filename = 
+let lines = ref [] in
+let chan = open_in filename in
+try
+  while true; do
+    lines := input_line chan :: !lines
+  done; !lines
+with End_of_file ->
+  close_in chan;
+  List.rev !lines
+  
+List.iter (fun a -> (print_endline a)) !lines;
+
+(* in String.concat " " proglist *) (* in let sast = grail [] input in print_func_list sast
+ *)
+
+(*To run interpreter style, you can call this instead of grail*)
+(* let rec interpreter (ast: Ast.afunc list) : Ast.afunc list =
   print_string "> ";
     let input = read_line () in
-  if input = "" then () else
+  if input = "exit" then ast
+  else
   try
     (*do for func*)
-    let rec do_program(p: Ast.program) (genv : genvironment) =   
+    let rec do_program(p: Ast.program) (genv : genvironment)  =   
         match p with
-        [] -> ()
-        |hd :: tl -> let genv = infer_func hd genv in do_program tl genv
-    in do_program (parse input) GlobalMap.empty;
-    grail ()
+        [] -> []
+        |hd :: tl -> let (genv, afunc) = infer_func hd genv 
+                                        in afunc :: do_program tl genv
+        in 
+        let pre_ast = do_program (parse input) GlobalMap.empty
+        in  interpreter (pre_ast @ ast) 
   with
   | Failure(msg) ->
-    if msg = "lexing: empty token" then grail ()
-    else print_endline msg; grail ()
-  | _ -> print_endline "Error Parsing"; grail ()
-
+    if msg = "lexing: empty token" then [] @ interpreter (ast)
+    else (print_endline msg; [] @ interpreter(ast))
+  | _ -> print_endline "Error Parsing"; [] @  interpreter (ast)
+ *)(* 
 let say() = 
- let str = "Welcome to Grail"  in 
-    print_string str; 
-;;
-
-say();
-grail();
+ let str = "Welcome to Grail, the awesomest language!\n"  in 
+    print_string str *)
