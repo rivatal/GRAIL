@@ -1,13 +1,12 @@
 (* report errors found during code generation *)
 exception Error of string
 
-
 module L = Llvm
 module A = Ast
 
 module StringMap = Map.Make(String)
 
-let translate (globals, functions) = 
+let translate (functions) = 
         (* define *)
         let context = L.global_context () in
         let the_module = L.create_module context "Grail"
@@ -33,29 +32,49 @@ let translate (globals, functions) =
         let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
         let printf_func = L.declare_function "print" printf_t the_module in
 
-       (* Define each function (arguments and return type) so we can call it *)
-       (* let function_decls = ... *)
+      (* Define each function (arguments and return type) so we can call it *) (** Fix the type thing here **)
+        let function_decls =
+            let function_decl m funcs =
+            let name = funcs.A.fname
+              and formal_types =
+            Array.of_list (List.map (fun (t,_) -> ltype_of_typ t) funcs.A.formals)
+              in let ftype = L.function_type (ltype_of_typ fdecl.A.typ) formal_types in
+              StringMap.add name (L.define_function name ftype the_module, fdecl) m in
+            List.fold_left function_decl StringMap.empty functions in
+          
+          (* Fill in the body of the given function *) (* FIX The Type Thing Here *)
+        let build_function_body fdecl =
+            let (the_function, _) = StringMap.find fdecl.A.fname function_decls in
+            let builder = L.builder_at_end context (L.entry_block the_function) in
 
-       (* Fill in the body of the given function *)
-       (* let build_function_body fdecl = ... *)
+            let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in
+            
+            (* Construct the function's "locals": formal arguments and locally
+               declared variables.  Allocate each on the stack, initialize their
+               value, if appropriate, and remember their values in the "locals" map *)
+            let local_vars =
+              let add_formal m (t, n) p = L.set_value_name n p;
+        let local = L.build_alloca (ltype_of_typ t) n builder in
+        ignore (L.build_store p local builder);
+        StringMap.add n local m in
 
-       (* Construct the function's "locals": formal arguments and locally
-          declared variables. Allocate each of the stack, initialize their
-          value, if appropriate, and remember their values in the "local" map *)
+              let add_local m (t, n) =            
+        let local_var = L.build_alloca (ltype_of_typ t) n builder
+        in StringMap.add n local_var m in
 
-
+              let formals = List.fold_left2 add_formal StringMap.empty fdecl.A.formals
+                  (Array.to_list (L.params the_function)) in
+              List.fold_left add_local formals fdecl.A.locals in
 
         (* Return the value for a variable or formal argument *)
-        let lookup n = try StringMap.find n local_vars
-                        with Not_found -> StringMap.find n global_vars
-        in
+        let lookup n = try StringMap.find n local_vars in
 
         let rec expr builder = function
                 A.IntLit i -> L.const_int i32_t i
                 | A.BoolLit b -> L.const_int i1_t (if b then 1 else 0)
-              (*  | A.StrLit s -> 
-                | A.CharLit c -> 
-                | A.FloatLit f -> *)
+                | A.StrLit s -> L.pointer_type i8_t s
+                | A.CharLit c -> L.const_int i8_t c
+             (*   | A.FloatLit f -> *)
                 | A.Id a -> L.build_load (lookup a) a builder (* why this format *)
                (* | A.List ->  why is List an expression, should not it be a data staructure?  *)
                 | A.Call ("print", [e]) -> L.build_call printf_func [| int_format_str ; (expr builder e) |] "printf" builder
@@ -94,20 +113,22 @@ let translate (globals, functions) =
                         Some _ -> ()
                         | None -> ignore (f builder) in
         
-        (* stmt section below *)
+
+        (* Build the code for the given statement; return the builder for
+       the statement's successor *)
         let rec stmt builder = function
-                A.Expr e -> ignore (expr builder e); builder        
-        
-        
+          A.Expr e -> ignore (expr builder e); builder
+
+
         (* Build the code for each statement in the function *)
-        (* let builder = stmt builder (A.Block fdecl.A.body) in *)        
+        let builder = stmt builder (A.Block fdecl.A.body) in
 
         (* Add a return if the last block falls off the end *)
-        (* add_terminal builder (match fdecl.A.typ with
-                A.Void -> L.build_ret_void
-                | t -> L.build_ret (L.const_int (ltype_of_typ t) 0))
-        *)
-in
+        add_terminal builder (match fdecl.A.typ with
+            A.Void -> L.build_ret_void
+          | t -> L.build_ret (L.const_int (ltype_of_typ t) 0))
+      in
+            
 
 List.iter build_function_body functions;
 the_module
