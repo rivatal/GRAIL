@@ -34,8 +34,8 @@ let translate (functions) =
 
       (* Define each function (arguments and return type) so we can call it *) (** Fix the type thing here **)
         let function_decls =
-            let function_decl m funcs =
-            let name = funcs.A.fname
+            let function_decl m func=
+            let name = func.A.fname
               and formal_types =
             Array.of_list (List.map (fun (t,_) -> ltype_of_typ t) funcs.A.formals)
               in let ftype = L.function_type (ltype_of_typ fdecl.A.typ) formal_types in
@@ -67,7 +67,7 @@ let translate (functions) =
               List.fold_left add_local formals fdecl.A.locals in
 
         (* Return the value for a variable or formal argument *)
-        let lookup n = try StringMap.find n local_vars in
+        let lookup n = StringMap.find n local_vars in
 
         let rec expr builder = function
                 A.IntLit i -> L.const_int i32_t i
@@ -85,8 +85,8 @@ let translate (functions) =
                         (match op with 
                                 A.Neg -> L.build_neg
                                 | A.Not -> L.build_not) e' "tmp" builder
-                | A.Binop (e1, op, e2) -> let e1' = expr builder e1
-                                          let e2' = expr builder e2 in
+                | A.Binop (e1, op, e2) ->     let e1' = expr builder e1
+                                              and e2' = expr builder e2 in
                                           (match op with
                                                 A.Add -> L.build_add
                                                 | A.Sub -> L.build_sub
@@ -104,6 +104,7 @@ let translate (functions) =
                                           ) e1' e2' "tmp" builder
                 (* Edge, Graph, Node, Record *)
                 | A.Noexpr -> L.const_int i32_t 0
+              in
 
         
         (* Invoke "f builder" if the current block does not already 
@@ -118,6 +119,7 @@ let translate (functions) =
        the statement's successor *)
         let rec stmt builder = function
           A.Expr e -> ignore (expr builder e); builder
+        in
 
 
         (* Build the code for each statement in the function *)
