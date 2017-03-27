@@ -82,24 +82,10 @@ let grail (ast: Ast.afunc list) (input: string) : Ast.afunc list =
                                          in afunc :: do_program tl genv
     in do_program (parse input) GlobalMap.empty
 
+let say() = let sast = grail [] "function(x) { return x;}" in print_func_list sast
+;;
 
-(* let proglist = 
- *)
-let read_file filename = 
-let lines = ref [] in
-let chan = open_in filename in
-try
-  while true; do
-    lines := input_line chan :: !lines
-  done; !lines
-with End_of_file ->
-  close_in chan;
-  List.rev !lines
-  
-List.iter (fun a -> (print_endline a)) !lines;
-
-(* in String.concat " " proglist *) (* in let sast = grail [] input in print_func_list sast
- *)
+say();
 
 (*To run interpreter style, you can call this instead of grail*)
 (* let rec interpreter (ast: Ast.afunc list) : Ast.afunc list =
