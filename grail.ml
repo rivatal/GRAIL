@@ -1,12 +1,13 @@
 open Ast
 open Astutils
 
+module NameMap = Map.Make(String)
+module GlobalMap = Map.Make(String)
+type genvironment = (primitiveType* primitiveType list) GlobalMap.t
+
 let parse (s: string) : Ast.program =
     Parser.program Scanner.token (Lexing.from_string s)
 
-module NameMap = Map.Make(String)
-(* module GlobMap = Map.Make(String)
- *)
 
 let rec get_ids (e: expr): string list =
     match e with
@@ -34,7 +35,7 @@ let rec get_all_ids (e: stmt list): string list =
                 | Asn(x, y, _) -> [x] @ (get_ids y) @ get_all_ids tl 
                 | Return(x) -> (get_ids x) @ get_all_ids tl
 
-let get_all_formals_ids (e: func): string list =
+let get_all_formals_ids (e: func): (string list * string) =
     match e with 
         |Fbody(Fdecl(name, formals), stmts) ->
         let rec dedup = function
@@ -46,23 +47,23 @@ let get_all_formals_ids (e: func): string list =
         in List.iter (fun x ->print_string x) ids1;
         let ids2 = get_ids_formals formals
         in List.iter (fun x ->print_string x) ids2;
-        dedup (ids1 @ ids2 @ [name])
+        (dedup (ids1 @ ids2),name)
 
 
-let infer (e: Ast.func) : Ast.afunc =
-     let vals = get_all_formals_ids e in
-	 let env = List.fold_left (fun m x -> NameMap.add x (Infer.gen_new_type ()) m) NameMap.empty vals in
-     Infer.infer_func e env
+let infer (e: Ast.func) (genv : genvironment) : (Ast.afunc * genvironment) =
+     let vals, fname = get_all_formals_ids e in
+     let env = List.fold_left (fun m x -> NameMap.add x (Infer.gen_new_type ()) m) NameMap.empty vals in 
+     let genv = GlobalMap.add fname (Infer.gen_new_type (),[]) genv in 
+     Infer.infer_func e env genv
 
-
-
-let infer_func (e: Ast.func) : unit = 
-    let afunc = infer e in
+let infer_func (e: Ast.func) (genv :  genvironment): genvironment = 
+    let (afunc,genv) = infer e genv in
     match afunc with
     AFbody(AFdecl(name, formals, t), astmts) -> 
       print_endline ("Function " ^ name ^ " " ^ string_of_type t);
           List.iter (fun a -> (print_endline (string_of_type (a)))) formals;
-          List.iter (fun a -> (print_endline (string_of_type (Infer.type_of_stmt a)))) astmts 
+          List.iter (fun a -> (print_endline (string_of_type (Infer.type_of_stmt a)))) astmts;
+          genv
     
 let rec grail () : unit =
   print_string "> ";
@@ -70,11 +71,11 @@ let rec grail () : unit =
   if input = "" then () else
   try
     (*do for func*)
-    let rec do_program(p: Ast.program) =   
+    let rec do_program(p: Ast.program) (genv : genvironment) =   
         match p with
         [] -> ()
-        |hd :: tl -> infer_func hd; do_program tl
-    in do_program (parse input);
+        |hd :: tl -> let genv = infer_func hd genv in do_program tl genv
+    in do_program (parse input) GlobalMap.empty;
     grail ()
   with
   | Failure(msg) ->

@@ -1,8 +1,11 @@
 (* https://github.com/prakhar1989/type-inference/blob/master/infer.ml *)
 open Ast
 open Astutils   
+
 module NameMap = Map.Make(String)
 type environment = primitiveType NameMap.t
+module GlobalMap = Map.Make(String)
+type genvironment = (primitiveType* primitiveType list) GlobalMap.t
 
 (* Unknown type,  resolved type. eg.[(T, TInt); (U, TBool)] *)
 type substitutions = (id * primitiveType) list
@@ -14,7 +17,7 @@ let gen_new_type () =
     let c1 = !type_variable in
     incr type_variable; T(Char.escaped (Char.chr c1))
 
-let rec annotate_expr (e: expr) (env: environment) : aexpr =
+let rec annotate_expr (e: expr) (env: environment) (genv : genvironment): aexpr =
     match e with
         | IntLit(n) -> AIntLit(n, TInt)
         | BoolLit(b) -> ABoolLit(b, TBool)
@@ -23,20 +26,20 @@ let rec annotate_expr (e: expr) (env: environment) : aexpr =
         then AId(x, NameMap.find x env)
         else raise (failwith "variable not defined")
         | Binop(e1, op, e2) ->
-          let et1 = annotate_expr e1 env
-          and et2 = annotate_expr e2 env
+          let et1 = annotate_expr e1 env genv
+          and et2 = annotate_expr e2 env genv
           and new_type = gen_new_type () in
           ABinop(et1, op, et2, new_type)
         | Fun(id, e) ->
-          let ae = annotate_expr e env in
+          let ae = annotate_expr e env genv in
           let t = NameMap.find id env in
           AFun(id, ae, TFun(t, gen_new_type ()))
         (* returns the type of an annotated expression *)
         | Call(id, elist) ->    (*Function calls derive their type from the function declaration*)
-          let t = if NameMap.mem id env
-                  then NameMap.find id env
+          let (t,_) = if GlobalMap.mem id genv
+                  then GlobalMap.find id genv
                   else raise (failwith "function not defined") in
-          ACall(id, annotate_expr_list elist env, t)
+          ACall(id, annotate_expr_list elist env genv, t)
         and type_of (ae: aexpr): primitiveType =
             match ae with
             | AIntLit(_, t) | ABoolLit(_, t) | AStrLit(_,t) -> t
@@ -44,36 +47,36 @@ let rec annotate_expr (e: expr) (env: environment) : aexpr =
             | ABinop(_, _, _, t) -> t
             | AFun(_, _, t) -> t
             | ACall(_, _, t) -> t
-        and annotate_expr_list(e : expr list ) (env : environment) : aexpr list =
+        and annotate_expr_list(e : expr list ) (env : environment) (genv : genvironment) : aexpr list =
            match e with 
             | [] -> []
-            | hd :: tl -> ((annotate_expr hd env) :: (annotate_expr_list tl env))
+            | hd :: tl -> ((annotate_expr hd env genv) :: (annotate_expr_list tl env genv ))
 
 
 (*Make an annotate function/statement.
   Annotate statements and recursively annotate its expressions.
 *)
-let rec annotate_stmt (e: stmt) (env: environment) : astmt =
+let rec annotate_stmt (e: stmt) (env: environment) (genv: genvironment) : astmt =
   match e with
     | Asn(id, expr, switch) -> 
-        let aexpr = annotate_expr expr env
+        let aexpr = annotate_expr expr env genv
         and t = 
           if NameMap.mem id env
           then NameMap.find id env
          else raise (failwith "variable not defined")
      in AAsn(id, aexpr, switch, t)
     | Return(expr) ->
-      let aexpr = annotate_expr expr env in AReturn(aexpr, gen_new_type())
+      let aexpr = annotate_expr expr env genv in AReturn(aexpr, gen_new_type())
     and type_of_stmt (a: astmt): primitiveType = 
        match a with
       | AAsn(_, _, _, t) -> t
       | AReturn(_, t) -> t
 
 (* Annotate a statement list *)
-let  rec annotate_stmt_list(st : stmt list ) (env : environment) : astmt list =
+let  rec annotate_stmt_list(st : stmt list ) (env : environment) (genv : genvironment) : astmt list =
     match st with 
         | [] -> []
-        | hd :: tl -> (annotate_stmt hd env) ::  (annotate_stmt_list  tl env)
+        | hd :: tl -> (annotate_stmt hd env genv) ::  (annotate_stmt_list  tl env genv)
 
 let rec collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
     match ae with
@@ -212,8 +215,8 @@ let rec update_map (alist : astmt list) (env: environment) : environment =
               let env = update_expr_map aexpr env     
               in update_map tl env
 
-let infer_stmt_list (env: environment) (e: stmt list)  =
-  let annotated_stmtlist = annotate_stmt_list e env in
+let infer_stmt_list (env: environment) (genv : genvironment) (e: stmt list)  =
+  let annotated_stmtlist = annotate_stmt_list e env genv in
   let constraints =
       (*List.iter (fun a -> (print_endline (string_of_type (type_of_stmt a)))) annotated_stmtlist;*)
       collect_stmt_list annotated_stmtlist in 
@@ -225,7 +228,7 @@ let infer_stmt_list (env: environment) (e: stmt list)  =
     in 
         (*List.iter (fun a -> (print_endline (string_of_type (type_of_stmt a)))) retlist;*)
         let env = update_map retlist env in 
-        (retlist,env)
+        (retlist,env,genv)
 
 let rec grab_returns (r: astmt list) : primitiveType list =
     match r with
@@ -261,20 +264,20 @@ let rec infer_formals (f: string list) (env: environment):  primitiveType list=
              else raise (failwith "formal not used") in t :: infer_formals tail env
 
 (*Infer the type of the statements in the function*)
-let infer_func (f: func) (env: environment): afunc =
+let infer_func (f: func) (env: environment) (genv : genvironment) : (afunc * genvironment) =
   match f with
         |Fbody(decl, stmts) ->  
-        let (astmts,env) = 
-            infer_stmt_list env stmts
+        let (astmts,env,genv) = 
+            infer_stmt_list env genv stmts
         in let ret_type =
             (*List.iter (fun a -> (print_endline (string_of_type (type_of_stmt a)))) astmts;*)
             get_return_type astmts            
-
         in  
             match decl with
             |Fdecl(name, formals) ->           (*annotate the formals*)
-                if NameMap.mem name env
-                then ignore(NameMap.add name (T(string_of_type ret_type)) env)
-                else raise (failwith "function not defined");
-                let aformals = infer_formals formals env in   
-                AFbody(AFdecl(name, aformals, ret_type), astmts)
+                if GlobalMap.mem name genv
+                then 
+                    let aformals = infer_formals formals env in   
+                    let genv = GlobalMap.add name (ret_type,aformals) genv in 
+                    (AFbody(AFdecl(name, aformals, ret_type), astmts),genv)
+                else raise (failwith "function not defined")
