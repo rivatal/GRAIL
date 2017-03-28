@@ -50,11 +50,13 @@ type expr =
 |    Noexpr
 
 type astmt =
+| aexpr
 | AAsn of id * aexpr * bool * primitiveType
 | AReturn of aexpr * primitiveType
 
 type stmt =
-     Asn of id * expr * bool
+|    expr
+|    Asn of id * expr * bool
 |    If of expr * stmt list * stmt list
 |    While of expr * stmt list
 |    For of expr * expr * expr * stmt list
