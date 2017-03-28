@@ -55,6 +55,13 @@ let infer (e: Ast.func) (genv : genvironment) : (Ast.afunc * genvironment) =
      let genv = GlobalMap.add fname (Infer.gen_new_type (),[]) genv in 
      Infer.infer_func e env genv
 
+
+let print_ufunc (func: Ast.func): unit =
+    match func with
+    Fbody(Fdecl(name, _), _) -> 
+      print_endline ("Function " ^ name ^ " ")
+
+
 let print_func (afunc: Ast.afunc): unit =
     match afunc with
     AFbody(AFdecl(name, _, formals, t), astmts) -> 
@@ -80,9 +87,12 @@ let grail (ast: Ast.afunc list) (input: string) : Ast.afunc list =
     let rec do_program(p: Ast.program) (genv : genvironment) : Ast.afunc list  =   
         match p with
         [] -> []
-        |hd :: tl -> let (genv, afunc) = infer_func hd genv 
-                                         in afunc :: do_program tl genv
-    in do_program (parse input) GlobalMap.empty
+        |hd :: tl -> let (genv, afunc) = ignore(print_string "acting on "; print_ufunc hd);
+                                        infer_func hd genv 
+                                        in afunc :: do_program tl genv
+    in 
+    let genv = GlobalMap.add "print" (TInt, [TString]) GlobalMap.empty in 
+    do_program (parse input) genv
 
 let format_sast_codegen (ast : Ast.afunc) : Ast.sast_afunc = 
     match ast with 
@@ -94,12 +104,13 @@ let format_sast_codegen (ast : Ast.afunc) : Ast.sast_afunc =
         }
 
         
-let say() =  let sast = grail [] "function(x) { print(x); }" in 
+let say() =  let sast = grail [] "main(a){ return 3; } function(x) { main(); return y; }" in 
+    print_string "Got here\n";
     let rec formlist l = 
     match l with 
     | [] -> []
     | h :: t -> let x = format_sast_codegen h in 
-                print_string (string_of_func x) ; 
+               print_string "Before print string\n"; print_string (string_of_func x) ; 
                 x  :: formlist t in  
         formlist (List.rev sast);
 ;;

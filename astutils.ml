@@ -29,6 +29,7 @@ let string_of_type (t: primitiveType) =
   let s, _, _ = aux t 97 CharMap.empty in s
 
 let rec string_of_aexpr (ae: aexpr): string =
+  print_string "Matching aexpr";
   match ae with
   | AIntLit(x, t)  -> Printf.sprintf "(%s: %s)" (string_of_int x) (string_of_type t)
   | ABoolLit(b, t) -> Printf.sprintf "(%s: %s)" (string_of_bool b) (string_of_type t)
@@ -42,6 +43,15 @@ let rec string_of_aexpr (ae: aexpr): string =
     let s1 = string_of_aexpr ae in
     let st = string_of_type t in
     Printf.sprintf "(fun %s -> %s): %s" id s1 st
+  | ACall(id, aelist, t) ->
+    let allaexprs = 
+    let rec matchlist m= 
+    match m with
+    [] -> []
+    | hd :: tl ->
+      string_of_aexpr hd ^ matchlist tl
+    in matchlist aelist
+  in Printf.sprintf "%s (%s): %s" id aexprs (string_of_type t)
 
 let rec string_of_expr (e: expr): string =
   match e with
@@ -57,7 +67,9 @@ let rec string_of_expr (e: expr): string =
     let s1 = string_of_expr e in Printf.sprintf "(fun %s -> %s)" id s1 
 
 
-let rec string_of_stmt = function 
+let rec string_of_stmt l= 
+    print_string "String of stmt\n";
+    match l with 
         | AReturn(aexpr,typ) -> "return " ^ string_of_aexpr aexpr ^ " " ^ string_of_type typ ^ ";\n";
         | AAsn(id,aexpr,_,typ) -> id ^ " = " ^ string_of_aexpr aexpr ^ " " ^ string_of_type typ ^ ";\n"
         | AExpr(aexpr,typ) -> " " ^ string_of_aexpr aexpr ^ " " ^ string_of_type typ ^ ";\n"
@@ -70,10 +82,13 @@ let rec string_of_stmt = function
         | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
     *)
 
-let string_of_func func = 
-    "Type :" ^ string_of_type func.typ ^ " Name : " ^ func.fname ^ "(" ^ String.concat ", " (List.map fst func.formals) ^
-    ")\n{\n" ^
-    (*  String.concat "" (List.map string_of_vdecl func.locals) ^ *)
-     String.concat "" (List.map string_of_stmt func.body) ^
+let string_of_func func = ignore(print_string "Matching: \n"); "yo\n";
+    let t = "Type :" ^ string_of_type func.typ 
+    in let name = 
+    " Name : " ^ func.fname
+    in let formals = "(" ^ String.concat ", " (List.map fst func.formals) ^ ")\n{\n"
+    in let body = 
+      String.concat "" (List.map string_of_stmt func.body) ^
     "}\n"
+  in t ^ name ^ formals
 

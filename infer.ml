@@ -250,6 +250,7 @@ let rec grab_returns (r: astmt list) : primitiveType list =
 
 (*Checks that return statements are consistent and returns the type*)
 let get_return_type(r: astmt list) : primitiveType =
+  print_string "get_return_type\n";
   let returns = grab_returns r in
   let rec find_type l =
       match l with
@@ -281,13 +282,16 @@ let infer_func (f: func) (env: environment) (genv : genvironment) : (afunc * gen
             infer_stmt_list env genv stmts
         in let ret_type =
             (*List.iter (fun a -> (print_endline (string_of_type (type_of_stmt a)))) astmts;*)
+            print_string "inferring func\n";
             get_return_type astmts            
         in  
             match decl with
             |Fdecl(name, formals) ->           (*annotate the formals*)
+                print_string "Matching decl\n";
                 if GlobalMap.mem name genv
                 then 
                     let aformals = infer_formals formals env in   
                     let genv = GlobalMap.add name (ret_type,aformals) genv in 
+                    print_string "Added aformals to genv\n";
                     (AFbody(AFdecl(name, formals, aformals, ret_type), astmts),genv)
                 else raise (failwith "function not defined")
