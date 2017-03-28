@@ -68,15 +68,14 @@ let translate (functions) =
         (* Return the value for a variable or formal argument *)
         let lookup n = StringMap.find n local_vars in
 
-        let rec expr builder = function
-                A.IntLit i -> L.const_int i32_t i
-                | A.BoolLit b -> L.const_int i1_t (if b then 1 else 0)
-                | A.StrLit s -> L.pointer_type i8_t s
-                | A.CharLit c -> L.const_int i8_t c
+        let rec aexpr builder = function
+                A.AIntLit(i,_) -> L.const_int i32_t i
+                | A.ABoolLit(b,_) -> L.const_int i1_t (if b then 1 else 0)
+                | A.AStrLit(s,_) -> L.pointer_type i8_t s
+                | A.ACharLit(c,_) -> L.const_int i8_t c
              (*   | A.FloatLit f -> *)
-                | A.Id a -> L.build_load (lookup a) a builder (* why this format *)
                (* | A.List ->  why is List an expression, should not it be a data staructure?  *)
-                | A.Call ("print", [e]) -> L.build_call printf_func [| int_format_str ; (expr builder e) |] "printf" builder
+                | A.ACall ("print", [e], _) -> L.build_call printf_func [| int_format_str ; (expr builder e) |] "printf" builder
         (*        | A.Item ->
                 | A.Subset ->
                 | A.Dot ->  
@@ -102,7 +101,7 @@ let translate (functions) =
                                                 (* what are In, Fadd, Fsub, Fmult, Fdiv, Gadd, Eadd*)
                                           ) e1' e2' "tmp" builder *)
                 (* Edge, Graph, Node, Record *)
-                | A.Noexpr -> L.const_int i32_t 0
+                (*| A.Noexpr -> L.const_int i32_t 0*)
               in
 
         
@@ -116,13 +115,13 @@ let translate (functions) =
 
         (* Build the code for the given statement; return the builder for
        the statement's successor *)
-        let rec stmt builder = function
-          A.Expr e -> ignore (expr builder e); builder
+        let rec astmt builder = function
+          A.AExpr(e,_) -> ignore (aexpr builder e); builder
         in
 
 
         (* Build the code for each statement in the function *)
-        let builder = List.fold_left stmt builder afunc.A.body in
+        let builder = List.fold_left astmt builder afunc.A.body in
 
         (* Add a return if the last block falls off the end *)
         add_terminal builder (match afunc.A.typ with
