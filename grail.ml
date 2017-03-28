@@ -124,10 +124,10 @@ compile();
 
 say();*)
 
-let sast = grail [] "main() { print(\"hello world\"); }" in
+(* let sast = grail [] "main() { print(\"hello world\"); }" in
   let m = Codegen.translate sast in
   Llvm_analysis.assert_valid_module m; print_string (Llvm.string_of_llmodule m) 
-
+ *)
 (*To run interpreter style, you can call this instead of grail*)
 (* let rec interpreter (ast: Ast.afunc list) : Ast.afunc list =
   print_string "> ";
