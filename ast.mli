@@ -54,8 +54,7 @@ type astmt =
 | AReturn of aexpr * primitiveType
 
 type stmt =
-     Asn of string * expr * bool
-|    Expr of expr
+     Asn of id * expr * bool
 |    If of expr * stmt list * stmt list
 |    While of expr * stmt list
 |    For of expr * expr * expr * stmt list
@@ -65,18 +64,19 @@ type stmt =
   
 type stmt_list = stmt list
 
+type func_dec = Fdecl of id * id list
+(*name, formals, return type*)
+type afunc_dec = AFdecl of id * id list * primitiveType list * primitiveType
 
-type program = func list
+type func = Fbody of func_dec * stmt list
+type afunc = AFbody of afunc_dec * astmt list
 
-type afunc = {
-	fname : string;
-	formals : (string * primitiveType) list;
-	body: astmt list
+type sast_afunc = { 
+    typ : primitiveType; 
+    fname : string;
+    formals : (string * primitiveType) list;
+    body: astmt list
 }
 
-type func = {
-    fname : string;
-    formals : string list;
-    body : stmt list;
-  }
+type program = func list
 

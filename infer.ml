@@ -281,5 +281,5 @@ let infer_func (f: func) (env: environment) (genv : genvironment) : (afunc * gen
                 then 
                     let aformals = infer_formals formals env in   
                     let genv = GlobalMap.add name (ret_type,aformals) genv in 
-                    (AFbody(AFdecl(name, aformals, ret_type), astmts),genv)
+                    (AFbody(AFdecl(name, formals, aformals, ret_type), astmts),genv)
                 else raise (failwith "function not defined")

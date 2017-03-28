@@ -56,3 +56,23 @@ let rec string_of_expr (e: expr): string =
   | Fun(id, e) ->
     let s1 = string_of_expr e in Printf.sprintf "(fun %s -> %s)" id s1 
 
+
+let rec string_of_stmt = function 
+        | AReturn(aexpr,typ) -> "return " ^ string_of_aexpr aexpr ^ " " ^ string_of_type typ ^ ";\n";
+        | AAsn(id,aexpr,_,typ) -> id ^ " = " ^ string_of_aexpr aexpr ^ " " ^ string_of_type typ ^ ";\n"
+    (*  | If(e, s) -> "if (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt s
+        | If(e, s1, s2) ->  "if (" ^ string_of_expr e ^ ")\n" ^
+                string_of_stmt s1 ^ "else\n" ^ string_of_stmt s2
+        | For(e1, e2, e3, s) ->
+                "for (" ^ string_of_expr e1  ^ " ; " ^ string_of_expr e2 ^ " ; " ^
+                string_of_expr e3  ^ ") " ^ string_of_stmt s
+        | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
+    *)
+
+let string_of_func func = 
+    "Type :" ^ string_of_type func.typ ^ " Name : " ^ func.fname ^ "(" ^ String.concat ", " (List.map fst func.formals) ^
+    ")\n{\n" ^
+    (*  String.concat "" (List.map string_of_vdecl func.locals) ^ *)
+     String.concat "" (List.map string_of_stmt func.body) ^
+    "}\n"
+

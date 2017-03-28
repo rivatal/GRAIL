@@ -55,7 +55,7 @@ let infer (e: Ast.func) (genv : genvironment) : (Ast.afunc * genvironment) =
 
 let print_func (afunc: Ast.afunc): unit =
     match afunc with
-    AFbody(AFdecl(name, formals, t), astmts) -> 
+    AFbody(AFdecl(name, _, formals, t), astmts) -> 
       print_endline ("Function " ^ name ^ " " ^ string_of_type t);
       List.iter (fun a -> (print_endline (string_of_type (a)))) formals;
       List.iter (fun a -> (print_endline (string_of_type (Infer.type_of_stmt a)))) astmts
@@ -82,7 +82,24 @@ let grail (ast: Ast.afunc list) (input: string) : Ast.afunc list =
                                          in afunc :: do_program tl genv
     in do_program (parse input) GlobalMap.empty
 
-let say() = let sast = grail [] "function(x) { return x;}" in print_func_list sast
+let format_sast_codegen (ast : Ast.afunc) : Ast.sast_afunc = 
+    match ast with 
+    AFbody(AFdecl(name, formals, aformals, t), astmts) ->
+        { typ = t; 
+          fname = name;
+          formals = List.combine formals aformals;
+          body = astmts
+        }
+
+        
+let say() =  let sast = grail [] "function(x) { return x;} boolfunc(a,b) { a = a && true; return b || a;}" in 
+    let rec formlist l = 
+    match l with 
+    | [] -> []
+    | h :: t -> let x = format_sast_codegen h in 
+                print_string (string_of_func x) ; 
+                x  :: formlist t in  
+        formlist (List.rev sast);
 ;;
 
 say();
