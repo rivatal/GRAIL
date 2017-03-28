@@ -1,0 +1,9 @@
+rm parser.ml
+rm infer.cmo
+rm grail
+rm scanner.cmo
+rm scanner.cmi
+rm parser.cmi
+rm parser.cmo
+rm ast.cmi
+rm scanner.ml
