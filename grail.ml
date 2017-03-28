@@ -102,14 +102,14 @@ let format_sast_codegen (ast : Ast.afunc) : Ast.sast_afunc =
           formals = List.combine formals aformals;
           body = astmts
         }
-
-        
-let say() =  let sast = grail [] "main(){ print(\"hello world\"); return 0;}" in 
-(* let compile() = let sast = grail [] "main() { print(\"hello world\"); }" in
+let compile() = let sast = List.map format_sast_codegen (grail [] "main() { print(\"hello world\"); }") in
   let m = Codegen.translate sast in
   Llvm_analysis.assert_valid_module m; print_string (Llvm.string_of_llmodule m) ;;
 compile();
- *)
+
+        
+(*let say() =  let sast = grail [] "main(){ print(\"hello world\"); return 0;}" in 
+
 
     let rec formlist l = 
     match l with 
@@ -120,7 +120,7 @@ compile();
         formlist (List.rev sast);
 ;;
 
-say();
+say();*)
 
 (* let sast = grail [] "main() { print(\"hello world\"); }" in
   let m = Codegen.translate sast in
