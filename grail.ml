@@ -34,6 +34,8 @@ let rec get_all_ids (e: stmt list): string list =
                 match hd with
                 | Asn(x, y, _) -> [x] @ (get_ids y) @ get_all_ids tl 
                 | Return(x) -> (get_ids x) @ get_all_ids tl
+                | Expr(x) -> (get_ids x) @ get_all_ids tl
+                
 
 let get_all_formals_ids (e: func): (string list * string) =
     match e with 
@@ -92,7 +94,7 @@ let format_sast_codegen (ast : Ast.afunc) : Ast.sast_afunc =
         }
 
         
-let say() =  let sast = grail [] "function(x) { return x;} boolfunc(a,b) { a = a && true; return b || a;}" in 
+let say() =  let sast = grail [] "function(x) { print(x); }" in 
     let rec formlist l = 
     match l with 
     | [] -> []

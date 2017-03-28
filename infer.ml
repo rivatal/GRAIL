@@ -67,12 +67,13 @@ let rec annotate_stmt (e: stmt) (env: environment) (genv: genvironment) : astmt 
      in AAsn(id, aexpr, switch, t)
     | Return(expr) ->
       let aexpr = annotate_expr expr env genv in AReturn(aexpr, gen_new_type())
-    | expr -> annotate_expr expr env genv 
+    | Expr(expr) -> 
+      let aexpr = annotate_expr expr env genv in AExpr(aexpr, gen_new_type()) 
     and type_of_stmt (a: astmt): primitiveType = 
        match a with
       | AAsn(_, _, _, t) -> t
       | AReturn(_, t) -> t
-      | aexpr -> type_of(aexpr) 
+      | AExpr(_, t) -> t 
 (* Annotate a statement list *)
 let  rec annotate_stmt_list(st : stmt list ) (env : environment) (genv : genvironment) : astmt list =
     match st with 
@@ -111,8 +112,8 @@ let collect_stmt (a: astmt) : (primitiveType * primitiveType) list =
       collect_expr aexpr @ [(type_of aexpr , t)]
     | AReturn(aexpr, t) ->
       collect_expr aexpr @ [(type_of aexpr , t)]
-    | aexpr ->
-      collect_expr aexpr
+    | AExpr(aexpr, t) ->
+      collect_expr aexpr @ [(type_of aexpr , t)]
 
 (* Collect statement list *)
 let rec collect_stmt_list (astlist: astmt list) : (primitiveType * primitiveType) list = 
@@ -176,8 +177,8 @@ let rec apply_stmt (subs: substitutions) (a: astmt): astmt =
     AAsn(id, apply_expr subs aexpr, switch, apply subs t) 
   | AReturn(aexpr, t) ->
      AReturn(apply_expr subs aexpr, apply subs t) 
-  | aexpr -> 
-      apply_expr subs aexpr 
+  | AExpr(aexpr, t) -> 
+      AExpr(apply_expr subs aexpr, apply subs t) 
 
 let rec apply_stmt_list (subs:substitutions) (astlist : astmt list) : astmt list = 
     match astlist with 
@@ -218,7 +219,7 @@ let rec update_map (alist : astmt list) (env: environment) : environment =
       |AReturn(aexpr,t) -> 
               let env = update_expr_map aexpr env     
               in update_map tl env
-      | aexpr -> 
+      | AExpr(aexpr, t) -> 
               let env = update_expr_map aexpr env     
               in update_map tl env
 

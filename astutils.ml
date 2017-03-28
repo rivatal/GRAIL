@@ -60,6 +60,7 @@ let rec string_of_expr (e: expr): string =
 let rec string_of_stmt = function 
         | AReturn(aexpr,typ) -> "return " ^ string_of_aexpr aexpr ^ " " ^ string_of_type typ ^ ";\n";
         | AAsn(id,aexpr,_,typ) -> id ^ " = " ^ string_of_aexpr aexpr ^ " " ^ string_of_type typ ^ ";\n"
+        | AExpr(aexpr,typ) -> " " ^ string_of_aexpr aexpr ^ " " ^ string_of_type typ ^ ";\n"
     (*  | If(e, s) -> "if (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt s
         | If(e, s1, s2) ->  "if (" ^ string_of_expr e ^ ")\n" ^
                 string_of_stmt s1 ^ "else\n" ^ string_of_stmt s2
