@@ -53,9 +53,10 @@ type astmt =
 | aexpr
 | AAsn of id * aexpr * bool * primitiveType
 | AReturn of aexpr * primitiveType
+| AExpr of expr * primitiveType
 
 type stmt =
-|    expr
+|    Expr of expr
 |    Asn of id * expr * bool
 |    If of expr * stmt list * stmt list
 |    While of expr * stmt list
