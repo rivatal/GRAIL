@@ -75,7 +75,7 @@ let translate (functions) =
                 | A.ACharLit(c,_) -> L.const_int i8_t c
              (*   | A.FloatLit f -> *)
                (* | A.List ->  why is List an expression, should not it be a data staructure?  *)
-                | A.ACall ("print", [e], _) -> L.build_call printf_func [| int_format_str ; (expr builder e) |] "printf" builder
+                | A.ACall ("print", [e], _) -> L.build_call printf_func [| int_format_str ; (aexpr builder e) |] "printf" builder
         (*        | A.Item ->
                 | A.Subset ->
                 | A.Dot ->  
@@ -125,7 +125,7 @@ let translate (functions) =
 
         (* Add a return if the last block falls off the end *)
         add_terminal builder (match afunc.A.typ with
-            A.Void -> L.build_ret_void
+            A.TVoid -> L.build_ret_void
           | t -> L.build_ret (L.const_int (ltype_of_typ t) 0))
       in
             
