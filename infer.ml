@@ -67,7 +67,8 @@ let rec annotate_stmt (e: stmt) (env: environment) (genv: genvironment) : astmt 
      in AAsn(id, aexpr, switch, t)
     | Return(expr) ->
       let aexpr = annotate_expr expr env genv in AReturn(aexpr, gen_new_type())
-    | AExpr(expr) -> let aexpr = annotate_expr expr env genv in AExpr(aexpr, gen_new_type()) 
+    | Expr(expr) -> 
+      let aexpr = annotate_expr expr env genv in AExpr(aexpr, gen_new_type()) 
     and type_of_stmt (a: astmt): primitiveType = 
        match a with
       | AAsn(_, _, _, t) -> t
@@ -111,8 +112,8 @@ let collect_stmt (a: astmt) : (primitiveType * primitiveType) list =
       collect_expr aexpr @ [(type_of aexpr , t)]
     | AReturn(aexpr, t) ->
       collect_expr aexpr @ [(type_of aexpr , t)]
-    | AExpr(aexpr) ->
-      collect_expr aexpr
+    | AExpr(aexpr, t) ->
+      collect_expr aexpr @ [(type_of aexpr , t)]
 
 (* Collect statement list *)
 let rec collect_stmt_list (astlist: astmt list) : (primitiveType * primitiveType) list = 

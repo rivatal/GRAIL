@@ -34,6 +34,8 @@ let rec get_all_ids (e: stmt list): string list =
                 match hd with
                 | Asn(x, y, _) -> [x] @ (get_ids y) @ get_all_ids tl 
                 | Return(x) -> (get_ids x) @ get_all_ids tl
+                | Expr(x) -> (get_ids x) @ get_all_ids tl
+                
 
 let get_all_formals_ids (e: func): (string list * string) =
     match e with 

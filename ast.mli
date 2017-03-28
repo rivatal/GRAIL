@@ -55,18 +55,20 @@ type astmt =
 | AExpr of aexpr * primitiveType
 
 type stmt =
-|    Expr of expr
-|    Asn of id * expr * bool
-|    If of expr * stmt list * stmt list
-|    While of expr * stmt list
-|    For of expr * expr * expr * stmt list
-|    Return of expr
-|    Break
-|    Continue
+| Asn of id * expr * bool
+| If of expr * stmt list * stmt list
+| While of expr * stmt list
+| For of expr * expr * expr * stmt list
+| Return of expr
+| Break
+| Continue
+| Expr of expr
+
   
 type stmt_list = stmt list
 
 type func_dec = Fdecl of id * id list
+
 (*name, formals, return type*)
 type afunc_dec = AFdecl of id * id list * primitiveType list * primitiveType
 

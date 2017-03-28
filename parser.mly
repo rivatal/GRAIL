@@ -75,7 +75,8 @@ stmt_list:
   | stmt_list stmt { $2 :: $1 }
 
 stmt:
-  RETURN expr SEMI { Return($2) }
+   expr SEMI  { Expr($1) }    
+  |RETURN expr SEMI { Return($2) }
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE { If($3, $6, []) }
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE   { If($3, $6, List.rev $10) }
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE IF LPAREN expr RPAREN LBRACE stmt_list RBRACE  { If($3, List.rev $6, [If($11, List.rev $14, [])]) }
