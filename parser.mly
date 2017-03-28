@@ -57,10 +57,17 @@ decls:
  | decls_list func { $2::$1 }
 
 func:
+<<<<<<< HEAD
    func_dec LBRACE  stmt_list RBRACE { Fbody($1, List.rev $3) }
 
 func_dec:
 	ID LPAREN formals_opt RPAREN { Fdecl($1, $3) }
+=======
+   ID LPAREN formals_opt RPAREN LBRACE  stmt_list RBRACE
+      { { fname = $1;
+   formals = $3;
+   body = List.rev $6 } }
+>>>>>>> master
 
 formals_opt:
     /* nothing */ { [] }
@@ -74,8 +81,14 @@ stmt_list:
     /* nothing */  { [] }
   | stmt_list stmt { $2 :: $1 }
 
+<<<<<<< HEAD
 stmt:
   RETURN expr SEMI { Return($2) }
+=======
+  stmt:
+  RETURN expr SEMI { Return $2 }
+  | expr SEMI { Expr $1 }
+>>>>>>> master
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE { If($3, $6, []) }
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE   { If($3, $6, List.rev $10) }
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE IF LPAREN expr RPAREN LBRACE stmt_list RBRACE  { If($3, List.rev $6, [If($11, List.rev $14, [])]) }
