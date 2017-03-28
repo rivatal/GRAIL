@@ -13,12 +13,15 @@ let translate (functions) =
         and i32_t = L.i32_type context
         and i8_t  = L.i8_type  context
         and i1_t  = L.i1_type  context
+        and str_t = L.pointer_type (L.i8_type context)
         and void_t= L.void_type context in
         
         let ltype_of_typ = function
                   A.TInt -> i32_t
                 | A.TBool -> i1_t
-                | A.TVoid -> void_t in        
+                | A.TVoid -> void_t
+                | A.TString -> str_t in 
+
 
         (* Declare each global variable; remember its value in a map *)
         (* let global_vars = 
@@ -35,7 +38,7 @@ let translate (functions) =
       (* Define each function (arguments and return type) so we can call it *) (** Fix the type thing here **)
         let function_decls =
             let function_decl m afunc=
-            let name = func.A.fname
+            let name = afunc.A.fname
               and formal_types =
             Array.of_list (List.map (fun (_,t) -> ltype_of_typ t) afunc.A.formals)
               in let ftype = L.function_type (ltype_of_typ afunc.A.typ) formal_types in
@@ -47,35 +50,35 @@ let translate (functions) =
             let (the_function, _) = StringMap.find afunc.A.fname function_decls in
             let builder = L.builder_at_end context (L.entry_block the_function) in
 
-            let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in
+            (*let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in*)
             
             (* Construct the function's "locals": formal arguments and locally
                declared variables.  Allocate each on the stack, initialize their
                value, if appropriate, and remember their values in the "locals" map *)
-            let local_vars =
-              let add_formal m (n, t) p = L.set_value_name n p;
-        let local = L.build_alloca (ltype_of_typ t) n builder in
+            (*let local_vars =
+              let add_formal m (n, t) p = L.set_value_name n p;*)
+        (*let local = L.build_alloca (ltype_of_typ t) n builder in
         ignore (L.build_store p local builder);
         StringMap.add n local m in
 
               let add_local m (n, t) =            
         let local_var = L.build_alloca (ltype_of_typ t) n builder
-        in StringMap.add n local_var m in
+        in StringMap.add n local_var m in*)
 
-              let formals = List.fold_left2 add_formal StringMap.empty afunc.A.formals
+              (*let formals = List.fold_left2 add_formal StringMap.empty afunc.A.formals
                   (Array.to_list (L.params the_function)) in
 
         (* Return the value for a variable or formal argument *)
-        let lookup n = StringMap.find n local_vars in
+        let lookup n = StringMap.find n local_vars in*)
 
         let rec aexpr builder = function
                 A.AIntLit(i,_) -> L.const_int i32_t i
                 | A.ABoolLit(b,_) -> L.const_int i1_t (if b then 1 else 0)
-                | A.AStrLit(s,_) -> L.pointer_type i8_t s
-                | A.ACharLit(c,_) -> L.const_int i8_t c
+                | A.AStrLit(s,_) -> L.build_global_stringptr s "str" builder
+                (*| A.ACharLit(c,_) -> L.const_int i8_t c*)
              (*   | A.FloatLit f -> *)
                (* | A.List ->  why is List an expression, should not it be a data staructure?  *)
-                | A.ACall ("print", [e], _) -> L.build_call printf_func [| int_format_str ; (aexpr builder e) |] "printf" builder
+                | A.ACall ("print", [e], _) -> L.build_call printf_func [| (aexpr builder e) |] "printf" builder
         (*        | A.Item ->
                 | A.Subset ->
                 | A.Dot ->  
