@@ -16,9 +16,9 @@ let translate (functions) =
         and void_t= L.void_type context in
         
         let ltype_of_typ = function
-                  A.Int -> i32_t
-                | A.Bool -> i1_t
-                | A.Void -> void_t in        
+                  A.TInt -> i32_t
+                | A.TBool -> i1_t
+                | A.TVoid -> void_t in        
 
         (* Declare each global variable; remember its value in a map *)
         (* let global_vars = 
@@ -30,21 +30,21 @@ let translate (functions) =
 
        (* Declare printf(), which the print built-in function will call *)
         let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
-        let printf_func = L.declare_function "print" printf_t the_module in
+        let printf_func = L.declare_function "printf" printf_t the_module in
 
       (* Define each function (arguments and return type) so we can call it *) (** Fix the type thing here **)
         let function_decls =
-            let function_decl m func=
+            let function_decl m afunc=
             let name = func.A.fname
               and formal_types =
-            Array.of_list (List.map (fun (t,_) -> ltype_of_typ t) funcs.A.formals)
-              in let ftype = L.function_type (ltype_of_typ fdecl.A.typ) formal_types in
-              StringMap.add name (L.define_function name ftype the_module, fdecl) m in
+            Array.of_list (List.map (fun (_,t) -> ltype_of_typ t) afunc.A.formals)
+              in let ftype = L.function_type (ltype_of_typ afunc.A.typ) formal_types in
+              StringMap.add name (L.define_function name ftype the_module, afunc) m in
             List.fold_left function_decl StringMap.empty functions in
           
           (* Fill in the body of the given function *) (* FIX The Type Thing Here *)
-        let build_function_body fdecl =
-            let (the_function, _) = StringMap.find fdecl.A.fname function_decls in
+        let build_function_body afunc =
+            let (the_function, _) = StringMap.find afunc.A.fname function_decls in
             let builder = L.builder_at_end context (L.entry_block the_function) in
 
             let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in
@@ -53,18 +53,17 @@ let translate (functions) =
                declared variables.  Allocate each on the stack, initialize their
                value, if appropriate, and remember their values in the "locals" map *)
             let local_vars =
-              let add_formal m (t, n) p = L.set_value_name n p;
+              let add_formal m (n, t) p = L.set_value_name n p;
         let local = L.build_alloca (ltype_of_typ t) n builder in
         ignore (L.build_store p local builder);
         StringMap.add n local m in
 
-              let add_local m (t, n) =            
+              let add_local m (n, t) =            
         let local_var = L.build_alloca (ltype_of_typ t) n builder
         in StringMap.add n local_var m in
 
-              let formals = List.fold_left2 add_formal StringMap.empty fdecl.A.formals
+              let formals = List.fold_left2 add_formal StringMap.empty afunc.A.formals
                   (Array.to_list (L.params the_function)) in
-              List.fold_left add_local formals fdecl.A.locals in
 
         (* Return the value for a variable or formal argument *)
         let lookup n = StringMap.find n local_vars in
@@ -80,7 +79,7 @@ let translate (functions) =
                 | A.Call ("print", [e]) -> L.build_call printf_func [| int_format_str ; (expr builder e) |] "printf" builder
         (*        | A.Item ->
                 | A.Subset ->
-                | A.Dot ->  *)
+                | A.Dot ->  
                 | A.Unop(op, e) -> let e' = expr builder e in
                         (match op with 
                                 A.Neg -> L.build_neg
@@ -101,7 +100,7 @@ let translate (functions) =
                                                 | A.And -> L.build_and
                                                 | A.Or -> L.build_or
                                                 (* what are In, Fadd, Fsub, Fmult, Fdiv, Gadd, Eadd*)
-                                          ) e1' e2' "tmp" builder
+                                          ) e1' e2' "tmp" builder *)
                 (* Edge, Graph, Node, Record *)
                 | A.Noexpr -> L.const_int i32_t 0
               in
@@ -123,10 +122,10 @@ let translate (functions) =
 
 
         (* Build the code for each statement in the function *)
-        let builder = stmt builder (A.Block fdecl.A.body) in
+        let builder = List.fold_left stmt builder afunc.A.body in
 
         (* Add a return if the last block falls off the end *)
-        add_terminal builder (match fdecl.A.typ with
+        add_terminal builder (match afunc.A.typ with
             A.Void -> L.build_ret_void
           | t -> L.build_ret (L.const_int (ltype_of_typ t) 0))
       in
