@@ -94,7 +94,7 @@ let format_sast_codegen (ast : Ast.afunc) : Ast.sast_afunc =
         }
 
         
-let say() =  let sast = grail [] "function(x) { return x;} boolfunc(a,b) { a = a && true; return b || a;}" in 
+let say() =  let sast = grail [] "function(x) { print(x); }" in 
     let rec formlist l = 
     match l with 
     | [] -> []
