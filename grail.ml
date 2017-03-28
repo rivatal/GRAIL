@@ -106,6 +106,13 @@ let format_sast_codegen (ast : Ast.afunc) : Ast.sast_afunc =
         
 let say() =  let sast = grail [] "main(a){ return 3; } function(x) { main(); return y; }" in 
     print_string "Got here\n";
+(* let compile() = let sast = grail [] "main() { print(\"hello world\"); }" in
+  let m = Codegen.translate sast in
+  Llvm_analysis.assert_valid_module m; print_string (Llvm.string_of_llmodule m) ;;
+compile();
+ *)
+(*let say() =  let sast = grail [] "function(x) { print(x); }" in 
+
     let rec formlist l = 
     match l with 
     | [] -> []
@@ -115,7 +122,11 @@ let say() =  let sast = grail [] "main(a){ return 3; } function(x) { main(); ret
         formlist (List.rev sast);
 ;;
 
-say();
+say();*)
+
+let sast = grail [] "main() { print(\"hello world\"); }" in
+  let m = Codegen.translate sast in
+  Llvm_analysis.assert_valid_module m; print_string (Llvm.string_of_llmodule m) 
 
 (*To run interpreter style, you can call this instead of grail*)
 (* let rec interpreter (ast: Ast.afunc list) : Ast.afunc list =
