@@ -44,13 +44,13 @@ let rec string_of_aexpr (ae: aexpr): string =
     Printf.sprintf "(fun %s -> %s): %s" id s1 st
   | ACall(id, aelist, t) ->
     let allaexprs = 
-    let rec matchlist m= 
-    match m with
-    [] -> []
-    | hd :: tl ->
-      string_of_aexpr hd ::  matchlist tl
-    in String.concat "" (matchlist aelist)  
-  in Printf.sprintf "%s (%s): %s" id allaexprs (string_of_type t)
+      let rec matchlist m= 
+        match m with
+          [] -> []
+        | hd :: tl ->
+          string_of_aexpr hd ::  matchlist tl
+      in String.concat "" (matchlist aelist)  
+    in Printf.sprintf "%s (%s): %s" id allaexprs (string_of_type t)
 
 let rec string_of_expr (e: expr): string =
   match e with
@@ -65,28 +65,35 @@ let rec string_of_expr (e: expr): string =
   | Fun(id, e) ->
     let s1 = string_of_expr e in Printf.sprintf "(fun %s -> %s)" id s1 
 
+let string_of_ustmt (l: stmt)= 
+  match l with 
+  | Return(expr) -> "return " ^ string_of_expr expr ^ ";\n";
+  | Asn(id,expr,_) -> id ^ " = " ^ string_of_expr expr ^ ";\n"
+  | Expr(expr) -> " " ^ string_of_expr expr ^ ";\n"
+  
+
 
 let rec string_of_stmt l= 
-    match l with 
-        | AReturn(aexpr,typ) -> "return " ^ string_of_aexpr aexpr ^ " " ^ string_of_type typ ^ ";\n";
-        | AAsn(id,aexpr,_,typ) -> id ^ " = " ^ string_of_aexpr aexpr ^ " " ^ string_of_type typ ^ ";\n"
-        | AExpr(aexpr,typ) -> " " ^ string_of_aexpr aexpr ^ " " ^ string_of_type typ ^ ";\n"
-    (*  | If(e, s) -> "if (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt s
-        | If(e, s1, s2) ->  "if (" ^ string_of_expr e ^ ")\n" ^
-                string_of_stmt s1 ^ "else\n" ^ string_of_stmt s2
-        | For(e1, e2, e3, s) ->
-                "for (" ^ string_of_expr e1  ^ " ; " ^ string_of_expr e2 ^ " ; " ^
-                string_of_expr e3  ^ ") " ^ string_of_stmt s
-        | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
-    *)
+  match l with 
+  | AReturn(aexpr,typ) -> "return " ^ string_of_aexpr aexpr ^ " " ^ string_of_type typ ^ ";\n";
+  | AAsn(id,aexpr,_,typ) -> id ^ " = " ^ string_of_aexpr aexpr ^ " " ^ string_of_type typ ^ ";\n"
+  | AExpr(aexpr,typ) -> " " ^ string_of_aexpr aexpr ^ " " ^ string_of_type typ ^ ";\n"
+(*  | If(e, s) -> "if (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt s
+    | If(e, s1, s2) ->  "if (" ^ string_of_expr e ^ ")\n" ^
+            string_of_stmt s1 ^ "else\n" ^ string_of_stmt s2
+    | For(e1, e2, e3, s) ->
+            "for (" ^ string_of_expr e1  ^ " ; " ^ string_of_expr e2 ^ " ; " ^
+            string_of_expr e3  ^ ") " ^ string_of_stmt s
+    | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
+*)
 
 let string_of_func func = 
-    let t = "Type :" ^ string_of_type func.typ 
-    in let name = 
-    " Name : " ^ func.fname
-    in let formals = "(" ^ String.concat ", " (List.map fst func.formals) ^ ")\n{\n"
-    in let body = 
-      String.concat "" (List.map string_of_stmt func.body) ^
-    "}\n"
+  let t = "Type :" ^ string_of_type func.typ 
+  in let name = 
+       " Name : " ^ func.fname
+  in let formals = "(" ^ String.concat ", " (List.map fst func.formals) ^ ")\n{\n"
+  in let body = 
+       String.concat "" (List.map string_of_stmt func.body) ^
+       "}\n"
   in t ^ name ^ formals ^body
 

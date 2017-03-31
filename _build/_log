@@ -28,7 +28,11 @@ Here is an example of a value that is not matched:
 (CharLit _|FloatLit _|List _|Call (_, _)|Item (_, _)|Subset (_, _, _)|
 Dot (_, _)|Unop (_, _)|Edge (_, _, _, _)|Graph (_, _)|Node (_, _)|Record _|
 Noexpr)
-File "astutils.ml", line 69, characters 8-22:
+File "astutils.ml", line 69, characters 2-191:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a value that is not matched:
+(If (_, _, _)|While (_, _)|For (_, _, _, _)|Break|Continue)
+File "astutils.ml", line 76, characters 8-22:
 Warning 39: unused rec flag.
 # Target: parser.mly, tags: { extension:mly, file:parser.mly, ocaml, ocamlyacc, package(llvm), package(llvm.analysis), parser, quiet }
 /usr/bin/ocamlyacc parser.mly
@@ -60,18 +64,18 @@ Warning 39: unused rec flag.
 # Target: infer.cmo, tags: { byte, compile, extension:cmo, extension:ml, file:infer.cmo, file:infer.ml, implem, ocaml, package(llvm), package(llvm.analysis), quiet }
 ocamlfind ocamlc -c -w +a-4 -package llvm.analysis -package llvm -o infer.cmo infer.ml
 + ocamlfind ocamlc -c -w +a-4 -package llvm.analysis -package llvm -o infer.cmo infer.ml
-File "infer.ml", line 21, characters 4-1017:
+File "infer.ml", line 21, characters 2-883:
 Warning 8: this pattern-matching is not exhaustive.
 Here is an example of a value that is not matched:
 (CharLit _|FloatLit _|List _|Item (_, _)|Subset (_, _, _)|Dot (_, _)|
 Unop (_, _)|Edge (_, _, _, _)|Graph (_, _)|Node (_, _)|Record _|Noexpr)
-File "infer.ml", line 60, characters 2-468:
+File "infer.ml", line 60, characters 2-438:
 Warning 8: this pattern-matching is not exhaustive.
 Here is an example of a value that is not matched:
 (If (_, _, _)|While (_, _)|For (_, _, _, _)|Break|Continue)
 File "infer.ml", line 59, characters 8-21:
 Warning 39: unused rec flag.
-File "infer.ml", line 90, characters 26-350:
+File "infer.ml", line 90, characters 14-282:
 Warning 8: this pattern-matching is not exhaustive.
 Here is an example of a value that is not matched:
 (Sub|Div|Equal|In|Fadd|Fsub|Fmult|Fdiv|Gadd|Eadd)
@@ -81,37 +85,37 @@ Here is an example of a value that is not matched:
 (TVoid|TStmt (_, _))
 File "infer.ml", line 174, characters 8-18:
 Warning 39: unused rec flag.
-File "infer.ml", line 98, characters 16-18:
+File "infer.ml", line 98, characters 9-11:
 Warning 27: unused variable id.
-File "infer.ml", line 100, characters 19-22:
+File "infer.ml", line 100, characters 12-15:
 Warning 27: unused variable idt.
-File "infer.ml", line 111, characters 11-13:
+File "infer.ml", line 111, characters 9-11:
 Warning 27: unused variable id.
-File "infer.ml", line 111, characters 22-28:
+File "infer.ml", line 111, characters 20-26:
 Warning 27: unused variable switch.
-File "infer.ml", line 205, characters 26-28:
+File "infer.ml", line 205, characters 20-22:
 Warning 27: unused variable op.
-File "infer.ml", line 205, characters 35-36:
+File "infer.ml", line 205, characters 29-30:
 Warning 27: unused variable t.
-File "infer.ml", line 208, characters 20-22:
+File "infer.ml", line 208, characters 14-16:
 Warning 27: unused variable id.
-File "infer.ml", line 208, characters 31-32:
+File "infer.ml", line 208, characters 25-26:
 Warning 27: unused variable t.
-File "infer.ml", line 219, characters 21-22:
+File "infer.ml", line 219, characters 19-20:
 Warning 27: unused variable t.
-File "infer.ml", line 222, characters 21-22:
+File "infer.ml", line 222, characters 19-20:
 Warning 27: unused variable t.
 # Target: scanner.cmo, tags: { byte, compile, extension:cmo, extension:ml, file:scanner.cmo, file:scanner.ml, implem, ocaml, package(llvm), package(llvm.analysis), quiet }
 ocamlfind ocamlc -c -w +a-4 -package llvm.analysis -package llvm -o scanner.cmo scanner.ml
 # Target: grail.cmo, tags: { byte, compile, extension:cmo, extension:ml, file:grail.cmo, file:grail.ml, implem, ocaml, package(llvm), package(llvm.analysis), quiet }
 ocamlfind ocamlc -c -w +a-4 -package llvm.analysis -package llvm -o grail.cmo grail.ml
 + ocamlfind ocamlc -c -w +a-4 -package llvm.analysis -package llvm -o grail.cmo grail.ml
-File "grail.ml", line 13, characters 4-260:
+File "grail.ml", line 37, characters 2-228:
 Warning 8: this pattern-matching is not exhaustive.
 Here is an example of a value that is not matched:
 (CharLit _|FloatLit _|List _|Item (_, _)|Subset (_, _, _)|Dot (_, _)|
 Unop (_, _)|Edge (_, _, _, _)|Graph (_, _)|Node (_, _)|Record _|Noexpr)
-File "grail.ml", line 34, characters 16-217:
+File "grail.ml", line 58, characters 4-184:
 Warning 8: this pattern-matching is not exhaustive.
 Here is an example of a value that is not matched:
 (If (_, _, _)|While (_, _)|For (_, _, _, _)|Break|Continue)
@@ -136,7 +140,11 @@ Here is an example of a value that is not matched:
 (CharLit _|FloatLit _|List _|Call (_, _)|Item (_, _)|Subset (_, _, _)|
 Dot (_, _)|Unop (_, _)|Edge (_, _, _, _)|Graph (_, _)|Node (_, _)|Record _|
 Noexpr)
-File "astutils.ml", line 69, characters 8-22:
+File "astutils.ml", line 69, characters 2-191:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a value that is not matched:
+(If (_, _, _)|While (_, _)|For (_, _, _, _)|Break|Continue)
+File "astutils.ml", line 76, characters 8-22:
 Warning 39: unused rec flag.
 # Target: parser.ml.depends, tags: { extension:ml, file:parser.ml, ocaml, ocamldep, package(llvm), package(llvm.analysis), quiet }
 ocamlfind ocamldep -package llvm.analysis -package llvm -modules parser.ml > parser.ml.depends
@@ -162,18 +170,18 @@ Warning 39: unused rec flag.
 # Target: infer.cmx, tags: { compile, extension:cmx, extension:ml, file:infer.cmx, file:infer.ml, implem, native, ocaml, package(llvm), package(llvm.analysis), quiet }
 ocamlfind ocamlopt -c -w +a-4 -package llvm.analysis -package llvm -o infer.cmx infer.ml
 + ocamlfind ocamlopt -c -w +a-4 -package llvm.analysis -package llvm -o infer.cmx infer.ml
-File "infer.ml", line 21, characters 4-1017:
+File "infer.ml", line 21, characters 2-883:
 Warning 8: this pattern-matching is not exhaustive.
 Here is an example of a value that is not matched:
 (CharLit _|FloatLit _|List _|Item (_, _)|Subset (_, _, _)|Dot (_, _)|
 Unop (_, _)|Edge (_, _, _, _)|Graph (_, _)|Node (_, _)|Record _|Noexpr)
-File "infer.ml", line 60, characters 2-468:
+File "infer.ml", line 60, characters 2-438:
 Warning 8: this pattern-matching is not exhaustive.
 Here is an example of a value that is not matched:
 (If (_, _, _)|While (_, _)|For (_, _, _, _)|Break|Continue)
 File "infer.ml", line 59, characters 8-21:
 Warning 39: unused rec flag.
-File "infer.ml", line 90, characters 26-350:
+File "infer.ml", line 90, characters 14-282:
 Warning 8: this pattern-matching is not exhaustive.
 Here is an example of a value that is not matched:
 (Sub|Div|Equal|In|Fadd|Fsub|Fmult|Fdiv|Gadd|Eadd)
@@ -183,37 +191,37 @@ Here is an example of a value that is not matched:
 (TVoid|TStmt (_, _))
 File "infer.ml", line 174, characters 8-18:
 Warning 39: unused rec flag.
-File "infer.ml", line 98, characters 16-18:
+File "infer.ml", line 98, characters 9-11:
 Warning 27: unused variable id.
-File "infer.ml", line 100, characters 19-22:
+File "infer.ml", line 100, characters 12-15:
 Warning 27: unused variable idt.
-File "infer.ml", line 111, characters 11-13:
+File "infer.ml", line 111, characters 9-11:
 Warning 27: unused variable id.
-File "infer.ml", line 111, characters 22-28:
+File "infer.ml", line 111, characters 20-26:
 Warning 27: unused variable switch.
-File "infer.ml", line 205, characters 26-28:
+File "infer.ml", line 205, characters 20-22:
 Warning 27: unused variable op.
-File "infer.ml", line 205, characters 35-36:
+File "infer.ml", line 205, characters 29-30:
 Warning 27: unused variable t.
-File "infer.ml", line 208, characters 20-22:
+File "infer.ml", line 208, characters 14-16:
 Warning 27: unused variable id.
-File "infer.ml", line 208, characters 31-32:
+File "infer.ml", line 208, characters 25-26:
 Warning 27: unused variable t.
-File "infer.ml", line 219, characters 21-22:
+File "infer.ml", line 219, characters 19-20:
 Warning 27: unused variable t.
-File "infer.ml", line 222, characters 21-22:
+File "infer.ml", line 222, characters 19-20:
 Warning 27: unused variable t.
 # Target: scanner.cmx, tags: { compile, extension:cmx, extension:ml, file:scanner.cmx, file:scanner.ml, implem, native, ocaml, package(llvm), package(llvm.analysis), quiet }
 ocamlfind ocamlopt -c -w +a-4 -package llvm.analysis -package llvm -o scanner.cmx scanner.ml
 # Target: grail.cmx, tags: { compile, extension:cmx, extension:ml, file:grail.cmx, file:grail.ml, implem, native, ocaml, package(llvm), package(llvm.analysis), quiet }
 ocamlfind ocamlopt -c -w +a-4 -package llvm.analysis -package llvm -o grail.cmx grail.ml
 + ocamlfind ocamlopt -c -w +a-4 -package llvm.analysis -package llvm -o grail.cmx grail.ml
-File "grail.ml", line 13, characters 4-260:
+File "grail.ml", line 37, characters 2-228:
 Warning 8: this pattern-matching is not exhaustive.
 Here is an example of a value that is not matched:
 (CharLit _|FloatLit _|List _|Item (_, _)|Subset (_, _, _)|Dot (_, _)|
 Unop (_, _)|Edge (_, _, _, _)|Graph (_, _)|Node (_, _)|Record _|Noexpr)
-File "grail.ml", line 34, characters 16-217:
+File "grail.ml", line 58, characters 4-184:
 Warning 8: this pattern-matching is not exhaustive.
 Here is an example of a value that is not matched:
 (If (_, _, _)|While (_, _)|For (_, _, _, _)|Break|Continue)
