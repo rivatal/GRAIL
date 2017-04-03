@@ -28,6 +28,12 @@ let string_of_type (t: primitiveType) =
       (Printf.sprintf "(%s -> %s)" st1 st2), c2, m2 in
   let s, _, _ = aux t 97 CharMap.empty in s
 
+
+(*^^What does this even do??*)
+let string_of_tuple (t: id * primitiveType) =
+  match t with
+  (a, b) -> string_of_type b
+
 let rec string_of_aexpr (ae: aexpr): string =
   match ae with
   | AIntLit(x, t)  -> Printf.sprintf "(%s: %s)" (string_of_int x) (string_of_type t)
@@ -42,38 +48,17 @@ let rec string_of_aexpr (ae: aexpr): string =
     let s1 = string_of_aexpr ae in
     let st = string_of_type t in
     Printf.sprintf "(fun %s -> %s): %s" id s1 st
-  | ACall(id, aelist, t) ->
+  | ACall(id, astmts, t) ->
     let allaexprs = 
       let rec matchlist m= 
         match m with
           [] -> []
         | hd :: tl ->
-          string_of_aexpr hd ::  matchlist tl
-      in String.concat "" (matchlist aelist)  
+          string_of_stmt hd ::  matchlist tl
+      in String.concat "" (matchlist astmts)  
     in Printf.sprintf "%s (%s): %s" id allaexprs (string_of_type t)
 
-let rec string_of_expr (e: expr): string =
-  match e with
-  | IntLit(x) -> string_of_int x
-  | BoolLit(b) -> string_of_bool b
-  | StrLit(b) -> b
-  | Id(s) -> s
-  | Binop(e1, op, e2) ->
-    let s1 = string_of_expr e1 and s2 = string_of_expr e2 in
-    let sop = string_of_op op in
-    Printf.sprintf "(%s %s %s)" s1 sop s2
-  | Fun(id, e) ->
-    let s1 = string_of_expr e in Printf.sprintf "(fun %s -> %s)" id s1 
-
-let string_of_ustmt (l: stmt)= 
-  match l with 
-  | Return(expr) -> "return " ^ string_of_expr expr ^ ";\n";
-  | Asn(id,expr,_) -> id ^ " = " ^ string_of_expr expr ^ ";\n"
-  | Expr(expr) -> " " ^ string_of_expr expr ^ ";\n"
-  
-
-
-let rec string_of_stmt l= 
+and string_of_stmt l= 
   match l with 
   | AReturn(aexpr,typ) -> "return " ^ string_of_aexpr aexpr ^ " " ^ string_of_type typ ^ ";\n";
   | AAsn(id,aexpr,_,typ) -> id ^ " = " ^ string_of_aexpr aexpr ^ " " ^ string_of_type typ ^ ";\n"
@@ -87,7 +72,32 @@ let rec string_of_stmt l=
     | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
 *)
 
-let string_of_func func = 
+and string_of_ustmt (l: stmt)= 
+  match l with 
+  | Return(expr) -> "return " ^ string_of_expr expr ^ ";\n";
+  | Asn(id,expr,_) -> id ^ " = " ^ string_of_expr expr ^ ";\n"
+  | Expr(expr) -> " " ^ string_of_expr expr ^ ";\n"
+  
+and string_of_expr (e: expr): string =
+  match e with
+  | IntLit(x) -> string_of_int x
+  | BoolLit(b) -> string_of_bool b
+  | StrLit(b) -> b
+  | Id(s) -> s
+  | Binop(e1, op, e2) ->
+    let s1 = string_of_expr e1 and s2 = string_of_expr e2 in
+    let sop = string_of_op op in
+    Printf.sprintf "(%s %s %s)" s1 sop s2
+  | Fun(id, e) ->
+    let s1 = string_of_expr e in Printf.sprintf "(fun %s -> %s)" id s1 
+  | Call(id, e) ->
+    let s1 = List.map(fun a -> (string_of_expr (a))) e in let l = String.concat "," s1 in Printf.sprintf "(call %s(%s))" id l 
+
+
+
+
+
+let string_of_func (func: sast_afunc) = 
   let t = "Type :" ^ string_of_type func.typ 
   in let name = 
        " Name : " ^ func.fname
