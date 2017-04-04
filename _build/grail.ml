@@ -67,9 +67,9 @@ let rec get_ids_expr (e: expr) (genv: genvironment): string list =
    else (raise (failwith ("function " ^ id ^ " not defined in get_ids_expr"))) in
    let newformals = mapformals id aformals in
    Stack.pop callstack;
-(*    print_string "Formals added:\n"; 
+   print_string "Formals added:\n"; 
    List.iter(fun a -> (print_endline a)) newformals;
- *)   newformals
+   newformals
 
 let rec get_all_ids (e: stmt list) (g: genvironment): string list =
   match e with 
@@ -126,7 +126,7 @@ let format_sast_codegen (ast : Ast.afunc) : Ast.sast_afunc =
     }
 
 (*Interpreter for debugging purposes*)
-let rec interpreter (ast: Ast.sast_afunc list) : Ast.sast_afunc list =
+(* let rec interpreter (ast: Ast.sast_afunc list) : Ast.sast_afunc list =
   print_string "> ";
     let input = read_line () in
   if input = "exit" then ast
@@ -154,9 +154,9 @@ let rec display (input: Ast.sast_afunc list) : unit =
 
 say();
 let l = interpreter([]) in display l
+ *)
 
-
-(*  let compile() = let sast = List.map format_sast_codegen (grail [] "main() { print(\"hello world\"); }") in
+ let compile() = let sast = List.map format_sast_codegen (grail [] "main() { print(\"hello world\"); }") in
   let m = Codegen.translate sast in
   Llvm_analysis.assert_valid_module m; print_string (Llvm.string_of_llmodule m) ;;
-compile(); *)
+compile();
