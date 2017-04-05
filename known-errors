@@ -1,1 +1,0 @@
-function calls need to also infer the type if the type is stricter than that of the function declaration. Proposed solution: re-infer the type of the function when we call it, using the actuals in place of the function formals.
