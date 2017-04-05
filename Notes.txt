@@ -76,19 +76,21 @@ Accounted:
 Wrong-length variable lists
 Overloading functions not permitted	
 Variables need to be defined before they're used.
+Same formal twice
+If conditional must be boolean, For middle stmt must be boolean, For first and last must be assignments
+
 
 Not:
-Ifs and such
-Same formal twice
+If assignments and returns must occur in all cases.
 
 Recursive functions? (How would we handle those?)
 
 
 Um... we gave statements types. Oops. The only statement that really needs a type is return.
-Is there a problem with annotating expression lists at the same time
+Is there a problem with annotating expression lists at the same time? Okay, I think I fixed all that.
 
 Possible point of concern:
-f(a, b){ return b; } 
+>f(a, b){ return b; } 
 
 returns:
 f(a, b){ : 'a
@@ -98,4 +100,32 @@ b and a seem to be of the same any type. I feel like this is wrong, though I can
 
 
 Okay, I think I fixed statements.
+Included if, but there seems to be a problem with parsing them.
 
+> f(x){ if(x > 0){ return true; }}
+Error Parsing
+
+I also need to decide if if can make changes to the environment-- I can't see a way to allow x to be two different types in different branches but checking all assignment statements in all ifs is a bit formidable. Oh well.
+
+	f(x){if(x < 11){ return 3; }} 
+
+	now registers as an int. Issue-- there needs to be a return statement outside the if too.
+	f(x){if(x < 11){ return 3; } return x;} problematically says mismatched returns when it should really force x to be an int.
+
+	f(x){if(x < 11){ return 3; } return 5;} 
+	is fine
+
+
+Meeting:
+For statements (suggest statement lists?)
+Change the charlits
+Tests, please!
+Optional for? If the thing's a statement...
+Oh and parsing for, most important
+Merge
+
+Need to make everything work for optional for
+
+f(x){ for(x = 3; x < 10; x = x + 1){ return 3; }; return 5; }
+Okay, something is weird with parsing for...
+Could be the fact that I messed with stmt stuffs.

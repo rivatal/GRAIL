@@ -51,15 +51,18 @@ type aexpr =
 
 and astmt =
   | AAsn of id * aexpr * bool
+  | AIf of aexpr * astmt list * astmt list
+  | AFor of astmt * aexpr * astmt * astmt list
   | AReturn of aexpr * primitiveType
+  | ABreak
+  | AContinue
   | AExpr of aexpr
-  | AIf of expr * stmt list * stmt list
 
 and stmt =
   | Asn of id * expr * bool
   | If of expr * stmt list * stmt list
   | While of expr * stmt list
-  | For of expr * expr * expr * stmt list
+  | For of stmt * expr * stmt * stmt list
   | Return of expr
   | Break
   | Continue

@@ -25,7 +25,6 @@ let gen_new_void () : primitiveType =
   incr type_variable; 
   TVoid(Char.escaped (Char.chr c1))
 
-
 let mapidwith (fname: string )(id: string) : string =
   (fname ^ "#" ^ id)
 
@@ -49,26 +48,46 @@ let rec findinmap(id: string) (env: environment): primitiveType =
          else (find t id)
   in find m id
 
+let check_asn (a: stmt) : unit =
+(*   print_string "Checking assign";
+ *)  match a with
+  Asn(_,_,_) -> ()
+  |_ -> raise(failwith ((string_of_ustmt a) ^ " not an assignment statement."))
+
 (* Group of functions dealing with annotation:
    stmt, list, type of; expr, list, type of
 *)
-let rec infer_stmt (e: stmt) (env: environment) (genv: genvironment) : astmt =
+let rec infer_stmt (e: stmt) (env: environment) (genv: genvironment) : (astmt * environment * genvironment) =
   match e with
   | Asn(id, expr, switch) -> 
-    let allexpr = infer_expr env genv expr in 
-    (match allexpr with
-       (r, _, _) ->
-       AAsn(id, r, switch))
+    let aexpr, _, _ = infer_expr env genv expr in 
+    (AAsn(id, aexpr, switch), env, genv)
   | Return(expr) ->
-    let allexpr = infer_expr env genv expr in 
-    (match allexpr with
-       (r, _, _) ->
-       AReturn(r, type_of r))
+    let aexpr, _, _ = infer_expr env genv expr in 
+    (AReturn(aexpr, type_of aexpr), env, genv)
   | Expr(expr) -> 
-    let allexpr = infer_expr env genv expr in 
-    match allexpr with
-      (aexpr, _, _) ->
-      AExpr(aexpr) 
+    let aexpr, _, _ = infer_expr env genv expr in 
+    (AExpr(aexpr), env, genv)
+   | If(expr, s1, s2) ->
+    let conditional, _, _ = infer_expr env genv expr
+    in (check_bool conditional);
+    let as1, env, genv = infer_stmt_list env genv s1
+    in                   (*Make sure second stmts isn't empty? More importantly-- currently this env overwrites. But I think we need to be sure any if assignments are the same? *)
+    let as2, env, genv = infer_stmt_list env genv s2
+  in (AIf(conditional, as1, as2), env, genv)
+   | Break -> ABreak, env, genv
+   | Continue -> AContinue, env, genv
+   | For(s1, e1, s2, stmts) ->
+     let backupenv = env in
+     (check_asn s1);
+     (check_asn s2);
+     let as1, env, _ = infer_stmt s1 env genv in 
+     let ae1, _, _ = infer_expr env genv e1 in 
+     (check_bool ae1);
+     let as2, _, _ = infer_stmt s2 env genv in
+     let astmts, _, _ = infer_stmt_list env genv stmts in 
+     (AFor(as1, ae1, as2, astmts), backupenv, genv)
+
 
 and annotate_expr (e: expr) (env: environment) (genv : genvironment): aexpr =
   (*   ignore(print_string "annotate_expr");
@@ -105,6 +124,12 @@ and type_of (ae: aexpr): primitiveType =
   | AId(_, t) -> t
   | ABinop(_, _, _, t) -> t
   | ACall(_, _, t) -> t
+and check_bool (e: aexpr) : unit =
+  print_string "Checking bool";
+  if(type_of e != TBool)
+  then(raise(failwith ((string_of_aexpr e) ^ " not a boolean.")))
+  else ()
+
 
 and assign_formals (asnlist: ((id * primitiveType) * expr) list) (id: string): stmt list =
   let rec helper asnlist id = 
@@ -197,6 +222,13 @@ and update_map (alist : astmt list) (env: environment) : environment =
     |AExpr(aexpr) -> 
       let env = update_expr_map aexpr env     
       in update_map tl env
+    |AIf(_, a1, a2) ->
+      let env = update_map a1 env
+    in let env = update_map a2 env    (*Might have to change this when we get better if handling*)
+    in update_map tl env
+    |AFor(_,_,_,_) ->
+      update_map tl env
+
 
 and update_map_u (a: astmt) (env: environment) : environment = 
   match a with
@@ -209,6 +241,11 @@ and update_map_u (a: astmt) (env: environment) : environment =
     in env
   |AExpr(aexpr) -> 
     let env = update_expr_map aexpr env in env     
+  |AIf(_, a1, a2) ->
+    let env = update_map a1 env in 
+    let env = update_map a2 env in env
+  |AFor(_, _, _, _) -> env
+
 
 and update_expr_map aexpr env = 
   match aexpr with
@@ -229,6 +266,10 @@ and grab_returns (r: astmt list) : primitiveType list =
     (match h with
      |AReturn(_, t) ->
        t :: grab_returns tail
+     |AIf(_, x, y) ->
+        grab_returns x @ grab_returns y @ grab_returns tail
+     |AFor(_, _, _, y) ->
+        grab_returns y @ grab_returns tail
      | _ -> grab_returns tail)
 and get_return_type(r: astmt list) : primitiveType =
   let returns = grab_returns r in
@@ -244,7 +285,8 @@ and get_return_type(r: astmt list) : primitiveType =
 
 (*Overall inference functions:*)
 and infer_formals (f: string list) (env: environment):  (string * primitiveType) list=
-  match f with
+(*   ignore(print_string "Inferring formals!");
+ *)  match f with
   |[] -> []
   | h :: tail -> 
     let fid = (mapid h) in
@@ -274,15 +316,14 @@ and infer_func (f: func) (env: environment) (genv : genvironment) :  (afunc * ge
       else raise (failwith "function not defined")
 
 and infer_stmt_list (env: environment) (genv : genvironment) (e: stmt list) : (astmt list * environment * genvironment) =
-  (*   print_string "Inferring:\n";
-  *) 
-  (*  List.iter (fun a -> (print_endline (string_of_ustmt a))) e;  
+(*   print_string "Inferring:\n";
+ *)  (*  List.iter (fun a -> (print_endline (string_of_ustmt a))) e;  
   *)  
   let rec helper (env: environment) (genv : genvironment) (e: stmt list) (a: astmt list) = 
     match e with
       [] -> (a, env, genv)
     |h :: t -> 
-      let astmt = infer_stmt h env genv in 
+      let astmt, env, genv = infer_stmt h env genv in 
       let env = update_map_u astmt env in
       (helper env genv t ([astmt] @ a))
   in helper env genv e []
