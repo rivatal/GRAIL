@@ -78,7 +78,8 @@ Overloading functions not permitted
 Variables need to be defined before they're used.
 
 Not:
-
+Ifs and such
+Same formal twice
 
 Recursive functions? (How would we handle those?)
 

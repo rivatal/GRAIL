@@ -9,13 +9,13 @@ type uop = Neg | Not
 
 
 type primitiveType =
-  | TVoid
   | TInt
   | TBool
   | TString
   | TFloat
   | TChar 
   | T of string
+  | TVoid of string
   | TStmt of primitiveType * primitiveType
 
 type expr =

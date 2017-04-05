@@ -13,6 +13,28 @@ let callstack = Stack.create()
 let parse (s: string) : Ast.program =
   Parser.program Scanner.token (Lexing.from_string s)
 
+(*Extra checking functions*)
+let checknooverload (e: Ast.func) (genv : genvironment) : unit =
+  match e with
+  Fbody(Fdecl(name, _), _) ->
+  if(GlobalMap.mem name genv) 
+  then (raise (failwith ("function " ^ name ^ " already defined.")))
+  else ()
+
+(*https://www.rosettacode.org/wiki/Sort_using_a_custom_comparator#OCaml*)
+let mycmp s1 s2 =
+  if String.length s1 <> String.length s2 then
+    compare (String.length s2) (String.length s1)
+  else
+    String.compare (String.lowercase s1) (String.lowercase s2)
+
+let rec checkformals (s: string list) : unit =
+  let helper l = 
+  match l with 
+  |[_] | [] -> ()
+  | x :: y :: xs ->  if x = y then raise (failwith ("Error: Shared formal " ^ x)) else checkformals (y :: xs)
+in helper (List.sort mycmp s)
+
 (*Prints the name of an unannotated function*)
 let print_func (func: Ast.func): unit =
   match func with
@@ -50,6 +72,7 @@ let rec mapformals (fname: string) (aformals: ((string * primitiveType) list)) :
   [(mapid id)] @ mapformals fname t
 
 let rec get_ids_formals(e: string list) =
+  checkformals e;
   match e with 
     [] -> []
   |h :: t -> (mapid h) :: get_ids_formals t
@@ -74,42 +97,32 @@ let rec get_ids_expr (e: expr) (genv: genvironment): string list =
    ignore(Stack.pop callstack);
    newformals
 
-let rec get_all_ids (e: stmt list) (g: genvironment): string list =
+let rec get_all_ids_stmts (e: stmt list) (g: genvironment): string list =
   match e with 
   | [] -> []
   | hd :: tl ->
     match hd with
-    | Asn(x, _, _) -> [(mapid x)] @ get_all_ids tl g
-    | Return(x) -> (get_ids_expr x g) @ get_all_ids tl g
-    | Expr(x) -> (get_ids_expr x g) @ get_all_ids tl g
-
-
-let get_all_formals_ids (e: func) (g: genvironment): (string list * string) =
-  match e with 
-  |Fbody(Fdecl(name, formals), stmts) ->
-    Stack.push name callstack;
-    let rec dedup = function
+    | Asn(x, _, _) -> [(mapid x)] @ get_all_ids_stmts tl g
+    | Return(x) -> (get_ids_expr x g) @ get_all_ids_stmts tl g
+    | Expr(x) -> (get_ids_expr x g) @ get_all_ids_stmts tl g
+(*     | If(x, y, z) -> (get_all_ids_stmts z g) 
+ *)    
+let rec dedup = function
       | [] -> []
       | x :: y :: xs when x = y -> y :: dedup xs
       | x :: xs -> x :: dedup xs
-    in 
-    let ids1 = get_all_ids stmts g
-    in let ids2 = get_ids_formals formals
-    in ignore(Stack.pop callstack);
-    (dedup (ids1 @ ids2),name)
-
-let checknooverload (e: Ast.func) (genv : genvironment) : unit =
-  match e with
-  Fbody(Fdecl(name, _), _) ->
-  if(GlobalMap.mem name genv) 
-  then (raise (failwith ("function " ^ name ^ " already defined.")))
-  else ()
 
 let infer (e: Ast.func) (genv : genvironment) : (Ast.afunc * genvironment) =
-  let vals, fname = get_all_formals_ids e genv in
   checknooverload e genv; 
-  let env = List.fold_left (fun m x -> NameMap.add x (Infer.gen_new_type ()) m) NameMap.empty vals in 
-  let genv = GlobalMap.add fname (Infer.gen_new_type (),[],[]) genv in
+  match e with 
+  |Fbody(Fdecl(name, formals), stmts) ->
+    Stack.push name callstack;
+    let ids1 = get_all_ids_stmts stmts genv
+  in let env = List.fold_left (fun m x -> NameMap.add x (Infer.gen_new_void ()) m) NameMap.empty ids1
+   in let ids2 = get_ids_formals formals
+in let env = List.fold_left (fun m x -> NameMap.add x (Infer.gen_new_type ()) m) env ids2 
+    in ignore(Stack.pop callstack);
+  let genv = GlobalMap.add name (Infer.gen_new_type (),[],[]) genv in
   Infer.infer_func e env genv
 
 let infer_func (e: Ast.func) (genv :  genvironment): (genvironment * Ast.afunc) = 
