@@ -7,14 +7,19 @@ type genericMap = int CharMap.t
 let string_of_op (op: op) =
   match op with
   | Add -> "+" | Mult -> "*" | Less -> "<" | Greater -> ">"
-  | Or -> "||" | And -> "&&"
+  | Or -> "||" | And -> "&&" | Sub -> "-" | Div -> "/" | Fadd -> ".+"
+  | Equal -> "==" | Neq -> "-" | Leq -> "<=" | Geq -> ">=" | Fsub -> ".-"
+  | Fmult -> ".*" | Fdiv -> "./" 
 
 let string_of_type (t: primitiveType) =
   let rec aux (t: primitiveType) (chr: int) (map: genericMap) =
     match t with
     | TInt -> "int", chr, map
     | TBool -> "bool", chr, map
+    | TFloat -> "float", chr, map
     | TString -> "str", chr, map
+    | TChar -> "char", chr, map
+    | TVoid(_) -> "void", chr, map
     | T(x) ->
       let gen_chr, new_chr, new_map = if CharMap.mem x map
         then Char.escaped (Char.chr (CharMap.find x map)), chr, map
@@ -23,70 +28,96 @@ let string_of_type (t: primitiveType) =
           c, (chr + 1), CharMap.add x chr map
       in
       Printf.sprintf "'%s" gen_chr, new_chr, new_map
-    | TFun(t1, t2) -> let (st1, c1, m1) = aux t1 chr map in
-      let (st2, c2, m2) = aux t2 c1 m1 in
-      (Printf.sprintf "(%s -> %s)" st1 st2), c2, m2 in
-  let s, _, _ = aux t 97 CharMap.empty in s
+  in let s, _, _ = aux t 97 CharMap.empty in s
+
+(*^^What does this even do??*)
+let string_of_tuple (t: id * primitiveType) =
+  match t with
+    (a, b) -> a ^ " " ^ string_of_type b
 
 let rec string_of_aexpr (ae: aexpr): string =
   match ae with
   | AIntLit(x, t)  -> Printf.sprintf "(%s: %s)" (string_of_int x) (string_of_type t)
   | ABoolLit(b, t) -> Printf.sprintf "(%s: %s)" (string_of_bool b) (string_of_type t)
+  | AFloatLit(f, t) -> Printf.sprintf "(%s: %s)" (string_of_float f) (string_of_type t)
   | AStrLit(b, t) -> Printf.sprintf "(%s: %s)" (b) (string_of_type t)
+  | ACharLit(c, t) -> Printf.sprintf "(%s: %s)" (String.make 1 c) (string_of_type t)
   | AId(x, t) -> Printf.sprintf "(%s: %s)" x (string_of_type t)
   | ABinop(e1, op, e2, t) ->
     let s1 = string_of_aexpr e1 in let s2 = string_of_aexpr e2 in
     let sop = string_of_op op in let st = string_of_type t in
     Printf.sprintf "(%s %s %s: %s)" s1 sop s2 st
-  | AFun(id, ae, t) ->
-    let s1 = string_of_aexpr ae in
-    let st = string_of_type t in
-    Printf.sprintf "(fun %s -> %s): %s" id s1 st
-  | ACall(id, aelist, t) ->
+  | ACall(id, astmts, t) ->
     let allaexprs = 
-    let rec matchlist m= 
-    match m with
-    [] -> []
-    | hd :: tl ->
-      string_of_aexpr hd ::  matchlist tl
-    in String.concat "" (matchlist aelist)  
-  in Printf.sprintf "%s (%s): %s" id allaexprs (string_of_type t)
+      let rec matchlist m= 
+        match m with
+          [] -> []
+        | hd :: tl ->
+          string_of_stmt hd ::  matchlist tl
+      in String.concat "" (matchlist astmts)  
+    in Printf.sprintf "%s (%s): %s" id allaexprs (string_of_type t)
 
-let rec string_of_expr (e: expr): string =
+and string_of_stmt (l: astmt) = 
+  match l with 
+  | AReturn(aexpr,typ) -> "return " ^ string_of_aexpr aexpr ^ "; " ^ string_of_type typ ^ "\n";
+  | AAsn(id,aexpr,_) -> id ^ " = " ^ string_of_aexpr aexpr ^ "; ";
+  | AExpr(aexpr) -> " " ^ string_of_aexpr aexpr ^ "; "
+  | AIf(e, s1, s2) ->  
+  let a = "if (" ^ string_of_aexpr e ^ ") {" ^ string_of_stmt_list s1 ^ "; " in
+  let b =  (match s2 with
+          [] -> ""
+          |rest -> string_of_stmt_list rest) in (a ^ b)
+  |AFor(as1, ae1, as2, astmts) ->
+        "for (" ^ string_of_stmt as1  ^ string_of_aexpr ae1 ^ " ; " ^ string_of_stmt as2 
+        ^ string_of_stmt_list astmts
+
+and string_of_stmt_list (stmts : astmt list) : string =
+  let s1 = List.map(fun a -> (string_of_stmt (a))) stmts in let l = String.concat "" s1 in l
+
+ (*   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
+*)
+
+and string_of_ustmt (l: stmt)= 
+  match l with 
+  | Return(expr) -> "return " ^ string_of_expr expr ^ ";\n";
+  | Asn(id,expr,_) -> id ^ " = " ^ string_of_expr expr ^ ";\n"
+  | Expr(expr) -> " " ^ string_of_expr expr ^ ";\n"
+  | If(e, s1,  s2) -> let a = "if (" ^ string_of_expr e ^ ") {" ^ string_of_ustmt_list s1 ^ "; " in
+  let b =
+  match s2 with
+  [] -> ""
+  |rest -> string_of_ustmt_list rest in 
+(a ^ b)
+  | For(s1, e1, s2, astmts) -> "for (" ^ string_of_ustmt s1 ^ string_of_expr e1 ^ string_of_ustmt s2 ^" ) {\n" ^
+  string_of_ustmt_list astmts ^ "}" 
+and string_of_ustmt_list (stmts : stmt list) : string =
+  let s1 = List.map(fun a -> (string_of_ustmt (a))) stmts in let l = String.concat "" s1 in l
+
+and string_of_expr (e: expr): string =
   match e with
   | IntLit(x) -> string_of_int x
   | BoolLit(b) -> string_of_bool b
   | StrLit(b) -> b
+  | FloatLit(f) -> string_of_float f
+  | CharLit(c) -> String.make 1 c
   | Id(s) -> s
   | Binop(e1, op, e2) ->
     let s1 = string_of_expr e1 and s2 = string_of_expr e2 in
     let sop = string_of_op op in
     Printf.sprintf "(%s %s %s)" s1 sop s2
-  | Fun(id, e) ->
-    let s1 = string_of_expr e in Printf.sprintf "(fun %s -> %s)" id s1 
+  | Call(id, e) ->
+    let s1 = List.map(fun a -> (string_of_expr (a))) e in let l = String.concat "," s1 in Printf.sprintf "(call %s(%s))" id l 
 
-
-let rec string_of_stmt l= 
-    match l with 
-        | AReturn(aexpr,typ) -> "return " ^ string_of_aexpr aexpr ^ " " ^ string_of_type typ ^ ";\n";
-        | AAsn(id,aexpr,_,typ) -> id ^ " = " ^ string_of_aexpr aexpr ^ " " ^ string_of_type typ ^ ";\n"
-        | AExpr(aexpr,typ) -> " " ^ string_of_aexpr aexpr ^ " " ^ string_of_type typ ^ ";\n"
-    (*  | If(e, s) -> "if (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt s
-        | If(e, s1, s2) ->  "if (" ^ string_of_expr e ^ ")\n" ^
-                string_of_stmt s1 ^ "else\n" ^ string_of_stmt s2
-        | For(e1, e2, e3, s) ->
-                "for (" ^ string_of_expr e1  ^ " ; " ^ string_of_expr e2 ^ " ; " ^
-                string_of_expr e3  ^ ") " ^ string_of_stmt s
-        | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
-    *)
-
-let string_of_func func = 
-    let t = "Type :" ^ string_of_type func.typ 
-    in let name = 
-    " Name : " ^ func.fname
-    in let formals = "(" ^ String.concat ", " (List.map fst func.formals) ^ ")\n{\n"
-    in let body = 
-      String.concat "" (List.map string_of_stmt func.body) ^
-    "}\n"
-  in t ^ name ^ formals ^body
-
+let string_of_func (func: sast_afunc) = 
+  let header = func.fname in
+  let formals = "(" ^ String.concat ", " (List.map fst func.formals) ^ "){ : " ^ string_of_type func.typ ^ "\n"
+  in let body = String.concat "" (List.map string_of_stmt func.body) ^ "}\n"
+  in header ^ formals ^ body
+(*   let t = "Type :" ^ string_of_type func.typ 
+     in let name = 
+       " Name : " ^ func.fname
+     in let formals = "(" ^ String.concat ", " (List.map fst func.formals) ^ ")\n{\n"
+     in let body = 
+       String.concat "" (List.map string_of_stmt func.body) ^ "}\n"
+     in t ^ name ^ formals ^body
+*)

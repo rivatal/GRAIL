@@ -3,7 +3,7 @@
 open Ast
 %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA FUN
+%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA 
 %token PLUS MINUS DIVIDE ASSIGN NOT DOT COLON
 %token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR
 %token RETURN IF ELSE FOR WHILE INT BOOLEAN VOID
@@ -80,7 +80,7 @@ stmt:
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE { If($3, $6, []) }
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE   { If($3, $6, List.rev $10) }
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE IF LPAREN expr RPAREN LBRACE stmt_list RBRACE  { If($3, List.rev $6, [If($11, List.rev $14, [])]) }
-  | FOR LPAREN expr SEMI expr SEMI expr RPAREN LBRACE stmt_list RBRACE
+  | FOR LPAREN stmt SEMI expr SEMI stmt RPAREN LBRACE stmt_list RBRACE
      { For($3, $5, $7, List.rev $10) }
   | ID ASSIGN expr SEMI { Asn($1, $3, true) }
   | ID COPY expr SEMI { Asn($1, $3, false) }
@@ -101,7 +101,6 @@ stmt:
   | DOUBLELIT        { FloatLit($1) }      
   | ID               { Id($1) }
   | LBRACKET actuals_opt RBRACKET { List($2)}
-  | LPAREN FUN ID COLON COLON expr RPAREN { Fun($3, $6) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | ID LBRACKET expr RBRACKET { Item($1, $3) }
   | ID LBRACKET ID COLON expr RBRACKET { Subset($1, $3, $5) }
