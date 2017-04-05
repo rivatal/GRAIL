@@ -56,10 +56,10 @@ let rec get_ids_formals(e: string list) =
 
 let rec get_ids_expr (e: expr) (genv: genvironment): string list =
   match e with
-  | IntLit(_) | BoolLit(_) | StrLit(_) -> []
-  | Id(x) -> [(mapid x)]
-  | Binop(e1, _, e2) -> (get_ids_expr e1 genv) @ (get_ids_expr e2 genv)
-  | Call(id, elist) -> 
+  | IntLit(_) | BoolLit(_) | StrLit(_) | FloatLit(_) -> []
+  | Id(x) -> []
+  | Binop(e1, _, e2) -> []
+  | Call(id, elist) ->  
   Stack.push id callstack;
   let (_, aformals, _) =  
    if (GlobalMap.mem id genv)
@@ -76,7 +76,7 @@ let rec get_all_ids (e: stmt list) (g: genvironment): string list =
   | [] -> []
   | hd :: tl ->
     match hd with
-    | Asn(x, y, _) -> [(mapid x)] @ (get_ids_expr y g) @ get_all_ids tl g
+    | Asn(x, _, _) -> [(mapid x)] @ get_all_ids tl g
     | Return(x) -> (get_ids_expr x g) @ get_all_ids tl g
     | Expr(x) -> (get_ids_expr x g) @ get_all_ids tl g
 
@@ -95,15 +95,22 @@ let get_all_formals_ids (e: func) (g: genvironment): (string list * string) =
     in ignore(Stack.pop callstack);
     (dedup (ids1 @ ids2),name)
 
+let checknooverload (e: Ast.func) (genv : genvironment) : unit =
+  match e with
+  Fbody(Fdecl(name, _), _) ->
+  if(GlobalMap.mem name genv) 
+  then (raise (failwith ("function " ^ name ^ " already defined.")))
+  else ()
+
 let infer (e: Ast.func) (genv : genvironment) : (Ast.afunc * genvironment) =
   let vals, fname = get_all_formals_ids e genv in
+  checknooverload e genv; 
   let env = List.fold_left (fun m x -> NameMap.add x (Infer.gen_new_type ()) m) NameMap.empty vals in 
-  let genv = GlobalMap.add fname (Infer.gen_new_type (),[],[]) genv in 
+  let genv = GlobalMap.add fname (Infer.gen_new_type (),[],[]) genv in
   Infer.infer_func e env genv
 
 let infer_func (e: Ast.func) (genv :  genvironment): (genvironment * Ast.afunc) = 
   let (afunc,genv) = infer e genv in (genv, afunc)
-
 
 let grail (ast: Ast.afunc list) (input: string) : Ast.afunc list =
   let rec do_program(p: Ast.program) (genv : genvironment) : Ast.afunc list  =   

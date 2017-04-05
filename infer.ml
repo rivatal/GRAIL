@@ -71,6 +71,8 @@ and annotate_expr (e: expr) (env: environment) (genv : genvironment): aexpr =
   | IntLit(n) -> AIntLit(n, TInt)
   | BoolLit(b) -> ABoolLit(b, TBool)
   | StrLit(s) -> AStrLit(s,TString)
+  | FloatLit(f) -> AFloatLit(f, TFloat)
+  | CharLit(c) -> ACharLit(c, TChar)
   | Id(x) -> 
       let t = findinmap x env in
       AId(x, t)
@@ -97,7 +99,7 @@ and annotate_expr_list(e : expr list ) (env : environment) (genv : genvironment)
   | hd :: tl -> ((annotate_expr hd env genv) :: (annotate_expr_list tl env genv ))
 and type_of (ae: aexpr): primitiveType =  
   match ae with
-  | AIntLit(_, t) | ABoolLit(_, t) | AStrLit(_,t) -> t
+  | AIntLit(_, t) | ABoolLit(_, t) | AStrLit(_,t) | AFloatLit(_, t) | ACharLit(_,t) -> t
   | AId(_, t) -> t
   | ABinop(_, _, _, t) -> t
   | ACall(_, _, t) -> t
@@ -138,16 +140,17 @@ and collect_stmt_list (astlist: astmt list) : (primitiveType * primitiveType) li
 
 and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
   match ae with
-  | AIntLit(_) | ABoolLit(_) | AStrLit(_) -> []  (* no constraints to impose on literals *)
+  | AIntLit(_) | ABoolLit(_) | AStrLit(_) | AFloatLit(_) | ACharLit(_)-> []  (* no constraints to impose on literals *)
   | AId(_) -> []                   (* single occurence of val gives us no info *)
   | ABinop(ae1, op, ae2, t) ->
     let et1 = type_of ae1 and et2 = type_of ae2 in
     (* impose constraints based on binary operator *)
     let opc = match op with
-      | Add | Mult -> [(et1, TInt); (et2, TInt); (t, TInt)]
+      | Add | Mult | Sub | Div -> [(et1, TInt); (et2, TInt); (t, TInt)]
       (* we return et1, et2 since these are generic operators *)
-      | Greater | Less | Geq | Leq | Neq -> [(et1, et2); (t, TBool)]
+      | Greater | Less | Equal | Geq | Leq | Neq -> [(et1, et2); (t, TBool)]
       | And | Or -> [(et1, TBool); (et2, TBool); (t, TBool)]
+      | Fadd | Fsub | Fmult | Fdiv -> [(et1, TFloat); (et2, TFloat); (t, TFloat)]
     in
     (collect_expr ae1) @ (collect_expr ae2) @ opc (*opc appended at the rightmost since we apply substitutions right to left *)
   | ACall(id, astmts, t) -> [(t, t)]
@@ -169,7 +172,7 @@ and unify (constraints: (primitiveType * primitiveType) list) : substitutions =
     t1 @ t2
 and unify_one (t1: primitiveType) (t2: primitiveType) : substitutions =
   match t1, t2 with
-  | TInt, TInt | TBool, TBool | TString, TString -> []
+  | TInt, TInt | TBool, TBool | TString, TString | TFloat, TFloat -> []
   | T(x), z | z, T(x) -> [(x, z)]
   | _ -> raise (failwith "mismatched types")
 
@@ -178,7 +181,7 @@ and unify_one (t1: primitiveType) (t2: primitiveType) : substitutions =
  *) 
 and substitute (u: primitiveType) (x: id) (t: primitiveType) : primitiveType =
   match t with
-  | TInt | TBool | TString -> t
+  | TInt | TBool | TString | TFloat -> t
   | T(c) -> if c = x then u else t
 and apply (subs: substitutions) (t: primitiveType) : primitiveType =
   List.fold_right (fun (x, u) t -> substitute u x t) subs t
@@ -201,6 +204,8 @@ and apply_expr (subs: substitutions) (ae: aexpr): aexpr =
   | ABoolLit(b, t) -> ABoolLit(b, apply subs t)
   | AIntLit(n, t) -> AIntLit(n, apply subs t)
   | AStrLit(s,t) -> AStrLit(s, apply subs t)
+  | ACharLit(c,t) -> ACharLit(c, apply subs t)
+  | AFloatLit(f, t) -> AFloatLit(f, apply subs t)
   | AId(s, t) -> AId(s, apply subs t)
   | ABinop(e1, op, e2, t) -> ABinop(apply_expr subs e1, op, apply_expr subs e2, apply subs t)
   | ACall(id, astmts, t) -> ACall(id, astmts, apply subs t)
@@ -229,7 +234,7 @@ match hd with
 
 and update_expr_map aexpr env = 
       match aexpr with
-      | AIntLit(_,_) | ABoolLit(_,_) | AStrLit(_,_) -> env
+      | AIntLit(_,_) | ABoolLit(_,_) | AStrLit(_,_) | AFloatLit(_,_) | ACharLit(_,_) -> env
       | AId(s, t) ->
         let env = NameMap.add (mapid s) t env in 
         env
@@ -296,7 +301,8 @@ and infer_func (f: func) (env: environment) (genv : genvironment) :  (afunc * ge
 and infer_stmt_list (env: environment) (genv : genvironment) (e: stmt list) : (astmt list * environment * genvironment) =
 (*   print_string "Inferring:\n";
   List.iter (fun a -> (print_endline (string_of_ustmt a))) e;
- *)  let annotated_stmtlist = annotate_stmt_list e env genv in
+ *)  
+  let annotated_stmtlist = annotate_stmt_list e env genv in
   let constraints =
     collect_stmt_list annotated_stmtlist in 
   let subs = unify constraints in

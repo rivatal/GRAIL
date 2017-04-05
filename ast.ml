@@ -13,6 +13,8 @@ type primitiveType =
   | TInt
   | TBool
   | TString
+  | TFloat
+  | TChar 
   | T of string
   | TStmt of primitiveType * primitiveType
 
@@ -39,8 +41,10 @@ type expr =
 (* annotated expr -> expr with types *)
 type aexpr =
   | AIntLit of int * primitiveType
+  | ACharLit of char * primitiveType
   | ABoolLit of bool * primitiveType
   | AStrLit of string * primitiveType
+  | AFloatLit of float * primitiveType
   | AId of string * primitiveType
   | ABinop of aexpr * op * aexpr * primitiveType
   | ACall of string * astmt list * primitiveType
@@ -59,7 +63,6 @@ and stmt =
   | Break
   | Continue
   | Expr of expr
-
 
 type stmt_list = stmt list
 

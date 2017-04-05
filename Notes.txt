@@ -1,3 +1,7 @@
+3.28.17
+function calls need to also infer the type if the type is stricter than that of the function declaration. Proposed solution: re-infer the type of the function when we call it, using the actuals in place of the function formals.
+
+4.2.17
 Things we're inferring about Call:
 We have to type-check all the statements (and later infer? edges and stuff are global) but infer only the types themselves.
 The problem is, how to store all this stuff? I'm not sure how global changes will be enacted yet!
@@ -65,3 +69,13 @@ Is there any way to just alter the env?
 
 ref for global variables (should be worried about local instances now)
 Check if easier HM solution
+
+4.4.17
+Okay-- function calls look good. Onto error-checking!
+Accounted:
+Wrong-length variable lists
+Overloading functions not permitted
+
+
+Not:
+
