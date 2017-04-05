@@ -120,45 +120,6 @@ let translate (functions) =
        the statement's successor *)
         let rec astmt builder = function
           A.AExpr(e,_) -> ignore (aexpr builder e); builder
-        | A.AReturn(e,t) -> ignore (match t with
-            A.TVoid -> L.build_ret_void builder
-          | _ -> L.build_ret (aexpr builder e) builder); builder
-        | A.AAsn(s, e, b, t) -> let e' = aexpr builder e in ignore (L.build_store e' (lookup s) builder); builder
-        | A.If (predicate, then_stmt, else_stmt) ->
-        let bool_val = aexpr builder predicate in
-        let merge_bb = L.append_block context "merge" the_function in
-
-        let then_bb = L.append_block context "then" the_function in
-        add_terminal (List.fold_left astmt (L.builder_at_end context then_bb) then_stmt)
-          (L.build_br merge_bb);
-
-        let else_bb = L.append_block context "else" the_function in
-          add_terminal (List.fold_left astmt (L.builder_at_end context else_bb) else_stmt)
-          (L.build_br merge_bb);
-
-        ignore (L.build_cond_br bool_val then_bb else_bb builder);
-        L.builder_at_end context merge_bb
-
-        | A.While (predicate, body) ->
-        let pred_bb = L.append_block context "while" the_function in
-         ignore (L.build_br pred_bb builder);
-
-        let body_bb = L.append_block context "while_body" the_function in
-        add_terminal (List.fold_left astmt (L.builder_at_end context body_bb) body)
-        (L.build_br pred_bb);
-
-        let pred_builder = L.builder_at_end context pred_bb in
-        let bool_val = aexpr pred_builder predicate in
-
-        let merge_bb = L.append_block context "merge" the_function in
-        ignore (L.build_cond_br bool_val body_bb merge_bb pred_builder);
-        L.builder_at_end context merge_bb
-
-        | A.Break -> (*builder for merge block of current loop*) builder
-        | A.Continue -> (*builder for top block of current loop*) builder
-
-      | A.For (s1, e2, s3, body) -> List.fold_left astmt builder 
-      [s1 ; A.While (e2, List.rev s3::(List.rev body) ] )
         in
 
 
