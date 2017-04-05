@@ -50,9 +50,9 @@ type aexpr =
   | ACall of string * astmt list * primitiveType
 
 and astmt =
-  | AAsn of id * aexpr * bool * primitiveType
+  | AAsn of id * aexpr * bool
   | AReturn of aexpr * primitiveType
-  | AExpr of aexpr * primitiveType
+  | AExpr of aexpr
   | AIf of expr * stmt list * stmt list
 
 and stmt =

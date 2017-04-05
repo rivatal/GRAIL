@@ -71,10 +71,8 @@ let rec get_ids_expr (e: expr) (genv: genvironment): string list =
   Stack.push id callstack;
   let aformals = get_func_if_def id genv in
    let newformals = mapformals id aformals in
-   Stack.pop callstack;
-(*    print_string "Formals added:\n"; 
-   List.iter(fun a -> (print_endline a)) newformals;
- *)   newformals
+   ignore(Stack.pop callstack);
+   newformals
 
 let rec get_all_ids (e: stmt list) (g: genvironment): string list =
   match e with 

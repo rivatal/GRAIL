@@ -70,7 +70,7 @@ Is there any way to just alter the env?
 ref for global variables (should be worried about local instances now)
 Check if easier HM solution
 
-4.4.17
+4.4.17 - 4.5.17
 Okay-- function calls look good. Onto error-checking!
 Accounted:
 Wrong-length variable lists
@@ -85,4 +85,17 @@ Recursive functions? (How would we handle those?)
 
 
 Um... we gave statements types. Oops. The only statement that really needs a type is return.
+Is there a problem with annotating expression lists at the same time
+
+Possible point of concern:
+f(a, b){ return b; } 
+
+returns:
+f(a, b){ : 'a
+return (b: 'a); 'a
+}
+b and a seem to be of the same any type. I feel like this is wrong, though I can't figure out how to get a nafka mina. Oh-- it's due to the way things are printed. Maybe I'll fix when I'm less tired.
+
+
+Okay, I think I fixed statements.
 
