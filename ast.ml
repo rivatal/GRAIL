@@ -58,7 +58,7 @@ type stmt =
 | Asn of id * expr * bool
 | If of expr * stmt list * stmt list
 | While of expr * stmt list
-| For of expr * expr * expr * stmt list
+| For of stmt * expr * stmt * stmt list
 | Return of expr
 | Break
 | Continue
