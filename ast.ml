@@ -9,77 +9,82 @@ type uop = Neg | Not
 
 
 type primitiveType =
-    | TVoid
-    | TInt
-    | TBool
-    | TString
-    | T of string
-    | TFun of primitiveType * primitiveType
-    | TStmt of primitiveType * primitiveType
-
-    (* annotated expr -> expr with types *)
-type aexpr =
-    | AIntLit of int * primitiveType
-    | ABoolLit of bool * primitiveType
-    | AStrLit of string * primitiveType
-    | AId of string * primitiveType
-    | ABinop of aexpr * op * aexpr * primitiveType
-    | AFun of id * aexpr * primitiveType
-    | ACall of string * aexpr list * primitiveType
-
+  | TInt
+  | TBool
+  | TString
+  | TFloat
+  | TChar 
+  | T of string
+  | TVoid of string
+  | TStmt of primitiveType * primitiveType
 
 type expr =
-     IntLit of int
-|    BoolLit of bool
-|    StrLit of string
-|    CharLit of char 
-|    FloatLit of float
-|    Id of string
-|    List of expr list
-|    Fun of id * expr (* Lambda Function *)
-|    Call of string * expr list
-|    Item of string * expr
-|    Subset of string * string * expr
-|    Dot of expr * string
-|    Unop of uop * expr
-|    Binop of expr * op * expr
-|    Edge of expr * eop * expr * expr
-|    Graph of expr list * expr
-|    Node of string * expr
-|    Record of (string * expr) list
-|    Noexpr
+    IntLit of int
+  | BoolLit of bool
+  | StrLit of string
+  | CharLit of char 
+  | FloatLit of float
+  | Id of string
+  | List of expr list
+  | Call of string * expr list
+  | Item of string * expr
+  | Subset of string * string * expr
+  | Dot of expr * string
+  | Unop of uop * expr
+  | Binop of expr * op * expr
+  | Edge of expr * eop * expr * expr
+  | Graph of expr list * expr
+  | Node of string * expr
+  | Record of (string * expr) list
+  | Noexpr
 
-type astmt =
-| AAsn of id * aexpr * bool * primitiveType
-| AReturn of aexpr * primitiveType
-| AExpr of aexpr * primitiveType
+(* annotated expr -> expr with types *)
+type aexpr =
+  | AIntLit of int * primitiveType
+  | ACharLit of char * primitiveType
+  | ABoolLit of bool * primitiveType
+  | AStrLit of string * primitiveType
+  | AFloatLit of float * primitiveType
+  | AId of string * primitiveType
+  | ABinop of aexpr * op * aexpr * primitiveType
+  | ACall of string * astmt list * primitiveType
 
-type stmt =
-| Asn of id * expr * bool
-| If of expr * stmt list * stmt list
-| While of expr * stmt list
-| For of stmt * expr * stmt * stmt list
-| Return of expr
-| Break
-| Continue
-| Expr of expr
+and astmt =
+  | AAsn of id * aexpr * bool
+  | AIf of aexpr * astmt list * astmt list
+  | AFor of astmt * aexpr * astmt * astmt list
+  | AReturn of aexpr * primitiveType
+  | ABreak
+  | AContinue
+  | AExpr of aexpr
 
-  
+and stmt =
+  | Asn of id * expr * bool
+  | If of expr * stmt list * stmt list
+  | While of expr * stmt list
+  | For of stmt * expr * stmt * stmt list
+  | Return of expr
+  | Break
+  | Continue
+  | Expr of expr
+
 type stmt_list = stmt list
 
 type func_dec = Fdecl of id * id list
 
 (*name, formals, return type*)
-type afunc_dec = AFdecl of id * id list * primitiveType list * primitiveType
+type afunc_dec = AFdecl of id * (id * primitiveType) list * primitiveType
 
 type func = Fbody of func_dec * stmt list
 type afunc = AFbody of afunc_dec * astmt list
 
+
+
 type sast_afunc = { 
-    typ : primitiveType; 
-    fname : string;
-    formals : (string * primitiveType) list;
-    body: astmt list
+  typ : primitiveType; 
+  fname : string;
+  formals : (string * primitiveType) list;
+  body: astmt list
 }
 
 type program = func list
