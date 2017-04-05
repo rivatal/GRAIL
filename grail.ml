@@ -27,9 +27,9 @@ let print_afunc (afunc: Ast.afunc): unit =
   match afunc with
     AFbody(AFdecl(name, aformals, t), astmts) -> 
     print_endline ("Function " ^ name ^ " " ^ string_of_type t);
-    List.iter (fun a -> (print_endline (string_of_tuple (a)))) aformals;
-    List.iter (fun a -> (print_endline (string_of_type (Infer.type_of_stmt a)))) astmts
-
+    List.iter (fun a -> (print_endline (string_of_tuple (a)))) aformals
+(*     List.iter (fun a -> (print_endline (string_of_type (Infer.type_of_stmt a)))) astmts
+ *)
 let rec print_afunc_list (ast: Ast.afunc list): unit =
   match ast with
     [] -> ()
@@ -54,6 +54,14 @@ let rec get_ids_formals(e: string list) =
     [] -> []
   |h :: t -> (mapid h) :: get_ids_formals t
 
+let get_func_if_def (id: string) (genv: genvironment)  =
+  let f = 
+  if (GlobalMap.mem id genv)
+  then (GlobalMap.find id genv)
+  else (raise (failwith ("function " ^ id ^ " not defined (grail.ml, get_ids_expr)")))
+  in match f with
+  (_, aformals, _) -> aformals
+  
 let rec get_ids_expr (e: expr) (genv: genvironment): string list =
   match e with
   | IntLit(_) | BoolLit(_) | StrLit(_) | FloatLit(_) -> []
@@ -61,10 +69,7 @@ let rec get_ids_expr (e: expr) (genv: genvironment): string list =
   | Binop(e1, _, e2) -> []
   | Call(id, elist) ->  
   Stack.push id callstack;
-  let (_, aformals, _) =  
-   if (GlobalMap.mem id genv)
-   then (GlobalMap.find id genv)
-   else (raise (failwith ("function " ^ id ^ " not defined in get_ids_expr"))) in
+  let aformals = get_func_if_def id genv in
    let newformals = mapformals id aformals in
    Stack.pop callstack;
 (*    print_string "Formals added:\n"; 

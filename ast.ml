@@ -53,6 +53,7 @@ and astmt =
   | AAsn of id * aexpr * bool * primitiveType
   | AReturn of aexpr * primitiveType
   | AExpr of aexpr * primitiveType
+  | AIf of expr * stmt list * stmt list
 
 and stmt =
   | Asn of id * expr * bool

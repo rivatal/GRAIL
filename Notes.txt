@@ -74,8 +74,15 @@ Check if easier HM solution
 Okay-- function calls look good. Onto error-checking!
 Accounted:
 Wrong-length variable lists
-Overloading functions not permitted
+Overloading functions not permitted	
+Variables need to be defined before they're used.
 
 
 Not:
+
+
+Recursive functions? (How would we handle those?)
+
+
+Um... we gave statements types. Oops. The only statement that really needs a type is return.
 

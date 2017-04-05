@@ -52,19 +52,21 @@ let rec annotate_stmt (e: stmt) (env: environment) (genv: genvironment) : astmt 
     let aexpr = annotate_expr expr env genv in
         let t = (findinmap id env) in
         AAsn(id, aexpr, switch, t)
- | Return(expr) ->
+  | Return(expr) ->
     let aexpr = annotate_expr expr env genv in AReturn(aexpr, gen_new_type())
   | Expr(expr) -> 
     let aexpr = annotate_expr expr env genv in AExpr(aexpr, gen_new_type()) 
+(*   | Id(expr, smts, stmts) ->
+ *)
 and annotate_stmt_list(st : stmt list ) (env : environment) (genv : genvironment) : astmt list =
   match st with 
   | [] -> []
   | hd :: tl -> (annotate_stmt hd env genv) :: (annotate_stmt_list  tl env genv)
-and type_of_stmt (a: astmt): primitiveType = 
+(* and type_of_stmt (a: astmt): primitiveType = 
   match a with
   | AAsn(_, _, _, t) -> t
   | AReturn(_, t) -> t
-  | AExpr(_, t) -> t 
+  | AExpr(_, t) -> t  *)
 
 and annotate_expr (e: expr) (env: environment) (genv : genvironment): aexpr =
   match e with
@@ -84,7 +86,7 @@ and annotate_expr (e: expr) (env: environment) (genv : genvironment): aexpr =
   | Call(id, elist) ->    (*Function calls derive their type from the function declaration*)
     Stack.push id callstack;
   let (oldtype, aformals, stmts) =
-   if (GlobalMap.mem id genv)
+      if (GlobalMap.mem id genv)
       then (GlobalMap.find id genv)
       else (raise (failwith "function not defined")) in
       let assignments = assign_formals (List.combine aformals elist) id in
@@ -320,3 +322,12 @@ in
   let env = update_expr_map_list retlist env in 
   (retlist,env,genv)
 
+and infer_expr (env: environment) (genv : genvironment) (e: expr): (aexpr * environment * genvironment)  =
+  let annotated_expr = annotate_expr e env genv in
+  let constraints = collect_expr annotated_expr in 
+    (*List.iter print_constraints constraints;*)
+    let subs = unify constraints in
+    (* reset the type counter after completing inference *)
+    type_variable := (Char.code 'a');
+    let ret = apply_expr subs annotated_expr
+  in let env = update_expr_map ret env in (ret, env, genv)
