@@ -3,7 +3,7 @@
 open Ast
 %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA FUN
+%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA
 %token PLUS MINUS DIVIDE ASSIGN NOT DOT COLON
 %token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR
 %token RETURN IF ELSE FOR WHILE INT BOOLEAN VOID
@@ -22,7 +22,7 @@ open Ast
 %nonassoc NOELSE
 %nonassoc ELSE
 %right ASSIGN COPY PLUSEQ FPLUSEQ ADDEQ EADDEQ
-%nonassoc COLON 
+%nonassoc COLON
 %left OR
 %left AND
 %left EQ NEQ
@@ -53,20 +53,20 @@ decls:
  | decls_list { List.rev $1 }
 
  decls_list:
-   func { [$1] } 
+   func { [$1] }
  | decls_list func { $2::$1 }
 
 func:
-   func_dec LBRACE  stmt_list RBRACE { Fbody($1, List.rev $3) }
-
-func_dec:
-	ID LPAREN formals_opt RPAREN { Fdecl($1, $3) }
+   ID LPAREN formals_opt RPAREN LBRACE  stmt_list RBRACE
+      { { fname = $1;
+   formals = $3;
+   body = List.rev $6 } }
 
 formals_opt:
     /* nothing */ { [] }
   | formal_list   { List.rev $1 }
 
-formal_list:  /*Changed to id because they're ids*/
+formal_list:
     ID                   { [$1] }
   | formal_list COMMA ID { $3 :: $1 }
 
@@ -74,9 +74,9 @@ stmt_list:
     /* nothing */  { [] }
   | stmt_list stmt { $2 :: $1 }
 
-stmt:
-   expr SEMI  { Expr($1) }    
-  |RETURN expr SEMI { Return($2) }
+  stmt:
+  RETURN expr SEMI { Return $2 }
+  | expr SEMI { Expr $1 }
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE { If($3, $6, []) }
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE   { If($3, $6, List.rev $10) }
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE IF LPAREN expr RPAREN LBRACE stmt_list RBRACE  { If($3, List.rev $6, [If($11, List.rev $14, [])]) }
@@ -101,7 +101,6 @@ stmt:
   | DOUBLELIT        { FloatLit($1) }      
   | ID               { Id($1) }
   | LBRACKET actuals_opt RBRACKET { List($2)}
-  | LPAREN FUN ID COLON COLON expr RPAREN { Fun($3, $6) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | ID LBRACKET expr RBRACKET { Item($1, $3) }
   | ID LBRACKET ID COLON expr RBRACKET { Subset($1, $3, $5) }
