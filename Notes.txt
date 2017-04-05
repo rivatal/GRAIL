@@ -1,0 +1,133 @@
+3.28.17
+function calls need to also infer the type if the type is stricter than that of the function declaration. Proposed solution: re-infer the type of the function when we call it, using the actuals in place of the function formals.
+
+4.2.17
+Things we're inferring about Call:
+We have to type-check all the statements (and later infer? edges and stuff are global) but infer only the types themselves.
+The problem is, how to store all this stuff? I'm not sure how global changes will be enacted yet!
+Well nothing wrong with sticking local for now, I think. 
+
+So we've already done a bit of inference for this function. The trick is to redo it-- with actuals.
+We need a framework for redoing that inference.
+
+So if we treated a function call as this:
+of:
+function(x){ return x; }
+
+nf:
+main(){
+	y = function(3);
+	return y;
+}
+
+new:
+main(){
+	x = 3;
+	y = stmts... return x;
+	return y;
+}
+
+The trouble is a. unique local variables (I'm sure we could think of something) and b. Are we messing with anything in the future? We shouldn't be if everything is just defined for the namemap of this function!
+What if we had:
+main(a){
+	x = a;
+	y = stmts... return x;
+	return y;
+}
+We'd just want everything to be typed to a's type. But what if it were never resolved?
+
+Well, main has to be called, or it doesn't. If it's called, it needs to be called with resolveable actuals, aka, actuals resolvable through annotate expr, right? We can't get information of them from inside their functions, but we could from their larger context, like:
+main(){
+	x = 3;
+	function(x);
+}
+But either by assignment or by annotate_expr, by that point they should be resolved? What if they have both-- don't we need to collect them? Do we need to "infer" them? By what point can we be certain of their types?
+Say we do a whole inference call on those actuals, so that we for sure have them resolved to types. That's what we're doing now, or should be.
+What next?
+I feel like we need to resolve the function but add a couple assignment statements. 
+Do we do this in call or in our own construct?
+What have we done in call? inferred the actuals.
+Okay, so we could probably proceed in call.
+Now biggest hurtle so far has been adding assignment statements to variables we didn't know we'd need. The first time we need them is when we see call. Can we figure that out in grail? Why not?
+What if we call a function twice in two ways?
+
+main(){
+	x = 3;
+	function(x);
+	y = "sdf";
+	function(y);
+}
+Then we'd want "x" in both. I think we need a way to replace the formals in the functions with our own new local variable. That should be able to be done further down too. I think the only way to do it though is with some serious matching.
+What form of the function do we want to replace? Just the (unannotated) stmt list-- though we want to compare the two lists eventually... ack.
+
+Make a temporary namemap environment to map all function variables to their in-function counterparts, then update the real namemap with the second.
+
+(Can we ever run out of new variables?)
+
+Two options-- stick all the replace_ids work into grail, which means traversing the tree to find all the calls and get the stmts from the global map again, OR pass the env along every single function call.
+Is there any way to just alter the env?
+
+ref for global variables (should be worried about local instances now)
+Check if easier HM solution
+
+4.4.17 - 4.5.17
+Okay-- function calls look good. Onto error-checking!
+Accounted:
+Wrong-length variable lists
+Overloading functions not permitted	
+Variables need to be defined before they're used.
+Same formal twice
+If conditional must be boolean, For middle stmt must be boolean, For first and last must be assignments
+
+
+Not:
+If assignments and returns must occur in all cases.
+
+Recursive functions? (How would we handle those?)
+
+
+Um... we gave statements types. Oops. The only statement that really needs a type is return.
+Is there a problem with annotating expression lists at the same time? Okay, I think I fixed all that.
+
+Possible point of concern:
+>f(a, b){ return b; } 
+
+returns:
+f(a, b){ : 'a
+return (b: 'a); 'a
+}
+b and a seem to be of the same any type. I feel like this is wrong, though I can't figure out how to get a nafka mina. Oh-- it's due to the way things are printed. Maybe I'll fix when I'm less tired.
+
+
+Okay, I think I fixed statements.
+Included if, but there seems to be a problem with parsing them.
+
+> f(x){ if(x > 0){ return true; }}
+Error Parsing
+
+I also need to decide if if can make changes to the environment-- I can't see a way to allow x to be two different types in different branches but checking all assignment statements in all ifs is a bit formidable. Oh well.
+
+	f(x){if(x < 11){ return 3; }} 
+
+	now registers as an int. Issue-- there needs to be a return statement outside the if too.
+	f(x){if(x < 11){ return 3; } return x;} problematically says mismatched returns when it should really force x to be an int.
+
+	f(x){if(x < 11){ return 3; } return 5;} 
+	is fine
+
+
+Meeting:
+For statements (suggest statement lists?)
+Change the charlits
+Tests, please!
+Optional for? If the thing's a statement...
+Oh and parsing for, most important
+Merge
+
+Need to make everything work for optional for
+
+f(x){ for(x = 3; x < 10; x = x + 1){ return 3; }; return 5; }
+Okay, something is weird with parsing for...
+Could be the fact that I messed with stmt stuffs.
+
+Oooh might have messed up scoping-- I shouldn't be able to access variables above the call but we totally can. (Not sure if I tied the formals to the inner function or the outer one).
