@@ -80,7 +80,7 @@ stmt_list:
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE { If($3, $6, []) }
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE   { If($3, $6, List.rev $10) }
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE IF LPAREN expr RPAREN LBRACE stmt_list RBRACE  { If($3, List.rev $6, [If($11, List.rev $14, [])]) }
-  | FOR LPAREN expr SEMI expr SEMI expr RPAREN LBRACE stmt_list RBRACE
+  | FOR LPAREN stmt expr SEMI stmt RPAREN LBRACE stmt_list RBRACE
      { For($3, $5, $7, List.rev $10) }
   | ID ASSIGN expr SEMI { Asn($1, $3, true) }
   | ID COPY expr SEMI { Asn($1, $3, false) }
