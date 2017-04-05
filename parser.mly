@@ -3,7 +3,11 @@
 open Ast
 %}
 
+<<<<<<< HEAD
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA 
+=======
+%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA
+>>>>>>> 1458cb2d0df975b0b960729576e84ae4f0c061ba
 %token PLUS MINUS DIVIDE ASSIGN NOT DOT COLON
 %token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR
 %token RETURN IF ELSE FOR WHILE INT BOOLEAN VOID
@@ -22,7 +26,7 @@ open Ast
 %nonassoc NOELSE
 %nonassoc ELSE
 %right ASSIGN COPY PLUSEQ FPLUSEQ ADDEQ EADDEQ
-%nonassoc COLON 
+%nonassoc COLON
 %left OR
 %left AND
 %left EQ NEQ
@@ -53,20 +57,20 @@ decls:
  | decls_list { List.rev $1 }
 
  decls_list:
-   func { [$1] } 
+   func { [$1] }
  | decls_list func { $2::$1 }
 
 func:
-   func_dec LBRACE  stmt_list RBRACE { Fbody($1, List.rev $3) }
-
-func_dec:
-	ID LPAREN formals_opt RPAREN { Fdecl($1, $3) }
+   ID LPAREN formals_opt RPAREN LBRACE  stmt_list RBRACE
+      { { fname = $1;
+   formals = $3;
+   body = List.rev $6 } }
 
 formals_opt:
     /* nothing */ { [] }
   | formal_list   { List.rev $1 }
 
-formal_list:  /*Changed to id because they're ids*/
+formal_list:
     ID                   { [$1] }
   | formal_list COMMA ID { $3 :: $1 }
 
@@ -74,13 +78,17 @@ stmt_list:
     /* nothing */  { [] }
   | stmt_list stmt { $2 :: $1 }
 
-stmt:
-   expr SEMI  { Expr($1) }    
-  |RETURN expr SEMI { Return($2) }
+  stmt:
+  RETURN expr SEMI { Return $2 }
+  | expr SEMI { Expr $1 }
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE { If($3, $6, []) }
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE   { If($3, $6, List.rev $10) }
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE IF LPAREN expr RPAREN LBRACE stmt_list RBRACE  { If($3, List.rev $6, [If($11, List.rev $14, [])]) }
+<<<<<<< HEAD
   | FOR LPAREN stmt SEMI expr SEMI stmt RPAREN LBRACE stmt_list RBRACE
+=======
+  | FOR LPAREN stmt expr SEMI stmt RPAREN LBRACE stmt_list RBRACE
+>>>>>>> 1458cb2d0df975b0b960729576e84ae4f0c061ba
      { For($3, $5, $7, List.rev $10) }
   | ID ASSIGN expr SEMI { Asn($1, $3, true) }
   | ID COPY expr SEMI { Asn($1, $3, false) }
