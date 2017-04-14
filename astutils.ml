@@ -31,6 +31,7 @@ let string_of_type (t: primitiveType) =
   in let s, _, _ = aux t 97 CharMap.empty in s
 
 (*^^What does this even do??*)
+
 let string_of_tuple (t: id * primitiveType) =
   match t with
     (a, b) -> a ^ " " ^ string_of_type b
@@ -53,45 +54,45 @@ let rec string_of_aexpr (ae: aexpr): string =
         match m with
           [] -> []
         | hd :: tl ->
-          string_of_stmt hd ::  matchlist tl
+          string_of_astmt hd ::  matchlist tl
       in String.concat "" (matchlist astmts)  
     in Printf.sprintf "%s (%s): %s" id allaexprs (string_of_type t)
 
-and string_of_stmt (l: astmt) = 
+and string_of_astmt (l: astmt) = 
   match l with 
   | AReturn(aexpr,typ) -> "return " ^ string_of_aexpr aexpr ^ "; " ^ string_of_type typ ^ "\n";
   | AAsn(id,aexpr,_) -> id ^ " = " ^ string_of_aexpr aexpr ^ "; ";
   | AExpr(aexpr) -> " " ^ string_of_aexpr aexpr ^ "; "
   | AIf(e, s1, s2) ->  
-  let a = "if (" ^ string_of_aexpr e ^ ") {" ^ string_of_stmt_list s1 ^ "; " in
+  let a = "if (" ^ string_of_aexpr e ^ ") {" ^ string_of_astmt_list s1 ^ "; " in
   let b =  (match s2 with
           [] -> ""
-          |rest -> string_of_stmt_list rest) in (a ^ b)
+          |rest -> string_of_astmt_list rest) in (a ^ b)
   |AFor(as1, ae1, as2, astmts) ->
-        "for (" ^ string_of_stmt as1  ^ string_of_aexpr ae1 ^ " ; " ^ string_of_stmt as2 
-        ^ string_of_stmt_list astmts
-
-and string_of_stmt_list (stmts : astmt list) : string =
-  let s1 = List.map(fun a -> (string_of_stmt (a))) stmts in let l = String.concat "" s1 in l
-
- (*   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
+        "for (" ^ string_of_astmt as1  ^ string_of_aexpr ae1 ^ " ; " ^ string_of_astmt as2 
+        ^ string_of_astmt_list astmts
+ (*   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_astmt s
 *)
 
-and string_of_ustmt (l: stmt)= 
+and string_of_astmt_list (stmts : astmt list) : string =
+  let s1 = List.map(fun a -> (string_of_astmt (a))) stmts in let l = String.concat "" s1 in l
+
+
+and string_of_stmt (l: stmt)= 
   match l with 
   | Return(expr) -> "return " ^ string_of_expr expr ^ ";\n";
   | Asn(id,expr,_) -> id ^ " = " ^ string_of_expr expr ^ ";\n"
   | Expr(expr) -> " " ^ string_of_expr expr ^ ";\n"
-  | If(e, s1,  s2) -> let a = "if (" ^ string_of_expr e ^ ") {" ^ string_of_ustmt_list s1 ^ "; " in
+  | If(e, s1,  s2) -> let a = "if (" ^ string_of_expr e ^ ") {" ^ string_of_stmt_list s1 ^ "; }" in
   let b =
   match s2 with
   [] -> ""
-  |rest -> string_of_ustmt_list rest in 
+  |rest -> string_of_stmt_list rest in 
 (a ^ b)
-  | For(s1, e1, s2, astmts) -> "for (" ^ string_of_ustmt s1 ^ string_of_expr e1 ^ string_of_ustmt s2 ^" ) {\n" ^
-  string_of_ustmt_list astmts ^ "}" 
-and string_of_ustmt_list (stmts : stmt list) : string =
-  let s1 = List.map(fun a -> (string_of_ustmt (a))) stmts in let l = String.concat "" s1 in l
+  | For(s1, e1, s2, astmts) -> "for (" ^ string_of_stmt s1 ^ string_of_expr e1 ^ string_of_stmt s2 ^" ) {\n" ^
+  string_of_stmt_list astmts ^ "}" 
+and string_of_stmt_list (stmts : stmt list) : string =
+  let s1 = List.map(fun a -> (string_of_stmt (a))) stmts in let l = String.concat "" s1 in l
 
 and string_of_expr (e: expr): string =
   match e with
@@ -111,13 +112,13 @@ and string_of_expr (e: expr): string =
 let string_of_func (func: sast_afunc) = 
   let header = func.fname in
   let formals = "(" ^ String.concat ", " (List.map fst func.formals) ^ "){ : " ^ string_of_type func.typ ^ "\n"
-  in let body = String.concat "" (List.map string_of_stmt func.body) ^ "}\n"
+  in let body = String.concat "" (List.map string_of_astmt func.body) ^ "}\n"
   in header ^ formals ^ body
 (*   let t = "Type :" ^ string_of_type func.typ 
      in let name = 
        " Name : " ^ func.fname
      in let formals = "(" ^ String.concat ", " (List.map fst func.formals) ^ ")\n{\n"
      in let body = 
-       String.concat "" (List.map string_of_stmt func.body) ^ "}\n"
+       String.concat "" (List.map string_of_astmt func.body) ^ "}\n"
      in t ^ name ^ formals ^body
 *)

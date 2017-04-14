@@ -1,4 +1,3 @@
-**(Our language-- if a is new, sure, if it’s something different already, no? Or overwrite?)*
 **make everything mutable (including endpoints and fields but no record structure), 
 no heterogeneity**
 
