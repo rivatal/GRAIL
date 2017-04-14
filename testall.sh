@@ -22,7 +22,7 @@ globalerror=0
 keep=0
 
 Usage() {
-    echo "Usage: testall.sh [options] [.eg files]"
+    echo "Usage: testall.sh [options] [.gl files]"
     echo "-k    Keep intermediate files"
     echo "-h    Print this help"
     exit 1
@@ -71,8 +71,8 @@ RunFail() {
 Check() {
     error=0
     basename=`echo $1 | sed 's/.*\\///
-                             s/.eg//'`
-    reffile=`echo $1 | sed 's/.eg$//'`
+                             s/.gl//'`
+    reffile=`echo $1 | sed 's/.gl$//'`
     basedir="`echo $1 | sed 's/\/[^\/]*$//'`/."
 
     echo -n "$basename..."
@@ -84,7 +84,7 @@ Check() {
 
     generatedfiles="$generatedfiles ${basename}.ll ${basename}.out" &&
     Run "clang -emit-llvm -o list.bc -c src/list.c" &&
-    Run "$EGRAPHER" "<" $1 ">" "${basename}.ll" &&
+    Run "$GRAIL" "<" $1 ">" "${basename}.ll" &&
         Run "$LLL" "${basename}.ll list.bc" "-o" "a.out" &&
     Run "$LLI" "a.out" ">" "${basename}.out"&&
     Compare ${basename}.out ${reffile}.out ${basename}.diff
@@ -106,8 +106,8 @@ Check() {
 CheckFail() {
     error=0
     basename=`echo $1 | sed 's/.*\\///
-                             s/.eg//'`
-    reffile=`echo $1 | sed 's/.eg$//'`
+                             s/.gl//'`
+    reffile=`echo $1 | sed 's/.gl$//'`
     basedir="`echo $1 | sed 's/\/[^\/]*$//'`/."
 
     echo -n "$basename..."
@@ -118,7 +118,7 @@ CheckFail() {
     generatedfiles=""
 
     generatedfiles="$generatedfiles ${basename}.err ${basename}.diff" &&
-    RunFail "$EGRAPHER" "<" $1 "2>" "${basename}.err" ">>" $globallog &&
+    RunFail "$GRAIL" "<" $1 "2>" "${basename}.err" ">>" $globallog &&
     Compare ${basename}.err ${reffile}.err ${basename}.diff
 
     # Report the status and clean up the generated files
@@ -161,7 +161,7 @@ if [ $# -ge 1 ]
 then
     files=$@
 else
-    files="tests/test-*.eg tests/fail-*.eg"
+    files="tests/test-*.gl tests/fail-*.gl"
 fi
 
 for file in $files
