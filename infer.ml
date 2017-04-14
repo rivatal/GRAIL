@@ -62,7 +62,7 @@ let rec infer_stmt (e: stmt) (env: environment) (genv: genvironment) : (astmt * 
   match e with
   | Asn(id, expr, switch) -> 
     let aexpr, _, _ = infer_expr env genv expr in 
-    (AAsn(id, aexpr, switch), env, genv)
+    (AAsn(id, aexpr, switch, type_of aexpr), env, genv)
   | Return(expr) ->
     let aexpr, _, _ = infer_expr env genv expr in 
     (AReturn(aexpr, type_of aexpr), env, genv)
@@ -214,7 +214,7 @@ and update_map (alist : astmt list) (env: environment) : environment =
   | [] -> env
   | hd :: tl -> 
     match hd with
-    |AAsn(id, aexpr, _) ->
+    |AAsn(id, aexpr, _, _) ->
       let t = type_of aexpr in
       let env = NameMap.add (mapid id) t env
       in let env = update_expr_map aexpr env  (*Redundant?*)
@@ -234,7 +234,7 @@ and update_map (alist : astmt list) (env: environment) : environment =
 
 and update_map_u (a: astmt) (env: environment) : environment = 
   match a with
-  |AAsn(id, aexpr, _) ->
+  |AAsn(id, aexpr, _,_ ) ->
     let t = type_of aexpr in
     let env = NameMap.add (mapid id) t env
     in let env = update_expr_map aexpr env  (*Redundant?*)

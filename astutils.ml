@@ -61,7 +61,7 @@ let rec string_of_aexpr (ae: aexpr): string =
 and string_of_astmt (l: astmt) = 
   match l with 
   | AReturn(aexpr,typ) -> "return " ^ string_of_aexpr aexpr ^ "; " ^ string_of_type typ ^ "\n";
-  | AAsn(id,aexpr,_) -> id ^ " = " ^ string_of_aexpr aexpr ^ "; ";
+  | AAsn(id,aexpr,_,_) -> id ^ " = " ^ string_of_aexpr aexpr ^ "; ";
   | AExpr(aexpr) -> " " ^ string_of_aexpr aexpr ^ "; "
   | AIf(e, s1, s2) ->  
   let a = "if (" ^ string_of_aexpr e ^ ") {" ^ string_of_astmt_list s1 ^ "; " in
