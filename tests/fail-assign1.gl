@@ -5,5 +5,5 @@ main(){
         a = 1234;
         b = true;
         b = false;
-        a = true; (* Fail: assigning bool to integer *)
+        a = true; /* Fail: assigning bool to integer */
 }

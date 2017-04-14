@@ -1,4 +1,4 @@
-(* NEED TO ADD MORE BINARY OPERATOR *)
+/* NEED TO ADD MORE BINARY OPERATOR */
 
 main(){
         print(12==12);
