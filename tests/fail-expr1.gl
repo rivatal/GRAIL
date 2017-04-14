@@ -1,0 +1,5 @@
+main(){
+        a = 1;
+        b = true;
+        a = a + b; (* Error, bool add int *)
+}

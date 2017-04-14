@@ -1,0 +1,9 @@
+main(){
+        a;
+        b;
+        a = 123;
+        a = 1234;
+        b = true;
+        b = false;
+        a = true; (* Fail: assigning bool to integer *)
+}
