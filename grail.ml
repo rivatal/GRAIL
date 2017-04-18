@@ -104,7 +104,7 @@ let format_sast_codegen (ast : Ast.afunc) : Ast.sast_afunc =
         }
 
 
-let compile() = let sast = List.map format_sast_codegen (grail [] "main() { print(\"hello world\"); }") in
+let compile() = let sast = List.map format_sast_codegen (grail [] "main() { x = 2; y = x; z = y; print(\"hello world\"); }") in
   let m = Codegen.translate sast in
   Llvm_analysis.assert_valid_module m; print_string (Llvm.string_of_llmodule m) ;;
 compile();
