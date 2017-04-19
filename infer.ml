@@ -32,6 +32,7 @@ let mapid (id: string) : string =
   let fname = Stack.top callstack in
   (mapidwith fname id)
 
+
 let rec findinmap(id: string) (env: environment): primitiveType =
   let curr = Stack.copy callstack in
   let rec fold (myl: string list) =          (*First fold the call stack into a list for searching*)
@@ -52,7 +53,7 @@ let check_asn (a: stmt) : unit =
 (*   print_string "Checking assign";
  *)  match a with
   Asn(_,_,_) -> ()
-  |_ -> raise(failwith ((string_of_ustmt a) ^ " not an assignment statement."))
+  |_ -> raise(failwith ((string_of_stmt a) ^ " not an assignment statement."))
 
 (* Group of functions dealing with annotation:
    stmt, list, type of; expr, list, type of
@@ -61,7 +62,7 @@ let rec infer_stmt (e: stmt) (env: environment) (genv: genvironment) : (astmt * 
   match e with
   | Asn(id, expr, switch) -> 
     let aexpr, _, _ = infer_expr env genv expr in 
-    (AAsn(id, aexpr, switch), env, genv)
+    (AAsn(id, aexpr, switch, type_of aexpr), env, genv)
   | Return(expr) ->
     let aexpr, _, _ = infer_expr env genv expr in 
     (AReturn(aexpr, type_of aexpr), env, genv)
@@ -125,8 +126,9 @@ and type_of (ae: aexpr): primitiveType =
   | ABinop(_, _, _, t) -> t
   | ACall(_, _, t) -> t
 and check_bool (e: aexpr) : unit =
-  print_string "Checking bool";
-  if(type_of e != TBool)
+(*   print_string "Checking bool";
+ *)  
+ if(type_of e != TBool)
   then(raise(failwith ((string_of_aexpr e) ^ " not a boolean.")))
   else ()
 
@@ -212,7 +214,7 @@ and update_map (alist : astmt list) (env: environment) : environment =
   | [] -> env
   | hd :: tl -> 
     match hd with
-    |AAsn(id, aexpr, _) ->
+    |AAsn(id, aexpr, _, _) ->
       let t = type_of aexpr in
       let env = NameMap.add (mapid id) t env
       in let env = update_expr_map aexpr env  (*Redundant?*)
@@ -232,7 +234,7 @@ and update_map (alist : astmt list) (env: environment) : environment =
 
 and update_map_u (a: astmt) (env: environment) : environment = 
   match a with
-  |AAsn(id, aexpr, _) ->
+  |AAsn(id, aexpr, _,_ ) ->
     let t = type_of aexpr in
     let env = NameMap.add (mapid id) t env
     in let env = update_expr_map aexpr env  (*Redundant?*)
@@ -317,7 +319,7 @@ and infer_func (f: func) (env: environment) (genv : genvironment) :  (afunc * ge
 
 and infer_stmt_list (env: environment) (genv : genvironment) (e: stmt list) : (astmt list * environment * genvironment) =
 (*   print_string "Inferring:\n";
- *)  (*  List.iter (fun a -> (print_endline (string_of_ustmt a))) e;  
+ *)  (*  List.iter (fun a -> (print_endline (string_of_stmt a))) e;  
   *)  
   let rec helper (env: environment) (genv : genvironment) (e: stmt list) (a: astmt list) = 
     match e with

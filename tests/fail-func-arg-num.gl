@@ -1,0 +1,9 @@
+get(x, b){
+        return 0;
+}
+
+main(){
+        b = 10 ;
+        print(get(b));
+        return 0;
+}
