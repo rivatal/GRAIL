@@ -20,6 +20,8 @@ let string_of_type (t: primitiveType) =
     | TString -> "str", chr, map
     | TChar -> "char", chr, map
     | TVoid(_) -> "void", chr, map
+    | TList(x) -> 
+        let str, chr, map = aux x chr map in ("list " ^ str), chr, map
     | T(x) ->
       let gen_chr, new_chr, new_map = if CharMap.mem x map
         then Char.escaped (Char.chr (CharMap.find x map)), chr, map
