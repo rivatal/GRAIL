@@ -17,6 +17,7 @@ type primitiveType =
   | T of string
   | TVoid of string
   | TStmt of primitiveType * primitiveType
+  | TList of primitiveType         
 
 type expr =
     IntLit of int
@@ -47,7 +48,7 @@ type aexpr =
   | AFloatLit of float * primitiveType
   | AId of string * primitiveType
   | ABinop of aexpr * op * aexpr * primitiveType
-  | ACall of string * astmt list * primitiveType
+  | ACall of string * astmt list * primitiveType  
 
 and astmt =
   | AAsn of id * aexpr * bool
