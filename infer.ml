@@ -91,17 +91,14 @@ let rec infer_stmt (e: stmt) (env: environment) (genv: genvironment) : (astmt * 
 
 
 and annotate_expr (e: expr) (env: environment) (genv : genvironment): aexpr =
-  (*   ignore(print_string "annotate_expr");
-  *)  
+  (*   ignore(print_string "annotate_expr"); *)  
   match e with
   | IntLit(n) -> AIntLit(n, TInt)
   | BoolLit(b) -> ABoolLit(b, TBool)
   | StrLit(s) -> AStrLit(s,TString)
   | FloatLit(f) -> AFloatLit(f, TFloat)
   | CharLit(c) -> ACharLit(c, TChar)
-  | Id(x) -> 
-    let t = findinmap x env in
-    AId(x, t)
+  | Id(x) -> let t = findinmap x env in AId(x, t)
   | Binop(e1, op, e2) ->
     let et1 = annotate_expr e1 env genv
     and et2 = annotate_expr e2 env genv
@@ -158,7 +155,7 @@ and check_list_exprs (e: aexpr list) : unit =
   [] -> ()
   |h :: t -> 
   match h with
-  | AIntLit(_,_) | ABoolLit(_,_) | AStrLit(_,_) | AFloatLit(_,_) | ACharLit(_,_) | AId(_,_) -> check_list_exprs t
+  | AIntLit(_,_) | ABoolLit(_,_) | AStrLit(_,_) | AFloatLit(_,_) | ACharLit(_,_) | AId(_,_) | AList(_,_) -> check_list_exprs t
   | y -> raise(failwith ((string_of_aexpr y) ^ " does not belong in a list."))
 
 
@@ -278,7 +275,7 @@ and update_map (alist : astmt list) (env: environment) : environment =
     |AFor(_,_,_,_) ->
       update_map tl env
 
-
+(*For a single update map*)
 and update_map_u (a: astmt) (env: environment) : environment = 
   match a with
   |AAsn(id, aexpr, _) ->
@@ -300,7 +297,7 @@ and update_expr_map aexpr env =
   match aexpr with
   | AIntLit(_,_) | ABoolLit(_,_) | AStrLit(_,_) | AFloatLit(_,_) | ACharLit(_,_) | AList(_,_) -> env
   | AId(s, t) ->
-    let env = NameMap.add (mapid s) t env in 
+(*     let env = NameMap.add (mapid s) t env in  *)
     env
   | ABinop(et1, op, et2, t) -> 
     let env = update_expr_map et1 env
