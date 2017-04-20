@@ -83,6 +83,8 @@ let translate (functions) =
             | A.Leq     -> L.build_icmp L.Icmp.Sle
             | A.Greater -> L.build_icmp L.Icmp.Sgt
             | A.Geq     -> L.build_icmp L.Icmp.Sge
+            | A.And     -> L.build_and
+            | A.Or      -> L.build_or
             | _ -> raise (Failure "wrong operation applied to ints")
           )
         in
@@ -103,14 +105,6 @@ let translate (functions) =
           )
         in
 
-        let bool_ops op = 
-          (match op with
-            | A.And     -> L.build_and
-            | A.Or      -> L.build_or
-            | _ -> raise (Failure "wrong operation applied to bools")
-          )
-        in
-
 
 
         let rec aexpr builder = function
@@ -121,25 +115,26 @@ let translate (functions) =
                 | A.AFloatLit(f) -> L.const_float float_t f
                (* | A.List ->  why is List an expression, should not it be a data staructure?  *)
                 | A.ACall ("print", [e], _) -> L.build_call printf_func [| (aexpr builder e) |] "printf" builder
+                | A.Call (f, act) ->
+                  let (fdef, fdecl) = StringMap.find f function_decls in
+                  let actuals = List.rev (List.map (aexpr builder) (List.rev act)) in
+                  let result = (match fdecl.A.typ with A.TVoid -> ""
+                                            | _ -> f ^ "_result") in
+                     L.build_call fdef (Array.of_list actuals) result builder
         (*        | A.Item ->
                 | A.Subset ->
                 | A.Dot ->  *)
-                (*| A.Unop(op, e) -> let e' = aexpr builder e in
+                | A.Unop(op, e) -> let e' = aexpr builder e in
                         (match op with 
                                 A.Neg -> L.build_neg
-                                | A.Not -> L.build_not) e' "tmp" builder*)
+                                | A.Not -> L.build_not) e' "tmp" builder
                 | A.ABinop (e1, op, e2) ->     let e1' = aexpr builder e1
                                               and e2' = aexpr builder e2 in
-                                              (match e1 with 
-                                              | A.AIntLit _ -> (int_ops op) e1' e2' "tmp" builder
-                                              | A.AFloatLit _ -> (double_ops op) e1' e2' "tmp" builder
-                                              | A.ABoolLit _ -> (bool_ops op) e1' e2' "tmp" builder
-                                              | A.AId(_, A.TInt) -> (int_ops op) e1' e2' "tmp" builder
+                                              (match e2 with 
+                                              | A.AFloatLit _ -> (float_ops op) e1' e2' "tmp" builder
                                               | A.AId(_, A.TFloat) -> (float_ops op) e1' e2' "tmp" builder
-                                              | A.AId(_, A.TBool) -> (bool_ops op) e1' e2' "tmp" builder
-                                              | A.ACall(_, A.TInt) -> (int_ops op) e1' e2' "tmp" builder
-                                              | A.ACall(_, A.TFloat) -> (float_ops op) e1' e2' "tmp" builder
-                                              | A.ACall(_, A.TBool) -> (bool_ops op) e1' e2' "tmp" builder                                              
+                                              | A.ACall(_, _, A.TFloat) -> (float_ops op) e1' e2' "tmp" builder
+                                              | _ -> (int_ops op) e1' e2' "tmp" builder                                              
                                             )
                 | A.Noexpr -> L.const_int i32_t 0
               in
@@ -178,7 +173,7 @@ let translate (functions) =
         ignore (L.build_cond_br bool_val then_bb else_bb builder);
         L.builder_at_end context merge_bb
 
-        (*| A.While (predicate, body) ->
+        | A.While (predicate, body) ->
         let pred_bb = L.append_block context "while" the_function in
          ignore (L.build_br pred_bb builder);
 
@@ -193,11 +188,9 @@ let translate (functions) =
         ignore (L.build_cond_br bool_val body_bb merge_bb pred_builder);
         L.builder_at_end context merge_bb
 
-        | A.Break -> (*builder for merge block of current loop*) builder
-        | A.Continue -> (*builder for top block of current loop*) builder
 
       | A.For (s1, e2, s3, body) -> List.fold_left astmt builder 
-      [s1 ; A.While(e2, List.rev s3::(List.rev body))] *)
+      [s1 ; A.While(e2, List.rev s3::(List.rev body))]
         in
 
 
