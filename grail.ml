@@ -88,7 +88,7 @@ let get_func_if_def (id: string) (genv: genvironment)  =
 
 let rec get_ids_expr (e: expr) (genv: genvironment): string list =
   match e with
-  | IntLit(_) | BoolLit(_) | StrLit(_) | FloatLit(_) -> []
+  | IntLit(_) | BoolLit(_) | StrLit(_) | FloatLit(_) | List(_) -> []
   | Id(x) -> []
   | Binop(e1, _, e2) -> []
   | Call(id, elist) ->  
