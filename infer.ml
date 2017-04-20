@@ -199,12 +199,11 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
     (collect_expr ae1) @ (collect_expr ae2) @ opc (*opc appended at the rightmost since we apply substitutions right to left *)
   | ACall(id, astmts, t) -> [(t, t)]
   | AList(ael, t) -> 
-  let lt = (t, (type_of (List.hd ael))) in
   let rec helper l = 
     match l with
     |x :: y :: tail -> (type_of x, type_of y) :: helper (y :: tail)
     |[] | _ -> []
-  in lt :: (helper ael)
+  in (helper ael)
   
 (*Collection of functions dealing with unify: *)
 and unify (constraints: (primitiveType * primitiveType) list) : substitutions =
@@ -218,6 +217,8 @@ and unify (constraints: (primitiveType * primitiveType) list) : substitutions =
     let t1 = unify_one (apply t2 x) (apply t2 y) in
     t1 @ t2
 and unify_one (t1: primitiveType) (t2: primitiveType) : substitutions =
+  ignore(print_string (string_of_type t1));
+  ignore(print_string (string_of_type t2));
   match t1, t2 with
   | TInt, TInt | TBool, TBool | TString, TString | TFloat, TFloat -> []
   | T(x), z | z, T(x) | TVoid(x), z | z, TVoid(x) -> [(x, z)]
@@ -297,7 +298,7 @@ and update_map_u (a: astmt) (env: environment) : environment =
 (*Return env every time. Also-- check that you cannot reassign variables.*)
 and update_expr_map aexpr env = 
   match aexpr with
-  | AIntLit(_,_) | ABoolLit(_,_) | AStrLit(_,_) | AFloatLit(_,_) | ACharLit(_,_) -> env
+  | AIntLit(_,_) | ABoolLit(_,_) | AStrLit(_,_) | AFloatLit(_,_) | ACharLit(_,_) | AList(_,_) -> env
   | AId(s, t) ->
     let env = NameMap.add (mapid s) t env in 
     env
