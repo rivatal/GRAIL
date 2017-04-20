@@ -124,16 +124,17 @@ let translate (functions) =
         (*        | A.Item ->
                 | A.Subset ->
                 | A.Dot ->  *)
-                | A.Unop(op, e) -> let e' = aexpr builder e in
+                (*| A.Unop(op, e) -> let e' = aexpr builder e in
                         (match op with 
                                 A.Neg -> L.build_neg
-                                | A.Not -> L.build_not) e' "tmp" builder
+                                | A.Not -> L.build_not) e' "tmp" builder*)
                 | A.ABinop (e1, op, e2) ->     let e1' = aexpr builder e1
                                               and e2' = aexpr builder e2 in
-                                              (match e2 with 
+                                              (match e1 with 
                                               | A.AFloatLit _ -> (float_ops op) e1' e2' "tmp" builder
                                               | A.AId(_, A.TFloat) -> (float_ops op) e1' e2' "tmp" builder
                                               | A.ACall(_, _, A.TFloat) -> (float_ops op) e1' e2' "tmp" builder
+                                              | A.ABinop(_,_,A.TFloat) -> (float_ops op) e1' e2' "tmp" builder
                                               | _ -> (int_ops op) e1' e2' "tmp" builder                                              
                                             )
                 | A.Noexpr -> L.const_int i32_t 0
