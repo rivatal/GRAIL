@@ -8,6 +8,7 @@
 *.cmxs
 *.cmxa
 *.err
+grail
 scanner.ml
 parser.ml
 parser.mli

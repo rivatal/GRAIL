@@ -17,6 +17,7 @@ type primitiveType =
   | TVoid of string
   | TList of primitiveType
   | TAssoc of primitiveType
+  | TRec
 
 type expr =
     IntLit of int
@@ -50,6 +51,8 @@ type aexpr =
   | ACall of string * astmt list * primitiveType  
   | AList of aexpr list * primitiveType         (*Make sure to check that the primitive type is only a TList*)
   | AItem of string * aexpr * primitiveType
+  | ARecord of astmt list * primitiveType      
+  | ADot of aexpr * string * primitiveType
 
 and astmt =
   | AAsn of id * aexpr * bool * primitiveType

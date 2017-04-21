@@ -136,5 +136,11 @@ Registers as void, which is good, but...
 f(x){ x = [10]; } is a list containing a single int, not a list of size ten.
 Should we just #javastyle?
 
+Mismatched types? No longer!
+f(x){ y = {a:x}; return y;} main(){ return f(3); }
+
+
+f(){ y = {a:3}; return y.a; }
+Newest mystery-- why on earth is y a void in the map? Why is it printing backwards?
 
 
