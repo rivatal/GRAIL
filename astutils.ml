@@ -21,7 +21,7 @@ let string_of_type (t: primitiveType) =
     | TChar -> "char", chr, map
     | TVoid(_) -> "void", chr, map
     | TList(x) -> 
-        let str, chr, map = aux x chr map in ("list " ^ str), chr, map
+    let str, chr, map = aux x chr map in (("list of " ^ str), chr, map)
     | T(x) ->
       let gen_chr, new_chr, new_map = if CharMap.mem x map
         then Char.escaped (Char.chr (CharMap.find x map)), chr, map
@@ -46,6 +46,7 @@ let rec string_of_aexpr (ae: aexpr): string =
   | AStrLit(b, t) -> Printf.sprintf "(%s: %s)" (b) (string_of_type t)
   | ACharLit(c, t) -> Printf.sprintf "(%s: %s)" (String.make 1 c) (string_of_type t)
   | AId(x, t) -> Printf.sprintf "(%s: %s)" x (string_of_type t)
+  | AList(_, t) -> Printf.sprintf "(%s)" (string_of_type t)
   | ABinop(e1, op, e2, t) ->
     let s1 = string_of_aexpr e1 in let s2 = string_of_aexpr e2 in
     let sop = string_of_op op in let st = string_of_type t in

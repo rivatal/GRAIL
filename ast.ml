@@ -7,7 +7,6 @@ type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq |
 
 type uop = Neg | Not 
 
-
 type primitiveType =
   | TInt
   | TBool
@@ -17,7 +16,7 @@ type primitiveType =
   | T of string
   | TVoid of string
   | TStmt of primitiveType * primitiveType
-  | TList of primitiveType         
+  | TList of primitiveType
 
 type expr =
     IntLit of int
@@ -49,6 +48,7 @@ type aexpr =
   | AId of string * primitiveType
   | ABinop of aexpr * op * aexpr * primitiveType
   | ACall of string * astmt list * primitiveType  
+  | AList of aexpr list * primitiveType         (*Make sure to check that the primitive type is only a TList*)
 
 and astmt =
   | AAsn of id * aexpr * bool * primitiveType
