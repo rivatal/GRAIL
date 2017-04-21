@@ -151,7 +151,7 @@ let format_sast_codegen (ast : Ast.afunc) : Ast.sast_afunc =
       formals = aformals;
       body = astmts
     }
-(*
+
 (*Interpreter for debugging purposes*)
 let rec interpreter (ast: Ast.sast_afunc list) : Ast.sast_afunc list =
   print_string "> ";
@@ -181,9 +181,10 @@ let rec display (input: Ast.sast_afunc list) : unit =
 
 say();
 let l = interpreter([]) in display l
-*)
 
+(* 
   let compile() = let sast = List.map format_sast_codegen (grail [] "main() { print(\"hello world\"); x = 2; y = x; z = y;}") in
     let m = Codegen.translate sast in
     Llvm_analysis.assert_valid_module m; print_string (Llvm.string_of_llmodule m) ;;
     compile(); 
+ *)

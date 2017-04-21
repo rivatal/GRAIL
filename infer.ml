@@ -22,10 +22,11 @@ let gen_new_type () =
   T(Char.escaped (Char.chr c1))
 
 let gen_new_void () : primitiveType =
-  let c1 = !type_variable in
+  TVoid
+(*   let c1 = !type_variable in
   incr type_variable; 
   TVoid(Char.escaped (Char.chr c1))
-
+ *)
 (*Store variables with function names*)
 let mapidwith (fname: string )(id: string) : string =
   (fname ^ "#" ^ id)
@@ -112,7 +113,7 @@ and annotate_expr (e: expr) (env: environment) (genv : genvironment): aexpr =
       let et1 = annotate_expr e env genv in 
       let typ = findinmap s env in
       (match typ with
-        TVoid(_) -> raise (failwith (s ^ " not defined @ 115."))
+        TVoid -> raise (failwith (s ^ " not defined @ 115."))
         |TList(t) -> AItem(s, et1, t)
         | _ -> raise (failwith (s ^ " not a list.")))
    | Binop(e1, op, e2) ->
@@ -272,8 +273,8 @@ and unify_one (t1: primitiveType) (t2: primitiveType) : substitutions =
 (*   ignore(print_string ((string_of_type t1) ^ "\n"));  
   ignore(print_string ((string_of_type t2) ^ "\n"));   *)
   match t1, t2 with
-  | TInt, TInt | TBool, TBool | TString, TString | TFloat, TFloat | TRec, TRec -> []
-  | T(x), z | z, T(x) | TVoid(x), z | z, TVoid(x) -> [(x, z)]
+  | TInt, TInt | TBool, TBool | TString, TString | TFloat, TFloat | TRec, TRec | TVoid, TVoid -> []
+  | T(x), z | z, T(x) -> [(x, z)]
   | TList(x), TList(y) -> unify_one x y
   | _ -> raise (failwith "mismatched types")
 
@@ -284,8 +285,8 @@ and unify_one (t1: primitiveType) (t2: primitiveType) : substitutions =
 and substitute (u: primitiveType) (x: id) (t: primitiveType) : primitiveType =
 (*   print_string "substituting"; *)
   match t with
-  | TInt | TBool | TString | TFloat | TList(_) | TRec -> t 
-  | T(c) | TVoid(c) -> if c = x then u else t 
+  | TInt | TBool | TString | TFloat | TList(_) | TRec | TVoid-> t 
+  | T(c)  -> if c = x then u else t 
 and apply (subs: substitutions) (t: primitiveType) : primitiveType =
   List.fold_right (fun (x, u) t -> substitute u x t) subs t
 

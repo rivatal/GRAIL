@@ -20,7 +20,7 @@ let string_of_type (t: primitiveType) =
     | TFloat -> "float", chr, map
     | TString -> "str", chr, map
     | TChar -> "char", chr, map
-    | TVoid(_) -> "void", chr, map
+    | TVoid -> "void", chr, map
     | TList(x) -> 
     let str, chr, map = aux x chr map in (("list of " ^ str), chr, map)
     | T(x) ->

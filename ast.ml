@@ -14,7 +14,7 @@ type primitiveType =
   | TFloat
   | TChar 
   | T of string
-  | TVoid of string
+  | TVoid
   | TList of primitiveType
   | TAssoc of primitiveType
   | TRec
