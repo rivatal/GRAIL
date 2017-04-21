@@ -79,10 +79,10 @@ let translate (functions) =
 
         let float_ops op = 
           (match op with
-            A.FAdd       -> L.build_fadd
-            | A.FSub     -> L.build_fsub
-            | A.FMult    -> L.build_fmul
-            | A.FDiv     -> L.build_fdiv
+            A.Fadd       -> L.build_fadd
+            | A.Fsub     -> L.build_fsub
+            | A.Fmult    -> L.build_fmul
+            | A.Fdiv     -> L.build_fdiv
             | A.Equal   -> L.build_fcmp L.Fcmp.Oeq
             | A.Neq     -> L.build_fcmp L.Fcmp.One
             | A.Less    -> L.build_fcmp L.Fcmp.Ult
@@ -101,7 +101,7 @@ let translate (functions) =
       			| A.AId(s,_) -> L.build_load (lookup s local_var_map) s builder 
                (* | A.List ->  why is List an expression, should not it be a data staructure?  *)
                 | A.ACall ("print", [e], _) -> L.build_call printf_func [| (aexpr builder e) |] "printf" builder
-                | A.Call (f, act) ->
+                | A.ACall (f, act) ->
                   let (fdef, fdecl) = StringMap.find f function_decls in
                   let actuals = List.rev (List.map (aexpr builder) (List.rev act)) in
                   let result = (match fdecl.A.typ with A.TVoid -> ""
