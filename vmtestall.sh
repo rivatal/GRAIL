@@ -2,8 +2,8 @@
 #Run testcases under dir /tests
 make
 # Path to the LLVM interpreter
-LLI="/usr/local/opt/llvm/bin/lli"
-LLL="/usr/local/opt/llvm/bin/llvm-link"
+LLI="/usr/bin/lli"
+LLL="/usr/bin/llvm-link"
 
 
 # Path to the grail compiler.  Usually "./grail.native"

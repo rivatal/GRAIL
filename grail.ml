@@ -56,7 +56,7 @@ let print_func (func: Ast.func): unit =
     Fbody(Fdecl(name, formals), astmts) -> 
     print_endline ("Function " ^ name);
     List.iter (fun a -> (print_endline a)) formals;
-    List.iter (fun a -> (print_endline (string_of_ustmt a))) astmts
+    List.iter (fun a -> (print_endline (string_of_stmt a))) astmts
 
 let mapid (id: string) : string =
   let fname = Stack.top callstack in

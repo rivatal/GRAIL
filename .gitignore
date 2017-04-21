@@ -7,6 +7,8 @@
 *.cmx
 *.cmxs
 *.cmxa
+*.err
 scanner.ml
 parser.ml
+parser.mli
 .DS_Store
