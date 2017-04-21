@@ -25,14 +25,6 @@ let translate (functions) =
                 | A.TFloat -> float_t in 
 
 
-        (* Declare each global variable; remember its value in a map *)
-        (* let global_vars = 
-                let global_var m (t, n) = 
-                        let init = L.const_int (ltype_of_typ t) 0
-                        in StringMap.add n (L.define_global n init the_module) m in
-                List.fold_left global_var StringMap.empty globals in
-        *)
-
        (* Declare printf(), which the print built-in function will call *)
         let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
         let printf_func = L.declare_function "printf" printf_t the_module in
@@ -57,21 +49,17 @@ let translate (functions) =
             (* Construct the function's "locals": formal arguments and locally
                declared variables.  Allocate each on the stack, initialize their
                value, if appropriate, and remember their values in the "locals" map *)
-            (*let local_vars =
-              let add_formal m (n, t) p = L.set_value_name n p;*)
-        (*let local = L.build_alloca (ltype_of_typ t) n builder in
-        ignore (L.build_store p local builder);
-        StringMap.add n local m in
-              let add_local m (n, t) =            
-        let local_var = L.build_alloca (ltype_of_typ t) n builder
-        in StringMap.add n local_var m in*)
-
-              (*let formals = List.fold_left2 add_formal StringMap.empty afunc.A.formals
-                  (Array.to_list (L.params the_function)) in
-        (* Return the value for a variable or formal argument *)
-        let lookup n = StringMap.find n local_vars in*)
-
-        let int_ops op = 
+            let local_vars =
+              let add_formal m (n, t) p = L.set_value_name n p;
+              let local = L.build_alloca (ltype_of_typ t) n builder in
+        	       ignore (L.build_store p local builder);
+       		       StringMap.add n local m in  
+	      
+              List.fold_left2 add_formal StringMap.empty afunc.A.formals (Array.to_list (L.params the_function)) 
+       	      in 
+		let lookup n map = try StringMap.find n map
+                with Not_found -> raise (Failure ("undeclared variable " ^ n))
+        in let int_ops op = 
           (match op with
             A.Add       -> L.build_add
             | A.Sub     -> L.build_sub
@@ -104,15 +92,13 @@ let translate (functions) =
             | _ -> raise (Failure "wrong operation applied to floats")
           )
         in
-
-
-
-        let rec aexpr builder = function
+        let rec aexpr builder local_var_map = function
                 A.AIntLit(i) -> L.const_int i32_t i
                 | A.ABoolLit(b) -> L.const_int i1_t (if b then 1 else 0)
                 | A.AStrLit(s) -> L.build_global_stringptr s "str" builder
                 | A.ACharLit(c) -> L.const_int i8_t c
                 | A.AFloatLit(f) -> L.const_float float_t f
+      			| A.AId(s,_) -> L.build_load (lookup s local_var_map) s builder 
                (* | A.List ->  why is List an expression, should not it be a data staructure?  *)
                 | A.ACall ("print", [e], _) -> L.build_call printf_func [| (aexpr builder e) |] "printf" builder
                 | A.Call (f, act) ->
@@ -121,13 +107,9 @@ let translate (functions) =
                   let result = (match fdecl.A.typ with A.TVoid -> ""
                                             | _ -> f ^ "_result") in
                      L.build_call fdef (Array.of_list actuals) result builder
-        (*        | A.Item ->
-                | A.Subset ->
-                | A.Dot ->  *)
-                (*| A.Unop(op, e) -> let e' = aexpr builder e in
-                        (match op with 
-                                A.Neg -> L.build_neg
-                                | A.Not -> L.build_not) e' "tmp" builder*)
+                (*| A.ACharLit(c,_) -> L.const_int i8_t c*)
+             (*   | A.FloatLit f -> *)
+               (* | A.List ->  why is List an expression, should not it be a data staructure?  *)
                 | A.ABinop (e1, op, e2) ->     let e1' = aexpr builder e1
                                               and e2' = aexpr builder e2 in
                                               (match e1 with 
@@ -138,28 +120,31 @@ let translate (functions) =
                                               | _ -> (int_ops op) e1' e2' "tmp" builder                                              
                                             )
                 | A.Noexpr -> L.const_int i32_t 0
-              in
-
+                (* Edge, Graph, Node, Record *)
+                (*| A.Noexpr -> L.const_int i32_t 0*)
         
         (* Invoke "f builder" if the current block does not already 
            have a terminal (e.g., a branch). *)        
-        let add_terminal builder f =
+       in  let add_terminal builder f =
                 match L.block_terminator (L.insertion_block builder) with
                         Some _ -> ()
-                        | None -> ignore (f builder) in
-        
+                        | None -> ignore (f builder) 
 
         (* Build the code for the given statement; return the builder for
        the statement's successor *)
 
-        let rec astmt builder = function
-          A.AExpr(e) -> ignore (aexpr builder e); builder
+        in let rec astmt (builder,local_var_map) = function
+           A.AExpr(e,_) -> ignore (aexpr builder local_var_map e); (builder,local_var_map)
         | A.AReturn(e, t) -> ignore(match t with
             A.TVoid -> L.build_ret_void builder
-          | _ -> L.build_ret (aexpr builder e) builder); builder
-        (*| A.AAsn(s, e, b) -> if b then let e' = aexpr builder e in ignore (L.build_store e' (lookup s) builder)
-          else ; builder*)
-        | A.AIf (predicate, then_stmt, else_stmt) ->
+          | _ -> L.build_ret (aexpr builder local_var_map e) builder); (builder,local_var_map)
+	  | A.AAsn(s, e, b, t) -> 
+		let add_local m (t,n) =            
+        	let local_var = L.build_alloca (ltype_of_typ t) n builder
+        	in StringMap.add n local_var m in
+      		let local_var_map = add_local local_var_map (t,s) in 
+	  let e' = aexpr builder local_var_map e in ignore (L.build_store e' (lookup s local_var_map) builder); (builder,local_var_map) 
+       | A.If (predicate, then_stmt, else_stmt) ->
         let bool_val = aexpr builder predicate in
         let merge_bb = L.append_block context "merge" the_function in
 
@@ -172,7 +157,7 @@ let translate (functions) =
           (L.build_br merge_bb);
 
         ignore (L.build_cond_br bool_val then_bb else_bb builder);
-        L.builder_at_end context merge_bb
+        (L.builder_at_end context merge_bb, local_var_map)
 
         | A.While (predicate, body) ->
         let pred_bb = L.append_block context "while" the_function in
@@ -187,17 +172,15 @@ let translate (functions) =
 
         let merge_bb = L.append_block context "merge" the_function in
         ignore (L.build_cond_br bool_val body_bb merge_bb pred_builder);
-        L.builder_at_end context merge_bb
+        (L.builder_at_end context merge_bb, local_var_map)
 
 
-      | A.For (s1, e2, s3, body) -> List.fold_left astmt builder 
-      [s1 ; A.While(e2, List.rev s3::(List.rev body))]
-        in
-
-
+      | A.For (s1, e2, s3, body) -> (List.fold_left astmt builder 
+      [s1 ; A.While(e2, List.rev s3::(List.rev body))],local_var_map) 
         (* Build the code for each statement in the function *)
-        let builder = List.fold_left astmt builder afunc.A.body in
-
+        in let (builder,local_vars) = List.fold_left 
+			 astmt (builder,local_vars) afunc.A.body 
+	in
         (* Add a return if the last block falls off the end *)
         add_terminal builder (match afunc.A.typ with
             A.TVoid -> L.build_ret_void
