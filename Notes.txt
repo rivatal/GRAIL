@@ -119,3 +119,22 @@ f(x){ for(x = 3; x < 10; x = x + 1){ return 3; }; return 5; }
 Okay, something is weird with parsing for. Fixed! It was extra semicolons in the parser.
 
 Oooh might have messed up scoping-- I shouldn't be able to access variables above the call but we totally can. (Not sure if I tied the formals to the inner function or the outer one).
+-----------------------------------------------------------------------------------------------------------
+f(x){ x = [1,2,3]; return x[0]; } main(){ return f(3); }
+Should not work.
+
+Fancy subset.
+Updating expression map?
+Checking array bounds?
+
+f(x){ x = [1]; y = x[2]; return x; }
+Registers perfectly as a list of int and an int, even though it's out of bounds.
+
+f(x){ x = []; y = x[0]; return x; }
+Registers as void, which is good, but...
+
+f(x){ x = [10]; } is a list containing a single int, not a list of size ten.
+Should we just #javastyle?
+
+
+

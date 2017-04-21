@@ -1,5 +1,7 @@
 **make everything mutable (including endpoints and fields but no record structure), 
 no heterogeneity**
+**okay-- what if we use like normal array lists? We don't want to edit the list of nodes or edges by index. 
+
 
 1. Introduction
 
@@ -91,7 +93,7 @@ Strings are arrays of chars.
 5. Expressions
 Expressions, consisting of type-compatible operators or groups of operators separated by operands, are outlined below in descending order of precedence.
 
-5.1. Subset Operators:
+5.1. Fancy Subset Operators:
 Graphs:
 node = graph.nodes["key"];  									//access a node by its keyword
 edge = graph.edges[node1 -> node2]; 							//access the edge between the keys of those nodes.

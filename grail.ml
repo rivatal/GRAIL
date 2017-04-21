@@ -91,6 +91,7 @@ let rec get_ids_expr (e: expr) (genv: genvironment): string list =
   | IntLit(_) | BoolLit(_) | StrLit(_) | FloatLit(_) | List(_) -> []
   | Id(x) -> []
   | Binop(e1, _, e2) -> []
+  | Item(_,_) -> []
   | Call(id, elist) ->  
     Stack.push id callstack;
     let aformals = get_func_if_def id genv in

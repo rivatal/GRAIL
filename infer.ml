@@ -1,4 +1,5 @@
 (* https://github.com/prakhar1989/type-inference/blob/master/infer.ml *)
+(*Assoc Arrays! And fancy subset?*)
 open Ast
 open Astutils   
 
@@ -39,10 +40,10 @@ let rec findinmap(id: string) (env: environment): primitiveType =
     else 
       let myl = Stack.pop curr :: myl in fold myl
   in let m = fold []
-  in let rec find(l: string list) (id: string) =
+  in let rec find(l: string list) (id: string) = (*Then find the id in the list*)
        match l with
-         [] -> raise (failwith (id ^ " not defined."))
-       |h :: t ->
+         [] -> gen_new_void()
+       |h :: t -> 
          if (NameMap.mem (mapidwith h id) env)  
          then (NameMap.find (mapidwith h id) env)
          else (find t id)
@@ -52,7 +53,7 @@ let check_asn (a: stmt) : unit =
 (*   print_string "Checking assign";
  *)  match a with
   Asn(_,_,_) -> ()
-  |_ -> raise(failwith ((string_of_ustmt a) ^ " not an assignment statement."))
+  |_ -> raise(failwith ((string_of_stmt a) ^ " not an assignment statement."))
 
 
 (* Group of functions dealing with annotation:
@@ -62,7 +63,7 @@ let rec infer_stmt (e: stmt) (env: environment) (genv: genvironment) : (astmt * 
   match e with
   | Asn(id, expr, switch) -> 
     let aexpr, _, _ = infer_expr env genv expr in 
-    (AAsn(id, aexpr, switch), env, genv)
+    (AAsn(id, aexpr, switch, type_of aexpr), env, genv)
   | Return(expr) ->
     let aexpr, _, _ = infer_expr env genv expr in 
     (AReturn(aexpr, type_of aexpr), env, genv)
@@ -98,8 +99,18 @@ and annotate_expr (e: expr) (env: environment) (genv : genvironment): aexpr =
   | StrLit(s) -> AStrLit(s,TString)
   | FloatLit(f) -> AFloatLit(f, TFloat)
   | CharLit(c) -> ACharLit(c, TChar)
-  | Id(x) -> let t = findinmap x env in AId(x, t)
-  | Binop(e1, op, e2) ->
+  | Id(x) -> let typ = findinmap x env in 
+    (match typ with
+      TVoid(_) -> raise (failwith (x ^ " not defined."))
+      |t ->  AId(x, t))
+   | Item(s, e) -> 
+      let et1 = annotate_expr e env genv in 
+      let typ = findinmap s env in
+      (match typ with
+        TVoid(_) -> raise (failwith (s ^ " not defined."))
+        |TList(t) -> AItem(s, et1, t)
+        | _ -> raise (failwith (s ^ " not a list.")))
+   | Binop(e1, op, e2) ->
     let et1 = annotate_expr e1 env genv
     and et2 = annotate_expr e2 env genv
     and new_type = gen_new_type () in
@@ -121,7 +132,7 @@ and annotate_expr (e: expr) (env: environment) (genv : genvironment): aexpr =
     let(_,env,genv) = (infer_stmt_list env genv assignments) in
     let (astmts, _, _) = (infer_stmt_list env genv stmts) in
     let t = get_return_type astmts in 
-    Stack.pop callstack;
+    ignore(Stack.pop callstack);
     ACall(id, astmts, t) (*Is it a problem that we never return genv?*)
 and annotate_expr_list (e: expr list) (env: environment) (genv : genvironment): aexpr list =
   let helper e =
@@ -135,6 +146,7 @@ and type_of (ae: aexpr): primitiveType =
   | AIntLit(_, t) | ABoolLit(_, t) | AStrLit(_,t) | AFloatLit(_, t) | ACharLit(_,t) -> t
   | AId(_, t) -> t
   | ABinop(_, _, _, t) -> t
+  | AItem(_,_,t) -> t
   | ACall(_, _, t) -> t
   | AList(_, t) -> t
 and check_bool (e: aexpr) : unit =
@@ -155,7 +167,7 @@ and check_list_exprs (e: aexpr list) : unit =
   [] -> ()
   |h :: t -> 
   match h with
-  | AIntLit(_,_) | ABoolLit(_,_) | AStrLit(_,_) | AFloatLit(_,_) | ACharLit(_,_) | AId(_,_) | AList(_,_)-> check_list_exprs t
+  | AIntLit(_,_) | ABoolLit(_,_) | AStrLit(_,_) | AFloatLit(_,_) | ACharLit(_,_) | AId(_,_) | AList(_,_) -> check_list_exprs t
   | y -> raise(failwith ((string_of_aexpr y) ^ " does not belong in a list."))
 
 
@@ -194,6 +206,12 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
       | Fadd | Fsub | Fmult | Fdiv -> [(et1, TFloat); (et2, TFloat); (t, TFloat)]
     in
     (collect_expr ae1) @ (collect_expr ae2) @ opc (*opc appended at the rightmost since we apply substitutions right to left *)
+  | AItem(s, ae1, t) -> collect_expr ae1
+ (*    let et1 = type_of ae1 in 
+    (match et1 with
+    TString -> [(t, TAssoc)]
+    |
+ *)
   | ACall(id, astmts, t) -> [(t, t)]
   | AList(ael, t) -> 
   let rec helper l = 
@@ -244,6 +262,7 @@ and apply_expr (subs: substitutions) (ae: aexpr): aexpr =
   | AId(s, t) -> AId(s, apply subs t)
   | AList(e, t) -> AList(apply_expr_list subs e, apply subs t)
   | ABinop(e1, op, e2, t) -> ABinop(apply_expr subs e1, op, apply_expr subs e2, apply subs t)
+  | AItem(s, e1, t) -> AItem(s, apply_expr subs e1, apply subs t)
   | ACall(id, astmts, t) -> ACall(id, astmts, apply subs t)
 and apply_expr_list (subs: substitutions) (ae: aexpr list)  : aexpr list =
   let rec helper (ae: aexpr list) (res: aexpr list) = 
@@ -258,7 +277,7 @@ and update_map (alist : astmt list) (env: environment) : environment =
   | [] -> env
   | hd :: tl -> 
     match hd with
-    |AAsn(id, aexpr, _) ->
+    |AAsn(id, aexpr, _,_) ->
       let t = type_of aexpr in
       let env = NameMap.add (mapid id) t env
       in let env = update_expr_map aexpr env  (*Redundant?*)
@@ -278,7 +297,7 @@ and update_map (alist : astmt list) (env: environment) : environment =
 (*For a single update map*)
 and update_map_u (a: astmt) (env: environment) : environment = 
   match a with
-  |AAsn(id, aexpr, _) ->
+  |AAsn(id, aexpr, _,_) ->
     let t = type_of aexpr in
     let env = NameMap.add (mapid id) t env
     in let env = update_expr_map aexpr env  (*Redundant?*)
@@ -302,6 +321,7 @@ and update_expr_map aexpr env =
   | ABinop(et1, op, et2, t) -> 
     let env = update_expr_map et1 env
     in update_expr_map et2 env
+  | AItem(s, et1, t) -> let env = update_expr_map et1 env in env (*Is this really necessary? We're not putting calls in arrays, are we?*)
   | ACall(id, astmts, t) -> let env = NameMap.add id t env in env
 
 (*Checks that return statements are consistent and returns the type*)

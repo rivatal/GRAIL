@@ -1,0 +1,76 @@
+[3;J[H[2J129 states, 5249 transitions, table size 21770 bytes
+1 rule never reduced
+29 reduce/reduce conflicts.
+File "astutils.ml", line 8, characters 2-252:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a value that is not matched:
+(In|Gadd|Eadd)
+File "astutils.ml", line 16, characters 4-614:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a value that is not matched:
+TStmt (_, _)
+File "astutils.ml", line 66, characters 2-606:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a value that is not matched:
+(ABreak|AContinue)
+File "astutils.ml", line 86, characters 2-522:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a value that is not matched:
+(While (_, _)|Break|Continue)
+File "astutils.ml", line 102, characters 2-493:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a value that is not matched:
+(List _|Item (_, _)|Subset (_, _)|Dot (_, _)|Unop (_, _)|Edge (_, _, _, _)|
+Graph (_, _)|Node (_, _)|Record _|Noexpr)
+File "infer.ml", line 63, characters 2-1261:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a value that is not matched:
+While (_, _)
+File "infer.ml", line 125, characters 4-23:
+Warning 10: this expression should have type unit.
+File "infer.ml", line 96, characters 2-1234:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a value that is not matched:
+(Item (_, _)|Subset (_, _)|Dot (_, _)|Unop (_, _)|Edge (_, _, _, _)|
+Graph (_, _)|Node (_, _)|Record _|Noexpr)
+File "infer.ml", line 135, characters 2-196:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a value that is not matched:
+ASubset (_, _, _)
+File "infer.ml", line 190, characters 14-384:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a value that is not matched:
+(In|Gadd|Eadd)
+File "infer.ml", line 184, characters 6-1079:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a value that is not matched:
+ASubset (_, _, _)
+File "infer.ml", line 231, characters 2-184:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a value that is not matched:
+(TChar|TStmt (_, _))
+File "infer.ml", line 239, characters 2-506:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a value that is not matched:
+ASubset (_, _, _)
+File "infer.ml", line 261, characters 4-627:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a value that is not matched:
+(ABreak|AContinue)
+File "infer.ml", line 281, characters 2-454:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a value that is not matched:
+(ABreak|AContinue)
+File "infer.ml", line 298, characters 2-363:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a value that is not matched:
+ASubset (_, _, _)
+File "grail.ml", line 90, characters 2-321:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a value that is not matched:
+(CharLit _|Item (_, _)|Subset (_, _)|Dot (_, _)|Unop (_, _)|
+Edge (_, _, _, _)|Graph (_, _)|Node (_, _)|Record _|Noexpr)
+File "grail.ml", line 105, characters 4-398:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a value that is not matched:
+(While (_, _)|Break|Continue)

@@ -47,7 +47,9 @@ let rec string_of_aexpr (ae: aexpr): string =
   | ACharLit(c, t) -> Printf.sprintf "(%s: %s)" (String.make 1 c) (string_of_type t)
   | AId(x, t) -> Printf.sprintf "(%s: %s)" x (string_of_type t)
   | AList(_, t) -> Printf.sprintf "(%s)" (string_of_type t)
-  | ABinop(e1, op, e2, t) ->
+  | AItem(s, e1, t) -> Printf.sprintf "(%s[%s] : %s)" s (string_of_aexpr e1) (string_of_type t)
+(*   | ASubset(_,_,t) -> Printf.sprintf "(%s)" (string_of_type t)
+ *)  | ABinop(e1, op, e2, t) ->
     let s1 = string_of_aexpr e1 in let s2 = string_of_aexpr e2 in
     let sop = string_of_op op in let st = string_of_type t in
     Printf.sprintf "(%s %s %s: %s)" s1 sop s2 st
@@ -105,7 +107,8 @@ and string_of_expr (e: expr): string =
   | FloatLit(f) -> string_of_float f
   | CharLit(c) -> String.make 1 c
   | Id(s) -> s
-  | Binop(e1, op, e2) ->
+(*   | Subset(s,e) -> Printf.sprintf "%s[%s]" s (string_of_expr e)
+ *)  | Binop(e1, op, e2) ->
     let s1 = string_of_expr e1 and s2 = string_of_expr e2 in
     let sop = string_of_op op in
     Printf.sprintf "(%s %s %s)" s1 sop s2
