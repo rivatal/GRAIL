@@ -86,11 +86,13 @@ let get_func_if_def (id: string) (genv: genvironment)  =
   in match f with
     (_, aformals, _) -> aformals
 
+(*Add in the formals for called functions, but mapped to the function names so they can only be used in that call.*)
 let rec get_ids_expr (e: expr) (genv: genvironment): string list =
   match e with
-  | IntLit(_) | BoolLit(_) | StrLit(_) | FloatLit(_) | List(_) -> []
+  | IntLit(_) | BoolLit(_) | StrLit(_) | FloatLit(_) | List(_) | Record(_) | Dot(_) -> []
   | Id(x) -> []
   | Binop(e1, _, e2) -> []
+  | Item(_,_) -> []
   | Call(id, elist) ->  
     Stack.push id callstack;
     let aformals = get_func_if_def id genv in
