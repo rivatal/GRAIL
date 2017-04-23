@@ -140,8 +140,9 @@ Mismatched types? No longer!
 f(x){ y = {a:x}; return y;} main(){ return f(3); }
 
 
-f(){ y = {a:3}; return y.a; }
+	f(){ y = {a:3}; return y.a; }
 Newest mystery-- why on earth is y a void in the map? Why is it printing backwards?
+Oh okay, phew. It was the way I was updating assisnments in the map, not indicative of a larger prob. Fixed now.
 
 ------------------------------------------------------------------------------------------
 
