@@ -6,19 +6,45 @@ module A = Ast
 
 module StringMap = Map.Make(String)
 
+
+
+(*
+================================================================
+        Main Codegen Function
+================================================================
+*)
+
 let translate (functions) = 
         (* define *)
         let context = L.global_context () in
+        let llm = Llvm_bitreader.parse_bitcode llctx customM in
+
         let the_module = L.create_module context "Grail"
         and i32_t = L.i32_type context
         and i8_t  = L.i8_type  context
         and i1_t  = L.i1_type  context
-        and void_t= L.void_type context in
+        and void_t= L.void_type context 
+        and list_t = L.pointer_type (match L.type_by_name llm "struct.List" with
+                                      None -> raise (Failure "struct.List doesn't defined.")
+                                     | Some x -> x)
+        in
         
         let ltype_of_typ = function
                   A.Int -> i32_t
                 | A.Bool -> i1_t
-                | A.Void -> void_t in        
+                | A.Void -> void_t         
+                | A.List _ -> list_t in
+
+        let lconst_of_typ = function
+                  A.Int -> L.const_int i32_t 0
+                | A.Float -> L.const_int i32_t 1
+                | A.Bool -> L.const_int i32_t 2
+             (*   | A.String_t -> L.const_int i32_t 3
+                | A.Node_t -> L.const_int i32_t 4
+                | A.Graph_t -> L.const_int i32_t 5
+                | A.Edge_t -> L.const_int i32_t 8     These data structures are not implemented yet *)
+                | _ -> raise (Failure ("[Error] Type Not Found for lconst_of_typ."))
+
 
         (* Declare each global variable; remember its value in a map *)
         (* let global_vars = 
@@ -28,11 +54,48 @@ let translate (functions) =
                 List.fold_left global_var StringMap.empty globals in
         *)
 
-       (* Declare printf(), which the print built-in function will call *)
+
+
+
+        (*
+        ================================================================
+          Declare printf(), which the print built-in function will call
+        ================================================================
+        *)
         let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
         let printf_func = L.declare_function "print" printf_t the_module in
 
-      (* Define each function (arguments and return type) so we can call it *) (** Fix the type thing here **)
+
+        (*
+        ================================================================
+          List (Array)
+        ================================================================
+        *)
+                
+        let create_list_t  = L.function_type list_t [| i32_t |]
+        let create_list_f  = L.declare_function "createList" create_list_t the_module
+        let create_list typ llbuilder =
+          let actuals = [|lconst_of_typ typ|]in (
+            L.build_call create_list_f actuals "createList" llbuilder
+          )
+
+        let rec add_multi_elements_list l_ptr typ llbuilder = function
+          | [] -> l_ptr
+          | h :: tl -> add_multi_elements_list (add_list (cast_float h typ llbuilder) l_ptr llbuilder) typ llbuilder tl
+
+
+
+
+
+
+
+
+        (*
+        ================================================================
+          Function Declaration
+        ================================================================
+        *)
+        (* Define each function (arguments and return type) so we can call it *) (** Fix the type thing here **)
         let function_decls =
             let function_decl m funcs =
             let name = funcs.A.fname
@@ -76,7 +139,54 @@ let translate (functions) =
                 | A.CharLit c -> L.const_int i8_t c
              (*   | A.FloatLit f -> *)
                 | A.Id a -> L.build_load (lookup a) a builder (* why this format *)
-               (* | A.List ->  why is List an expression, should not it be a data staructure?  *)
+                | A.List l ->  
+                    let from_expr_typ_to_list_typ = function 
+                         A.IntLit -> A.List
+                        | A.BoolLit -> A.List  (* need to add options if have list of floats, nodes, edges and graphs *)
+                        | A.StrLit -> A.List
+                        | A.CharLit -> A.List
+                        | _ -> A.List (* how are we gonna take care of void, id, list of list? *)
+                    in
+
+                    let rec check_float_typ = function
+                         [] -> A.Int_t
+                         | hd::ls -> if (snd(expr builder hd)) == A.Float then A.Float else check_float_typ ls in
+
+                    let list_typ = snd (expr builder (List.hd ls)) in (* the second element is type since 'aexpr * primitiveType' *)
+                    let list_typ = if list_typ == A.Int then check_float_typ ls else list_typ in
+
+                    (* converting a list of nodes to a graph, if did not understand wrong *)
+                    let list_conversion el =
+                          let (e_val, e_typ) = expr builder el in
+                          ( match e_typ with 
+                              _ -> (e_val, e_typ)
+                          )
+                        (*  (   match e_typ with
+                            | A.Node_t when list_typ = A.Graph_t -> (
+                                let gh = create_graph builder in (
+                                    ignore(graph_add_node gh e_val builder);
+                                    (gh, A.Graph_t)
+                                )
+                              )
+                            | _ -> (e_val, e_typ)
+                          )
+                        *)
+                      in 
+
+
+
+                    (* create a new list here *)
+                    let l_ptr_type = (create_list list_typ builder, from_expr_typ_to_list_typ list_typ) in
+                    (* then add all initial values to the list *)
+                    add_multi_elements_list (fst l_ptr_type) list_typ builder (List.map fst (List.map list_conversion ls)), (snd l_ptr_type)
+
+
+
+
+
+
+
+
                 | A.Call ("print", [e]) -> L.build_call printf_func [| int_format_str ; (expr builder e) |] "printf" builder
         (*        | A.Item ->
                 | A.Subset ->
