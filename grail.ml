@@ -168,23 +168,20 @@ let rec interpreter (ast: Ast.sast_afunc list) : Ast.sast_afunc list =
     | _ -> print_endline "Error Parsing"; [] @  interpreter (ast)
 
 
-let say() = 
-  let str = "Welcome to Grail, the awesomest language!\n"  in 
-  print_string str
+(*     let say() = 
+      let str = "Welcome to Grail, the awesomest language!\n"  in 
+      print_string str
 
-let rec display (input: Ast.sast_afunc list) : unit = 
-  match input with
-    [] -> ()
-  | h :: t ->
-    print_string (string_of_func h); 
-    display t;;
+      let rec display (input: Ast.sast_afunc list) : unit = 
+      match input with
+      [] -> ()
+      | h :: t ->
+      print_string (string_of_func h); 
+      display t;;
 
-say();
-let l = interpreter([]) in display l
-
-(* 
-  let compile() = let sast = List.map format_sast_codegen (grail [] "main() { print(\"hello world\"); x = 2; y = x; z = y;}") in
+      say();
+      let l = interpreter([]) in display l *)
+   let compile() = let sast = List.map format_sast_codegen (grail [] "main() { print(\"hello world\"); x = 2; y = x; z = y;}") in
     let m = Codegen.translate sast in
     Llvm_analysis.assert_valid_module m; print_string (Llvm.string_of_llmodule m) ;;
     compile(); 
- *)
