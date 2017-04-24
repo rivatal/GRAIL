@@ -122,7 +122,7 @@ let infer (e: Ast.func) (genv : genvironment) : (Ast.afunc * genvironment) =
   |Fbody(Fdecl(name, formals), stmts) ->
     Stack.push name callstack;
     let ids1 = get_all_ids_stmts stmts genv
-    in let env = List.fold_left (fun m x -> NameMap.add x (Infer.gen_new_void ()) m) NameMap.empty ids1
+    in let env = List.fold_left (fun m x -> NameMap.add x (Infer.gen_new_type ()) m) NameMap.empty ids1
     in let ids2 = get_ids_formals formals
     in let env = List.fold_left (fun m x -> NameMap.add x (Infer.gen_new_type ()) m) env ids2 
     in ignore(Stack.pop callstack);
@@ -133,15 +133,15 @@ let infer_func (e: Ast.func) (genv :  genvironment): (genvironment * Ast.afunc) 
   let (afunc,genv) = infer e genv in (genv, afunc)
 
 let grail (ast: Ast.afunc list) (input: string) : Ast.afunc list =
-  let rec do_program(p: Ast.program) (genv : genvironment) : Ast.afunc list  =   
+  let rec do_program(p: Ast.program) (genv : genvironment) (l : Ast.afunc list) : Ast.afunc list  =   
     match p with
-      [] -> []
+    [] -> List.rev l
     |hd :: tl -> let (genv, afunc) =
                    infer_func hd genv 
-      in afunc :: do_program tl genv
+    in do_program tl genv (afunc :: l) 
   in 
   let genv = GlobalMap.add "print" (TInt, [("x" ,TString)], []) GlobalMap.empty in 
-  do_program (parse input) genv
+  do_program (parse input) genv []
 
 let format_sast_codegen (ast : Ast.afunc) : Ast.sast_afunc = 
   match ast with 
