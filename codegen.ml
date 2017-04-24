@@ -3,6 +3,7 @@ exception Error of string
 
 module L = Llvm
 module A = Ast
+module C = Char
 
 module StringMap = Map.Make(String)
 
@@ -19,6 +20,7 @@ let translate (functions) =
         
         let ltype_of_typ = function
                   A.TInt -> i32_t
+                | A.TChar -> i8_t
                 | A.TBool -> i1_t
                 | A.TVoid -> void_t
                 | A.TString -> str_t 
@@ -93,33 +95,32 @@ let translate (functions) =
           )
         in
         let rec aexpr builder local_var_map = function
-                A.AIntLit(i) -> L.const_int i32_t i
-                | A.ABoolLit(b) -> L.const_int i1_t (if b then 1 else 0)
-                | A.AStrLit(s) -> L.build_global_stringptr s "str" builder
-                | A.ACharLit(c) -> L.const_int i8_t c
-                | A.AFloatLit(f) -> L.const_float float_t f
+                A.AIntLit(i, _) -> L.const_int i32_t i
+                | A.ABoolLit(b, _) -> L.const_int i1_t (if b then 1 else 0)
+                | A.AStrLit(s, _) -> L.build_global_stringptr s "str" builder
+                | A.ACharLit(c, _) -> L.const_int i8_t c
+                | A.AFloatLit(f, _) -> L.const_float float_t f
       			| A.AId(s,_) -> L.build_load (lookup s local_var_map) s builder 
                (* | A.List ->  why is List an expression, should not it be a data staructure?  *)
                 | A.ACall ("print", [e], _) -> L.build_call printf_func [| (aexpr builder e) |] "printf" builder
-                | A.ACall (f, act) ->
+                | A.ACall (f, act, _) ->
                   let (fdef, fdecl) = StringMap.find f function_decls in
                   let actuals = List.rev (List.map (aexpr builder) (List.rev act)) in
                   let result = (match fdecl.A.typ with A.TVoid -> ""
                                             | _ -> f ^ "_result") in
                      L.build_call fdef (Array.of_list actuals) result builder
-                (*| A.ACharLit(c,_) -> L.const_int i8_t c*)
-             (*   | A.FloatLit f -> *)
                (* | A.List ->  why is List an expression, should not it be a data staructure?  *)
-                | A.ABinop (e1, op, e2) ->     let e1' = aexpr builder e1
+                (*| A.Unop(op, e) ->
+                      let e' = expr builder e in
+                     (match op with
+                      A.Neg     -> L.build_neg
+                     | A.Not     -> L.build_not) e' "tmp" builder *)
+                | A.ABinop (e1, op, e2, t) ->     let e1' = aexpr builder e1
                                               and e2' = aexpr builder e2 in
-                                              (match e1 with 
-                                              | A.AFloatLit _ -> (float_ops op) e1' e2' "tmp" builder
-                                              | A.AId(_, A.TFloat) -> (float_ops op) e1' e2' "tmp" builder
-                                              | A.ACall(_, _, A.TFloat) -> (float_ops op) e1' e2' "tmp" builder
-                                              | A.ABinop(_,_,A.TFloat) -> (float_ops op) e1' e2' "tmp" builder
+                                              (match t with 
+                                              | A.ATFloat _ -> (float_ops op) e1' e2' "tmp" builder
                                               | _ -> (int_ops op) e1' e2' "tmp" builder                                              
                                             )
-                | A.Noexpr -> L.const_int i32_t 0
                 (* Edge, Graph, Node, Record *)
                 (*| A.Noexpr -> L.const_int i32_t 0*)
         
