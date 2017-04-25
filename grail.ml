@@ -107,6 +107,7 @@ let rec get_all_ids_stmts (e: stmt list) (g: genvironment): string list =
   | hd :: tl ->
     match hd with
     | Asn(x, _, _) -> [(mapid x)] @ get_all_ids_stmts tl g
+    | While(_,y) -> (get_all_ids_stmts y g)  @ get_all_ids_stmts tl g
     | Return(x) -> (get_ids_expr x g) @ get_all_ids_stmts tl g
     | Expr(x) -> (get_ids_expr x g) @ get_all_ids_stmts tl g
     | If(x, y, z) -> (get_all_ids_stmts y g) @ (get_all_ids_stmts z g) @ get_all_ids_stmts tl g

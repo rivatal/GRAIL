@@ -172,18 +172,39 @@ Superlocal for scoping needs to happen for assignments.
 
 ----------------------------------------------------------------------------------------------
 
-Questions for Danny-- 
-Feeding in a file?
-Character literals in the scanner?
-Checking ifs?
-Checking for off indices of lists?
-
-----------------------------------------------------------------------------------------------
 
 Are we still dynamic typing?
 
 ----------------------------------------------------------------------------------------------
 
 Note-- breaking for and if handling of scope.
+
+-----------------------------------------------------------------------------------------------
+Okay-- with for and if-- it was broken before because we inferred the statement in annotate expression but didn't update the map for statements inside those scopes. What we need to do is pass the map variables from annotate expression back to their infer_stmt_list and also to always call infer_stmt_list rather than infer_stmt on those inner stmts.
+-----------------------------------------------------------------------------------------------
+Questions for Danny-- 
+Feeding in a file? Sys.argv.(1) (May create new dependencies)
+Character literals in the scanner? Look at how other groups have done string-- Danny's group (| '"' (([^ '"'] | "\\\"")* as strlit) '"' { STRING_LITERAL(strlit) }) <-- ours are too complicated
+
+| Compile -> 
+  let output_file = Sys.argv.(2) and stdlib_file = Sys.argv.(3) in
+  let stdlib = Utils.str_of_file stdlib_file in
+  let file = open_out output_file
+  in fprintf file "%s\n\n%s\n%s\n"
+  stdlib prog (Utils.conclude_program ()); close_out file
+
+
+Checking ifs?
+Checking for off indices of lists?
+
+Don't initialize inside the if-- it needs to be outside. (though it can be modified there)
+(if you initialize in if it's only accessible there)
+recursively check inside control flow for return
+or you could disallow returns in control flow
+
+Arraylist situation-- runtime error for list index.
+----------------------------------------------------------------------------------------------
+To Do-- fix the system for records and dot for the fields and specific record types.
+
 
 

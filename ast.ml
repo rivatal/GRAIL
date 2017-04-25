@@ -18,6 +18,7 @@ type primitiveType =
   | TList of primitiveType
   | TAssoc of primitiveType
   | TRec of primitiveType
+  | TEdge of primitiveType
 
 type expr =
     IntLit of int
@@ -59,6 +60,7 @@ and astmt =
   | AAsn of id * aexpr * bool * primitiveType
   | AIf of aexpr * astmt list * astmt list
   | AFor of astmt * aexpr * astmt * astmt list
+  | AWhile of aexpr * astmt list
   | AReturn of aexpr * primitiveType
   | ABreak
   | AContinue

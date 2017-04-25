@@ -88,6 +88,11 @@ let rec infer_stmt (allenv: allenv) (e: stmt): (allenv * astmt) =
     in (allenv, AIf(conditional, as1, as2))
   | Break -> allenv, ABreak
   | Continue -> allenv, AContinue
+  | While(e1, stmts) ->
+    let genv, env, recs = allenv in 
+    let ae1 = infer_expr allenv e1 in ignore(check_bool ae1); 
+    let (_, astmts) = infer_stmt_list allenv stmts in 
+    (allenv, AWhile(ae1, astmts))
   | For(s1, e1, s2, stmts) -> (*Needs some fixing*)
     let genv, env, recs = allenv in 
     let backupenv = env in
@@ -101,8 +106,11 @@ let rec infer_stmt (allenv: allenv) (e: stmt): (allenv * astmt) =
 (*     let allenv = backupenv, genv, recs in
  *)    (allenv, AFor(as1, ae1, as2, astmts))
 
+(* f(x){ while(x < 3){ y = 5; };}  *)
+
+
 and annotate_expr (allenv: allenv) (e: expr) (* (env: environment) *) : aexpr =
-(*   ignore(print_string ("annotating " ^ (string_of_expr e)));    *)
+  ignore(print_string ("annotating " ^ (string_of_expr e)));    
   let env, genv, recs = allenv in
   match e with
   | IntLit(n) -> AIntLit(n, TInt)
@@ -170,6 +178,7 @@ and annotate_expr (allenv: allenv) (e: expr) (* (env: environment) *) : aexpr =
          in inf :: (helper t)) 
     in let astmts = helper pairlist
     in ARecord(astmts, gen_new_rec())
+   (* type records = (primitiveType * ((id * primitiveType) list)) list *)
 
 and annotate_expr_list (allenv: allenv) (e: expr list): aexpr list =
   let helper e =
@@ -359,6 +368,7 @@ and update_map (allenv: allenv) (a: astmt) : (environment * records) =
   |AExpr(aexpr) -> env, allrecs     
   |AIf(_, a1, a2) -> env, allrecs 
   |AFor(_, _, _, _) -> env, allrecs
+  |AWhile(_,_) -> env, allrecs
 
 (*honestly is this redundant?*)
 (* and update_map_expr (aexpr: aexpr) (env: environment) : environment = 
@@ -387,6 +397,8 @@ and grab_returns (r: astmt list) : primitiveType list =
      |AIf(_, x, y) ->
        grab_returns x @ grab_returns y @ grab_returns tail
      |AFor(_, _, _, y) ->
+       grab_returns y @ grab_returns tail
+     |AWhile(_, y) ->
        grab_returns y @ grab_returns tail
      | _ -> grab_returns tail)
 and get_return_type(r: astmt list) : primitiveType =
