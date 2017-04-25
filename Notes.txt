@@ -175,8 +175,15 @@ Superlocal for scoping needs to happen for assignments.
 Questions for Danny-- 
 Feeding in a file?
 Character literals in the scanner?
+Checking ifs?
+Checking for off indices of lists?
 
 ----------------------------------------------------------------------------------------------
 
 Are we still dynamic typing?
+
+----------------------------------------------------------------------------------------------
+
+Note-- breaking for and if handling of scope.
+
 

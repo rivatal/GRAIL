@@ -128,7 +128,7 @@ let infer (e: Ast.func) (genv : genvironment) : (Ast.afunc * genvironment) =
     in let env = List.fold_left (fun m x -> NameMap.add x (Infer.gen_new_type ()) m) env ids2 
     in ignore(Stack.pop callstack);
     let genv = GlobalMap.add name (Infer.gen_new_type (),[],[]) genv in
-    Infer.infer_func e env genv
+    Infer.infer_func (env, genv, []) e
 
 let infer_func (e: Ast.func) (genv :  genvironment): (genvironment * Ast.afunc) = 
   let (afunc,genv) = infer e genv in (genv, afunc)

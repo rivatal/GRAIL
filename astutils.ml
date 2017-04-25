@@ -17,10 +17,10 @@ let string_of_uop (uop: uop) =
     |Not -> "not "
 
 
-let string_of_type (t: primitiveType) =
+let rec string_of_type (t: primitiveType) =
   let rec aux (t: primitiveType) (chr: int) (map: genericMap) =
     match t with
-    | TRec -> "record", chr, map
+    | TRec(s) -> ("record "  ^ string_of_type s), chr, map
     | TInt -> "int", chr, map
     | TBool -> "bool", chr, map
     | TFloat -> "float", chr, map

@@ -17,7 +17,7 @@ type primitiveType =
   | TVoid
   | TList of primitiveType
   | TAssoc of primitiveType
-  | TRec
+  | TRec of primitiveType
 
 type expr =
     IntLit of int
