@@ -17,7 +17,7 @@ type primitiveType =
   | TVoid
   | TList of primitiveType
   | TAssoc of primitiveType
-  | TRec of primitiveType
+  | TRec of string * ((id * primitiveType) list) (*the entire type is explicit in TRec*)
   | TEdge of primitiveType
 
 type expr =

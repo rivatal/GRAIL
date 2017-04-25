@@ -27,8 +27,17 @@ let gen_new_type () =
 let gen_new_void () : primitiveType =
   TVoid (*just chr escaped, no T in the TVoid*)
 
-let gen_new_rec () : primitiveType =
-    TRec(gen_new_type())
+let gen_new_rec (asnlist : astmt list) : primitiveType =
+  let rec helper l : (id * primitiveType) list= 
+  (match l with
+  [] -> []
+  |AAsn(id, aexpr, _, t) :: tl -> 
+  (id, t) :: helper tl
+  |_ -> raise(failwith(" not valid a record entry.")))
+  in let fields = helper (List.rev asnlist)
+  in let c1 = !type_variable in
+  incr type_variable; 
+  TRec(Char.escaped (Char.chr c1), fields)
 
 (*Store variables with function names*)
 let mapidwith (fname: string )(id: string) : string =
@@ -110,7 +119,7 @@ let rec infer_stmt (allenv: allenv) (e: stmt): (allenv * astmt) =
 
 
 and annotate_expr (allenv: allenv) (e: expr) (* (env: environment) *) : aexpr =
-  ignore(print_string ("annotating " ^ (string_of_expr e)));    
+(* (* (*   ignore(print_string ("annotating " ^ (string_of_expr e)));    *) *) *)
   let env, genv, recs = allenv in
   match e with
   | IntLit(n) -> AIntLit(n, TInt)
@@ -177,7 +186,7 @@ and annotate_expr (allenv: allenv) (e: expr) (* (env: environment) *) : aexpr =
        |(id, expr) :: t -> let (_, inf) = (infer_stmt allenv (Asn(id, expr, false))) 
          in inf :: (helper t)) 
     in let astmts = helper pairlist
-    in ARecord(astmts, gen_new_rec())
+    in ARecord(astmts, gen_new_rec(astmts))
    (* type records = (primitiveType * ((id * primitiveType) list)) list *)
 
 and annotate_expr_list (allenv: allenv) (e: expr list): aexpr list =
@@ -261,7 +270,7 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
       | Fadd | Fsub | Fmult | Fdiv -> [(et1, TFloat); (et2, TFloat); (t, TFloat)]
     in
     (collect_expr ae1) @ (collect_expr ae2) @ opc (*opc appended at the rightmost since we apply substitutions right to left *)
-  | ADot(ae1, _, _) -> [(type_of ae1, gen_new_rec())]
+  | ADot(ae1, _, _) -> [(type_of ae1, type_of ae1)]
   | AItem(s, ae1, t) -> collect_expr ae1
   (*    let et1 = type_of ae1 in 
         (match et1 with
@@ -294,7 +303,10 @@ and unify_one (t1: primitiveType) (t2: primitiveType) : substitutions =
   match t1, t2 with
   | TInt, TInt | TBool, TBool | TString, TString | TFloat, TFloat | TVoid, TVoid -> []
   | T(x), z | z, T(x) -> [(x, z)]
-  | TList(x), TList(y) | TRec(x), TRec(y) -> unify_one x y
+  | TList(x), TList(y) -> unify_one x y
+  | TRec(a, b), TRec(c, d) -> if (c = a)
+      then [] 
+      else raise (failwith "mismatched types")
   | _ -> raise (failwith "mismatched types")
 
 (* This case is particularly useful when you are calling a function that returns a function *)
@@ -304,7 +316,7 @@ and unify_one (t1: primitiveType) (t2: primitiveType) : substitutions =
 and substitute (u: primitiveType) (x: id) (t: primitiveType) : primitiveType =
   (*   print_string "substituting"; *)  
   match t with
-  | TInt | TBool | TString | TFloat | TList(_) | TRec(_) | TVoid-> t 
+  | TInt | TBool | TString | TFloat | TList(_) | TRec(_,_) | TVoid-> t 
   | T(c)  -> if c = x then u else t 
 and apply (subs: substitutions) (t: primitiveType) : primitiveType =
   List.fold_right (fun (x, u) t -> substitute u x t) subs t
@@ -363,7 +375,8 @@ and update_map (allenv: allenv) (a: astmt) : (environment * records) =
             let t = type_of aexpr in
             let env = NameMap.add (mapid (mapidrec id entry)) t env in helper tail env)
        in ((helper et1 env), recs)
-     |_ -> env, allrecs)  (*Redundant?*)
+     | _ -> env, recs)
+(*      | x -> (update_map_expr x, recs) *)
   |AReturn(aexpr, _) -> env, allrecs
   |AExpr(aexpr) -> env, allrecs     
   |AIf(_, a1, a2) -> env, allrecs 
@@ -371,7 +384,7 @@ and update_map (allenv: allenv) (a: astmt) : (environment * records) =
   |AWhile(_,_) -> env, allrecs
 
 (*honestly is this redundant?*)
-(* and update_map_expr (aexpr: aexpr) (env: environment) : environment = 
+(*  and update_map_expr (aexpr: aexpr) (env: environment) : environment = 
   match aexpr with
   | AIntLit(_,_) | ABoolLit(_,_) | AStrLit(_,_) | AFloatLit(_,_) | ACharLit(_,_) | AList(_,_) -> env
   | AUnop(op, et1, t) -> env
@@ -384,8 +397,8 @@ and update_map (allenv: allenv) (a: astmt) : (environment * records) =
     in update_map_expr et2 env
   | ARecord(et1, t) -> env
   | AItem(s, et1, t) -> let env = update_map_expr et1 env in env (*Is this really necessary? We're not putting calls in arrays, are we?*)
-  | ACall(id, astmts, t) -> let env = NameMap.add id t env in env (*what if call is a record?*)
- *)
+  | ACall(id, astmts, t) -> let env = NameMap.add id t env in env (*what if call is a record?*) *)
+ 
 (*Checks that return statements are consistent and returns the type*)
 and grab_returns (r: astmt list) : primitiveType list =
   match r with

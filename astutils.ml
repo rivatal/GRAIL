@@ -20,7 +20,7 @@ let string_of_uop (uop: uop) =
 let rec string_of_type (t: primitiveType) =
   let rec aux (t: primitiveType) (chr: int) (map: genericMap) =
     match t with
-    | TRec(s) -> ("record "  ^ string_of_type s), chr, map
+    | TRec(s, l) -> ("record "  ^ s), chr, map
     | TInt -> "int", chr, map
     | TBool -> "bool", chr, map
     | TFloat -> "float", chr, map
