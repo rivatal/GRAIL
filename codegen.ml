@@ -98,14 +98,14 @@ let translate (functions) =
                 A.AIntLit(i, _) -> L.const_int i32_t i
                 | A.ABoolLit(b, _) -> L.const_int i1_t (if b then 1 else 0)
                 | A.AStrLit(s, _) -> L.build_global_stringptr s "str" builder
-                | A.ACharLit(c, _) -> L.const_int i8_t c
+                (*| A.ACharLit(c, _) -> L.const_int i8_t c*)
                 | A.AFloatLit(f, _) -> L.const_float float_t f
       			| A.AId(s,_) -> L.build_load (lookup s local_var_map) s builder 
                (* | A.List ->  why is List an expression, should not it be a data staructure?  *)
-                | A.ACall ("print", [e], _) -> L.build_call printf_func [| (aexpr builder e) |] "printf" builder
-                | A.ACall (f, act, _) ->
+                | A.ACall ("print", [e], _, _) -> L.build_call printf_func [| (aexpr builder local_var_map e) |] "printf" builder
+                | A.ACall (f, act, _, _) ->
                   let (fdef, fdecl) = StringMap.find f function_decls in
-                  let actuals = List.rev (List.map (aexpr builder) (List.rev act)) in
+                  let actuals = List.rev (List.map (aexpr builder local_var_map) (List.rev act)) in
                   let result = (match fdecl.A.typ with A.TVoid -> ""
                                             | _ -> f ^ "_result") in
                      L.build_call fdef (Array.of_list actuals) result builder
@@ -115,8 +115,8 @@ let translate (functions) =
                      (match op with
                       A.Neg     -> L.build_neg
                      | A.Not     -> L.build_not) e' "tmp" builder *)
-                | A.ABinop (e1, op, e2, t) ->     let e1' = aexpr builder e1
-                                              and e2' = aexpr builder e2 in
+                | A.ABinop (e1, op, e2, t) ->     let e1' = aexpr builder local_var_map e1
+                                              and e2' = aexpr builder local_var_map e2 in
                                               (match t with 
                                               | A.ATFloat _ -> (float_ops op) e1' e2' "tmp" builder
                                               | _ -> (int_ops op) e1' e2' "tmp" builder                                              
@@ -146,7 +146,7 @@ let translate (functions) =
       		let local_var_map = add_local local_var_map (t,s) in 
 	  let e' = aexpr builder local_var_map e in ignore (L.build_store e' (lookup s local_var_map) builder); (builder,local_var_map) 
        | A.If (predicate, then_stmt, else_stmt) ->
-        let bool_val = aexpr builder predicate in
+        let bool_val = aexpr builder local_var_map predicate in
         let merge_bb = L.append_block context "merge" the_function in
 
         let then_bb = L.append_block context "then" the_function in
@@ -179,7 +179,8 @@ let translate (functions) =
       | A.For (s1, e2, s3, body) -> (List.fold_left astmt builder 
       [s1 ; A.While(e2, List.rev s3::(List.rev body))],local_var_map) 
         (* Build the code for each statement in the function *)
-        in let (builder,local_vars) = List.fold_left 
+
+  in let (builder,local_vars) = List.fold_left 
 			 astmt (builder,local_vars) afunc.A.body 
 	in
         (* Add a return if the last block falls off the end *)
