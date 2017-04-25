@@ -88,7 +88,7 @@ stmt:
   | ID FPLUSEQ expr SEMI { Asn($1, Binop(Id($1), Fadd, $3), true) }
   | ID ADDEQ expr SEMI { Asn($1, Binop(Id($1), Gadd, $3), true) }
   | ID EADDEQ expr SEMI { Asn($1, Binop(Id($1), Eadd, $3), true) }
-  | WHILE LPAREN expr RPAREN stmt_list SEMI { While($3, $5) }
+  | WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE { While($3, $6) }
   | BREAK SEMI{ Break }
   | CONTINUE SEMI{ Continue }
 

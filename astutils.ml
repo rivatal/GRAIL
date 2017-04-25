@@ -64,7 +64,7 @@ let rec string_of_aexpr (ae: aexpr): string =
   | AUnop(op, e1, t) ->
     let s1 = string_of_aexpr e1 in let sop = string_of_uop op in let st = string_of_type t in
     Printf.sprintf "(%s%s: %s)" sop s1 st
-  | ACall(id, astmts, t) ->
+  | ACall(id, _, astmts, t) ->
     let allaexprs = 
       let rec matchlist m= 
         match m with
@@ -94,8 +94,6 @@ and string_of_astmt (l: astmt) =
     "for (" ^ string_of_astmt as1  ^ string_of_aexpr ae1 ^ " ; " ^ string_of_astmt as2 
     ^ string_of_astmt_list astmts
   |AWhile(ae1, astmts) -> "while (" ^ string_of_aexpr ae1 ^ ") {" ^ string_of_astmt_list astmts ^ "}"
-(*   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_astmt s
-*)
 
 and string_of_astmt_list (stmts : astmt list) : string =
   let s1 = List.map(fun a -> (string_of_astmt (a))) stmts in let l = String.concat "" s1 in l

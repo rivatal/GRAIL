@@ -173,12 +173,13 @@ and annotate_expr (allenv: allenv) (e: expr) (* (env: environment) *) : aexpr =
       if (GlobalMap.mem id genv)
       then (GlobalMap.find id genv)
       else (raise (failwith "function not defined @ 147")) in
+    let ael = annotate_expr_list allenv elist in
     let assignments = assign_formals (List.combine aformals elist) id in
     let(allenv, _) = (infer_stmt_list allenv assignments) in
     let (_, astmts) = (infer_stmt_list allenv stmts) in
     let t = get_return_type astmts in 
     ignore(Stack.pop callstack);
-    ACall(id, astmts, t) 
+    ACall(id, ael, astmts, t) 
 | Record(pairlist) -> 
     let rec helper pl =
       (match pl with
@@ -202,7 +203,7 @@ and type_of (ae: aexpr): primitiveType =
   | AId(_, t) -> t
   | ABinop(_, _, _, t) -> t
   | AItem(_,_,t) -> t
-  | ACall(_, _, t) -> t
+  | ACall(_, _, _, t) -> t
   | AList(_, t) -> t
   | ARecord(_,t) -> t
   | ADot(_,_,t) -> t
@@ -277,7 +278,7 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
         TString -> [(t, TAssoc)]
         |
   *)
-  | ACall(id, astmts, t) -> [(t, t)]
+  | ACall(id, _, astmts, t) -> [(t, t)]
   | AList(ael, t) -> 
     let rec helper l = 
       match l with
@@ -336,7 +337,7 @@ and apply_expr (subs: substitutions) (ae: aexpr): aexpr =
   | AUnop(op, e1, t) -> AUnop(op, apply_expr subs e1, apply subs t)
   | ARecord(e1, t) -> ARecord(e1, apply subs t)
   | AItem(s, e1, t) -> AItem(s, apply_expr subs e1, apply subs t)
-  | ACall(id, astmts, t) -> ACall(id, astmts, apply subs t)
+  | ACall(id, e, astmts, t) -> ACall(id, e, astmts, apply subs t)
   | ADot(id, entry, t) -> ADot(id, entry, apply subs t) (*Am I handling this right?*)
 and apply_expr_list (subs: substitutions) (ae: aexpr list)  : aexpr list =
   let rec helper (ae: aexpr list) (res: aexpr list) = 

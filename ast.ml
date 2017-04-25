@@ -1,6 +1,6 @@
 type id = string
 
-type eop = To | From | Dash
+type eop = To | From | Dash  (*make all op*)
 
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq |
           And | Or | In | Fadd | Fsub | Fmult | Fdiv | Gadd | Eadd
@@ -50,7 +50,7 @@ type aexpr =
   | AId of string * primitiveType
   | ABinop of aexpr * op * aexpr * primitiveType
   | AUnop of uop * aexpr * primitiveType
-  | ACall of string * astmt list * primitiveType  
+  | ACall of string * aexpr list * astmt list * primitiveType  
   | AList of aexpr list * primitiveType         (*Make sure to check that the primitive type is only a TList*)
   | AItem of string * aexpr * primitiveType
   | ARecord of astmt list * primitiveType      
