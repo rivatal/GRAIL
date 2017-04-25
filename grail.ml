@@ -92,6 +92,7 @@ let rec get_ids_expr (e: expr) (genv: genvironment): string list =
   | IntLit(_) | BoolLit(_) | StrLit(_) | FloatLit(_) | List(_) | Record(_) | Dot(_) -> []
   | Id(x) -> []
   | Binop(e1, _, e2) -> []
+  | Unop(_,_) -> []
   | Item(_,_) -> []
   | Call(id, elist) ->  
     Stack.push id callstack;
@@ -106,6 +107,7 @@ let rec get_all_ids_stmts (e: stmt list) (g: genvironment): string list =
   | hd :: tl ->
     match hd with
     | Asn(x, _, _) -> [(mapid x)] @ get_all_ids_stmts tl g
+    | While(_,y) -> (get_all_ids_stmts y g)  @ get_all_ids_stmts tl g
     | Return(x) -> (get_ids_expr x g) @ get_all_ids_stmts tl g
     | Expr(x) -> (get_ids_expr x g) @ get_all_ids_stmts tl g
     | If(x, y, z) -> (get_all_ids_stmts y g) @ (get_all_ids_stmts z g) @ get_all_ids_stmts tl g
@@ -127,7 +129,7 @@ let infer (e: Ast.func) (genv : genvironment) : (Ast.afunc * genvironment) =
     in let env = List.fold_left (fun m x -> NameMap.add x (Infer.gen_new_type ()) m) env ids2 
     in ignore(Stack.pop callstack);
     let genv = GlobalMap.add name (Infer.gen_new_type (),[],[]) genv in
-    Infer.infer_func e env genv
+    Infer.infer_func (env, genv, []) e
 
 let infer_func (e: Ast.func) (genv :  genvironment): (genvironment * Ast.afunc) = 
   let (afunc,genv) = infer e genv in (genv, afunc)
