@@ -17,7 +17,8 @@ type primitiveType =
   | TVoid
   | TList of primitiveType
   | TAssoc of primitiveType
-  | TRec
+  | TRec  of primitiveType (* (string * primitiveType) list *)
+  | TNode of primitiveType
 
 type expr =
     IntLit of int
@@ -53,6 +54,8 @@ type aexpr =
   | AItem of string * aexpr * primitiveType
   | ARecord of astmt list * primitiveType      
   | ADot of aexpr * string * primitiveType
+  | AUnop of uop * aexpr * primitiveType
+  | ANode of string * expr * primitiveType
 
 and astmt =
   | AAsn of id * aexpr * bool * primitiveType

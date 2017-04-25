@@ -2,13 +2,11 @@ open Ast
 open Astutils
 
 module NameMap = Map.Make(String)
-
 type environment = primitiveType NameMap.t
-
 module GlobalMap = Map.Make(String)
-
 type genvironment = (primitiveType * (string * primitiveType) list * stmt list) GlobalMap.t
 let callstack = Stack.create()
+
 
 let parse (s: string) : Ast.program =
   Parser.program Scanner.token (Lexing.from_string s)
@@ -89,16 +87,18 @@ let get_func_if_def (id: string) (genv: genvironment)  =
 (*Add in the formals for called functions, but mapped to the function names so they can only be used in that call.*)
 let rec get_ids_expr (e: expr) (genv: genvironment): string list =
   match e with
-  | IntLit(_) | BoolLit(_) | StrLit(_) | FloatLit(_) | List(_) | Record(_) | Dot(_) -> []
+(*   | IntLit(_) | BoolLit(_) | StrLit(_) | FloatLit(_) | List(_) | Record(_) | Dot(_) -> []
   | Id(x) -> []
   | Binop(e1, _, e2) -> []
-  | Item(_,_) -> []
+  | Unop(_,_) -> []
+  | Item(_,_) -> [] *)
   | Call(id, elist) ->  
     Stack.push id callstack;
     let aformals = get_func_if_def id genv in
     let newformals = mapformals id aformals in
     ignore(Stack.pop callstack);
     newformals
+  | _ -> []
 
 let rec get_all_ids_stmts (e: stmt list) (g: genvironment): string list =
   match e with 
@@ -127,7 +127,7 @@ let infer (e: Ast.func) (genv : genvironment) : (Ast.afunc * genvironment) =
     in let env = List.fold_left (fun m x -> NameMap.add x (Infer.gen_new_type ()) m) env ids2 
     in ignore(Stack.pop callstack);
     let genv = GlobalMap.add name (Infer.gen_new_type (),[],[]) genv in
-    Infer.infer_func e env genv
+    Infer.infer_func (env, genv, []) e 
 
 let infer_func (e: Ast.func) (genv :  genvironment): (genvironment * Ast.afunc) = 
   let (afunc,genv) = infer e genv in (genv, afunc)

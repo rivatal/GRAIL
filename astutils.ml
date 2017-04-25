@@ -11,10 +11,15 @@ let string_of_op (op: op) =
   | Equal -> "==" | Neq -> "-" | Leq -> "<=" | Geq -> ">=" | Fsub -> ".-"
   | Fmult -> ".*" | Fdiv -> "./" 
 
-let string_of_type (t: primitiveType) =
+let string_of_uop (uop: uop) =
+   match uop with
+    |Neg -> "-"
+    |Not -> "not "
+
+let rec string_of_type (t: primitiveType) =
   let rec aux (t: primitiveType) (chr: int) (map: genericMap) =
     match t with
-    | TRec -> "record", chr, map
+    | TRec(s) -> ("record "  ^ string_of_type s), chr, map
     | TInt -> "int", chr, map
     | TBool -> "bool", chr, map
     | TFloat -> "float", chr, map
@@ -51,10 +56,14 @@ let rec string_of_aexpr (ae: aexpr): string =
   | ADot(s,entry,t) -> Printf.sprintf "(%s.%s : %s)" (string_of_aexpr s) entry (string_of_type t)
   | AItem(s, e1, t) -> Printf.sprintf "(%s[%s] : %s)" s (string_of_aexpr e1) (string_of_type t)
   (*   | ASubset(_,_,t) -> Printf.sprintf "(%s)" (string_of_type t)
-  *)  | ABinop(e1, op, e2, t) ->
+  *)  
+  | ABinop(e1, op, e2, t) ->
     let s1 = string_of_aexpr e1 in let s2 = string_of_aexpr e2 in
     let sop = string_of_op op in let st = string_of_type t in
     Printf.sprintf "(%s %s %s: %s)" s1 sop s2 st
+  | AUnop(op, e1, t) ->
+    let s1 = string_of_aexpr e1 in let sop = string_of_uop op in let st = string_of_type t in
+    Printf.sprintf "(%s%s: %s)" sop s1 st
   | ACall(id, astmts, t) ->
     let allaexprs = 
       let rec matchlist m= 
@@ -121,6 +130,10 @@ and string_of_expr (e: expr): string =
     let s1 = string_of_expr e1 and s2 = string_of_expr e2 in
     let sop = string_of_op op in
     Printf.sprintf "(%s %s %s)" s1 sop s2
+  | Unop(uop, e1) ->
+    let s1 = string_of_expr e1 in 
+    let sop = string_of_uop uop in 
+    (Printf.sprintf "(%s%s)" sop s1)
   | Call(id, e) ->
     let s1 = List.map(fun a -> (string_of_expr (a))) e in let l = String.concat "," s1 in Printf.sprintf "(call %s(%s))" id l 
   | Record(exprs) ->
@@ -129,6 +142,7 @@ and string_of_expr (e: expr): string =
          [] -> str
        |(s, e) :: t -> helper t (str ^ s ^ ": " ^ (string_of_expr e)))
     in ("{" ^ (helper exprs "") ^ "}")
+
 
 let string_of_func (func: sast_afunc) = 
   let header = func.fname in

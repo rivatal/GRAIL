@@ -147,3 +147,36 @@ Oh okay, phew. It was the way I was updating assisnments in the map, not indicat
 ------------------------------------------------------------------------------------------
 
 We need to make main a prereq.
+-------------------------------------------------------------------------------------------
+Unops!
+f(x){ return !x; }
+f(x){ return -x; }
+
+both work now
+
+---------------------------------------------------------------------------------------------
+
+omg what if I do this?
+
+f(x){ a = {school: 3}; a = {weight: 6, x: 9}; return a.school; }
+
+a.school is still there..... !!!!
+
+what about records with any type? Hmmm should be resolved through functions though.
+
+f(x){ a = {school: x}; return a.school; } a(){ y = f("234"); return f(23); }
+If we disallow reassigning to variables, we have to allow this.
+----------------------------------------------------------------------------------------------
+
+Superlocal for scoping needs to happen for assignments.
+
+----------------------------------------------------------------------------------------------
+
+Questions for Danny-- 
+Feeding in a file?
+Character literals in the scanner?
+
+----------------------------------------------------------------------------------------------
+
+Are we still dynamic typing?
+
