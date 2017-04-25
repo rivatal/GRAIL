@@ -48,6 +48,7 @@ type aexpr =
   | AFloatLit of float * primitiveType
   | AId of string * primitiveType
   | ABinop of aexpr * op * aexpr * primitiveType
+  | AUnop of uop * aexpr * primitiveType
   | ACall of string * astmt list * primitiveType  
   | AList of aexpr list * primitiveType         (*Make sure to check that the primitive type is only a TList*)
   | AItem of string * aexpr * primitiveType

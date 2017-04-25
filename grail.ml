@@ -92,6 +92,7 @@ let rec get_ids_expr (e: expr) (genv: genvironment): string list =
   | IntLit(_) | BoolLit(_) | StrLit(_) | FloatLit(_) | List(_) | Record(_) | Dot(_) -> []
   | Id(x) -> []
   | Binop(e1, _, e2) -> []
+  | Unop(_,_) -> []
   | Item(_,_) -> []
   | Call(id, elist) ->  
     Stack.push id callstack;

@@ -111,6 +111,8 @@ and annotate_expr (e: expr) (env: environment) (genv : genvironment): aexpr =
     (match typ with
      (* TVoid(_) -> raise (failwith (x ^ " not defined @ 109.")) *)
      |t ->  AId(x, typ))
+  | Unop(uop, e1) ->
+    let et1 = annotate_expr e1 env genv and t = gen_new_type() in AUnop(uop, et1, t)
   | Item(s, e) -> 
     let et1 = annotate_expr e env genv in 
     let typ = findinmap s env in
@@ -180,6 +182,9 @@ and type_of (ae: aexpr): primitiveType =
   | AList(_, t) -> t
   | ARecord(_,t) -> t
   | ADot(_,_,t) -> t
+  | AUnop(_,_,t) -> t
+
+
 and check_bool (e: aexpr) : unit =
   (*   print_string "Checking bool"; *)
   if(type_of e != TBool)
@@ -233,6 +238,12 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
   match ae with
   | AIntLit(_) | ABoolLit(_) | AStrLit(_) | AFloatLit(_) | ACharLit(_) | ARecord(_) -> []  (* no constraints to impose on literals *)
   | AId(_) -> []                   (* single occurence of val gives us no info *)
+  | AUnop(uop, ae1, t) ->
+    let et1 = type_of ae1 in 
+    let opc = match uop with
+    | Not -> [(et1, TBool); (t, TBool)]
+    | Neg -> [(et1, TInt); (t, TInt)]
+  in (collect_expr ae1) @ opc
   | ABinop(ae1, op, ae2, t) ->
     let et1 = type_of ae1 and et2 = type_of ae2 in
     (* impose constraints based on binary operator *)
@@ -304,6 +315,7 @@ and apply_expr (subs: substitutions) (ae: aexpr): aexpr =
   | AId(s, t) -> AId(s, apply subs t)
   | AList(e, t) -> AList(apply_expr_list subs e, apply subs t)
   | ABinop(e1, op, e2, t) -> ABinop(apply_expr subs e1, op, apply_expr subs e2, apply subs t)
+  | AUnop(op, e1, t) -> AUnop(op, apply_expr subs e1, apply subs t)
   | ARecord(e1, t) -> ARecord(e1, apply subs t)
   | AItem(s, e1, t) -> AItem(s, apply_expr subs e1, apply subs t)
   | ACall(id, astmts, t) -> ACall(id, astmts, apply subs t)
@@ -353,6 +365,7 @@ and update_map (a: astmt) (env: environment) : environment =
 and update_map_expr (aexpr: aexpr) (env: environment) : environment = 
   match aexpr with
   | AIntLit(_,_) | ABoolLit(_,_) | AStrLit(_,_) | AFloatLit(_,_) | ACharLit(_,_) | AList(_,_) -> env
+  | AUnop(op, et1, t) -> env
   | ADot(_,_,_) -> env
   | AId(s, t) ->
     (*     let env = NameMap.add (mapid s) t env in  *)
