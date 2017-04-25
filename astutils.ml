@@ -27,7 +27,7 @@ let rec string_of_type (t: primitiveType) =
     | TChar -> "char", chr, map
     | TVoid -> "void", chr, map
     | TList(x) -> 
-      let str, chr, map = aux x chr map in (("list of " ^ str), chr, map)
+    let str, chr, map = aux x chr map in (("list of " ^ str), chr, map)
     | T(x) ->
       let gen_chr, new_chr, new_map = if CharMap.mem x map
         then Char.escaped (Char.chr (CharMap.find x map)), chr, map
@@ -55,9 +55,14 @@ let rec string_of_aexpr (ae: aexpr): string =
   | AList(_, t) -> Printf.sprintf "(%s)" (string_of_type t)
   | ADot(s,entry,t) -> Printf.sprintf "(%s.%s : %s)" (string_of_aexpr s) entry (string_of_type t)
   | AItem(s, e1, t) -> Printf.sprintf "(%s[%s] : %s)" s (string_of_aexpr e1) (string_of_type t)
+<<<<<<< HEAD
   (*   | ASubset(_,_,t) -> Printf.sprintf "(%s)" (string_of_type t)
   *)  
   | ABinop(e1, op, e2, t) ->
+=======
+(*   | ASubset(_,_,t) -> Printf.sprintf "(%s)" (string_of_type t)
+ *)  | ABinop(e1, op, e2, t) ->
+>>>>>>> parent of c16db3a... fixed a bug where records weren't being properly assigned.
     let s1 = string_of_aexpr e1 in let s2 = string_of_aexpr e2 in
     let sop = string_of_op op in let st = string_of_type t in
     Printf.sprintf "(%s %s %s: %s)" s1 sop s2 st
@@ -75,9 +80,9 @@ let rec string_of_aexpr (ae: aexpr): string =
     in Printf.sprintf "%s (%s): %s" id allaexprs (string_of_type t)
   | ARecord(aexprs, t) ->
     let rec helper l str : string =
-      (match l with
-         [] -> str
-       |h :: t -> helper t (string_of_astmt h))
+    (match l with
+      [] -> str
+      |h :: t -> helper t (string_of_astmt h))
     in ((string_of_type t) ^ "{" ^ (helper aexprs "") ^ "}")
 
 and string_of_astmt (l: astmt) = 
@@ -86,14 +91,14 @@ and string_of_astmt (l: astmt) =
   | AAsn(id,aexpr,_,_) -> id ^ " = " ^ string_of_aexpr aexpr ^ "; ";
   | AExpr(aexpr) -> " " ^ string_of_aexpr aexpr ^ "; "
   | AIf(e, s1, s2) ->  
-    let a = "if (" ^ string_of_aexpr e ^ ") {" ^ string_of_astmt_list s1 ^ "; " in
-    let b =  (match s2 with
+  let a = "if (" ^ string_of_aexpr e ^ ") {" ^ string_of_astmt_list s1 ^ "; " in
+  let b =  (match s2 with
           [] -> ""
-        |rest -> string_of_astmt_list rest) in (a ^ b)
+          |rest -> string_of_astmt_list rest) in (a ^ b)
   |AFor(as1, ae1, as2, astmts) ->
-    "for (" ^ string_of_astmt as1  ^ string_of_aexpr ae1 ^ " ; " ^ string_of_astmt as2 
-    ^ string_of_astmt_list astmts
-(*   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_astmt s
+        "for (" ^ string_of_astmt as1  ^ string_of_aexpr ae1 ^ " ; " ^ string_of_astmt as2 
+        ^ string_of_astmt_list astmts
+ (*   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_astmt s
 *)
 
 and string_of_astmt_list (stmts : astmt list) : string =
@@ -106,13 +111,13 @@ and string_of_stmt (l: stmt)=
   | Asn(id,expr,_) -> id ^ " = " ^ string_of_expr expr ^ ";\n"
   | Expr(expr) -> " " ^ string_of_expr expr ^ ";\n"
   | If(e, s1,  s2) -> let a = "if (" ^ string_of_expr e ^ ") {" ^ string_of_stmt_list s1 ^ "; }" in
-    let b =
-      match s2 with
-        [] -> ""
-      |rest -> string_of_stmt_list rest in 
-    (a ^ b)
+  let b =
+  match s2 with
+  [] -> ""
+  |rest -> string_of_stmt_list rest in 
+(a ^ b)
   | For(s1, e1, s2, astmts) -> "for (" ^ string_of_stmt s1 ^ string_of_expr e1 ^ string_of_stmt s2 ^" ) {\n" ^
-                               string_of_stmt_list astmts ^ "}" 
+  string_of_stmt_list astmts ^ "}" 
 and string_of_stmt_list (stmts : stmt list) : string =
   let s1 = List.map(fun a -> (string_of_stmt (a))) stmts in let l = String.concat "" s1 in l
 
@@ -124,8 +129,7 @@ and string_of_expr (e: expr): string =
   | FloatLit(f) -> string_of_float f
   | CharLit(c) -> String.make 1 c
   | Id(s) -> s
-  | Dot(a, b) -> ((string_of_expr a) ^ "." ^ b)
-  (*   | Subset(s,e) -> Printf.sprintf "%s[%s]" s (string_of_expr e)*)  
+(*   | Subset(s,e) -> Printf.sprintf "%s[%s]" s (string_of_expr e)*)  
   | Binop(e1, op, e2) ->
     let s1 = string_of_expr e1 and s2 = string_of_expr e2 in
     let sop = string_of_op op in
@@ -138,9 +142,9 @@ and string_of_expr (e: expr): string =
     let s1 = List.map(fun a -> (string_of_expr (a))) e in let l = String.concat "," s1 in Printf.sprintf "(call %s(%s))" id l 
   | Record(exprs) ->
     let rec helper l str : string =
-      (match l with
-         [] -> str
-       |(s, e) :: t -> helper t (str ^ s ^ ": " ^ (string_of_expr e)))
+    (match l with
+      [] -> str
+      |(s, e) :: t -> helper t (str ^ s ^ ": " ^ (string_of_expr e)))
     in ("{" ^ (helper exprs "") ^ "}")
 
 
