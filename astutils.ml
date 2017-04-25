@@ -11,10 +11,16 @@ let string_of_op (op: op) =
   | Equal -> "==" | Neq -> "-" | Leq -> "<=" | Geq -> ">=" | Fsub -> ".-"
   | Fmult -> ".*" | Fdiv -> "./" 
 
-let string_of_type (t: primitiveType) =
+let string_of_uop (uop: uop) =
+   match uop with
+    |Neg -> "-"
+    |Not -> "not "
+
+
+let rec string_of_type (t: primitiveType) =
   let rec aux (t: primitiveType) (chr: int) (map: genericMap) =
     match t with
-    | TRec -> "record", chr, map
+    | TRec(s, l) -> ("record "  ^ s), chr, map
     | TInt -> "int", chr, map
     | TBool -> "bool", chr, map
     | TFloat -> "float", chr, map
@@ -55,7 +61,10 @@ let rec string_of_aexpr (ae: aexpr): string =
     let s1 = string_of_aexpr e1 in let s2 = string_of_aexpr e2 in
     let sop = string_of_op op in let st = string_of_type t in
     Printf.sprintf "(%s %s %s: %s)" s1 sop s2 st
-  | ACall(id, astmts, t) ->
+  | AUnop(op, e1, t) ->
+    let s1 = string_of_aexpr e1 in let sop = string_of_uop op in let st = string_of_type t in
+    Printf.sprintf "(%s%s: %s)" sop s1 st
+  | ACall(id, _, astmts, t) ->
     let allaexprs = 
       let rec matchlist m= 
         match m with
@@ -84,8 +93,7 @@ and string_of_astmt (l: astmt) =
   |AFor(as1, ae1, as2, astmts) ->
     "for (" ^ string_of_astmt as1  ^ string_of_aexpr ae1 ^ " ; " ^ string_of_astmt as2 
     ^ string_of_astmt_list astmts
-(*   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_astmt s
-*)
+  |AWhile(ae1, astmts) -> "while (" ^ string_of_aexpr ae1 ^ ") {" ^ string_of_astmt_list astmts ^ "}"
 
 and string_of_astmt_list (stmts : astmt list) : string =
   let s1 = List.map(fun a -> (string_of_astmt (a))) stmts in let l = String.concat "" s1 in l
@@ -104,6 +112,7 @@ and string_of_stmt (l: stmt)=
     (a ^ b)
   | For(s1, e1, s2, astmts) -> "for (" ^ string_of_stmt s1 ^ string_of_expr e1 ^ string_of_stmt s2 ^" ) {\n" ^
                                string_of_stmt_list astmts ^ "}" 
+  | While(e1, stmts) -> "while (" ^ string_of_expr e1 ^ "){\n" ^ string_of_stmt_list stmts ^ "}"
 and string_of_stmt_list (stmts : stmt list) : string =
   let s1 = List.map(fun a -> (string_of_stmt (a))) stmts in let l = String.concat "" s1 in l
 
@@ -121,6 +130,10 @@ and string_of_expr (e: expr): string =
     let s1 = string_of_expr e1 and s2 = string_of_expr e2 in
     let sop = string_of_op op in
     Printf.sprintf "(%s %s %s)" s1 sop s2
+  | Unop(uop, e1) ->
+    let s1 = string_of_expr e1 in 
+    let sop = string_of_uop uop in 
+    (Printf.sprintf "(%s%s)" sop s1)
   | Call(id, e) ->
     let s1 = List.map(fun a -> (string_of_expr (a))) e in let l = String.concat "," s1 in Printf.sprintf "(call %s(%s))" id l 
   | Record(exprs) ->

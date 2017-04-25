@@ -1,6 +1,6 @@
 type id = string
 
-type eop = To | From | Dash
+type eop = To | From | Dash  (*make all op*)
 
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq |
           And | Or | In | Fadd | Fsub | Fmult | Fdiv | Gadd | Eadd
@@ -17,7 +17,8 @@ type primitiveType =
   | TVoid
   | TList of primitiveType
   | TAssoc of primitiveType
-  | TRec
+  | TRec of string * ((id * primitiveType) list) (*the entire type is explicit in TRec*)
+  | TEdge of primitiveType
 
 type expr =
     IntLit of int
@@ -48,7 +49,8 @@ type aexpr =
   | AFloatLit of float * primitiveType
   | AId of string * primitiveType
   | ABinop of aexpr * op * aexpr * primitiveType
-  | ACall of string * astmt list * primitiveType  
+  | AUnop of uop * aexpr * primitiveType
+  | ACall of string * aexpr list * astmt list * primitiveType  
   | AList of aexpr list * primitiveType         (*Make sure to check that the primitive type is only a TList*)
   | AItem of string * aexpr * primitiveType
   | ARecord of astmt list * primitiveType      
@@ -58,6 +60,7 @@ and astmt =
   | AAsn of id * aexpr * bool * primitiveType
   | AIf of aexpr * astmt list * astmt list
   | AFor of astmt * aexpr * astmt * astmt list
+  | AWhile of aexpr * astmt list
   | AReturn of aexpr * primitiveType
   | ABreak
   | AContinue
