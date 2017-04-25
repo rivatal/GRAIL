@@ -1,42 +1,18 @@
 Test Case Notes
 
 TO-DO:
-1.update tokenize.ml, which will affect   DONE
+1.update tokenize.ml, which will affect
 	_arithemic.out output and more
 
-        > update scanner_test.sh before using it 	
-	> after fixing all the syntax, try to run the scanner test by running scanner_test.sh
-	> add fail cases
+        update scanner_test.sh before using it 	
+	after fixing all the syntax, try to run the scanner test by running scanner_test.sh
+
+	add fail cases
+	
+
 
 2.add success & fail tests for parser
-        > update parserize.ml for our syntax
-        > record what data structures is not covered yet
-        > fix Makefile before running tests in this folder
-        > more tests
- 
+
 3. add success & fail tests for typer
-        > update Makefile & typer_check.ml if needed before running tests in the folder
-        > more tests
-        
+
 4. add success & fail tests for codegen
-        > after May 1st
-
-------------------------------------------------------------------
-create a Makefile in each of the folders (scanner, parser, typer, codegen),
-and then create a Makefile in the tests folder, which can run all the tests in the sub-folders above.
-
-
-NOT COVERED YET:
-1. Scanner
-
-2. Parser
-        > record (dict)
-        > graph
-        > list
-        > node
-
-3. Typer
-
-4. Codegen
-
-

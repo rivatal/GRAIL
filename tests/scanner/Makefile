@@ -1,4 +1,3 @@
-# This Makefile is for running all the tests in scanner sub-folder.
 # test/scanner Makefile
 #  - builds the tokenize executable for printing scanned tokens from stdin
 

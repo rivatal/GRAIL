@@ -7,47 +7,45 @@ let stringify = function
   | PLUS -> "PLUS"   | MINUS -> "MINUS"
   | TIMES -> "TIMES" | DIVIDE -> "DIVIDE"
   (* separator *)
-  | SEMI -> "SEMI" | COMMA -> "COMMA"
-  | ASSIGN -> "ASSIGN"         | COLON -> "COLON"
+  | SEMICOLUMN -> "SEMICOLUMN" | SEQUENCE -> "SEQUENCE"
+  | ASSIGN -> "ASSIGN"         | COLUMN -> "COLUMN"
   | DOT -> "DOT"
   (* logical operation *)
   | AND -> "AND"      | OR -> "OR"
   | NOT -> "NOT"      | IF -> "IF"
   | ELSE -> "ELSE"    | FOR -> "FOR"
-  | WHILE -> "WHILE" 
+  | WHILE -> "WHILE"  | BREAK -> "BREAK"
+  | CONTINUE -> "CONTINUE" | IN -> "IN"
   (* comparator *)
-  | EQ -> "EQ"          | NEQ -> "NEQ"
-  | GT -> "GT"      | GEQ -> "GEQ"
-  | LT -> "SMALLER"      | LEQ -> "LEQ"
+  | EQUAL -> "EQUAL"          | NOTEQUAL -> "NOTEQUAL"
+  | GREATER -> "GREATER"      | GREATEREQUAL -> "GREATEREQUAL"
+  | SMALLER -> "SMALLER"      | SMALLEREQUAL -> "SMALLEREQUAL"
   (* graph operator *)
-  | DASH -> "DASH"            | RARROW -> "RARROW"
-  | LARROW -> "LARROW"    
- (* | AT -> "AT"
-  | AMPERSAND -> "AMPERSAND"  | SIMILARITY -> "SIMILARITY" *)
+  | LINK -> "LINK"            | RIGHTLINK -> "RIGHTLINK"
+  | LEFTLINK -> "LEFTLINK"    | AT -> "AT"
+  | AMPERSAND -> "AMPERSAND"  | SIMILARITY -> "SIMILARITY"
   (* identifier *)
   | ID(string) -> "ID"
   (* primary type *)
   | INT -> "INT"          | FLOAT -> "FLOAT"
   | STRING -> "STRING"    | BOOL -> "BOOL"
- (* | NODE -> "NODE"        | GRAPH -> "GRAPH" *)
-  | LIST -> "LIST"      (*  | DICT -> "DICT" *)
+  | NODE -> "NODE"        | GRAPH -> "GRAPH"
+  | LIST -> "LIST"        | DICT -> "DICT"
   | NULL -> "NULL"        | VOID -> "VOID"
-  
-  (* quote 
-  | QUOTE -> "QUOTE" *)
-
+  (* quote *)
+  | QUOTE -> "QUOTE"
   (* boolean operation *)
   (* bracket *)
-  | LBRACKET -> "LBRACKET"           | RBRACKET -> "RBRACKET"
-  | LBRACE -> "LBRACE" | RBRACE -> "RBRACE"
-  | LPAREN -> "LPAREN" | RPAREN -> "RPAREN"
+  | LEFTBRACKET -> "LEFTBRACKET"           | RIGHTBRACKET -> "RIGHTBRACKET"
+  | LEFTCURLYBRACKET -> "LEFTCURLYBRACKET" | RIGHTCURLYBRACKET -> "RIGHTCURLYBRACKET"
+  | LEFTROUNDBRACKET -> "LEFTROUNDBRACKET" | RIGHTROUNDBRACKET -> "RIGHTROUNDBRACKET"
   (* End-of-File *)
   | EOF -> "EOF"
   (* Literals *)
-  | INTLIT(int) -> "INT_LITERAL"
-  | FLOATLIT(float) -> "FLOAT_LITERAL"
-  | STRINGLIT(string) -> "STRING_LITERAL"
-  | BOOLIT(bool) -> "BOOLEAN_LITERAL"
+  | INT_LITERAL(int) -> "INT_LITERAL"
+  | FLOAT_LITERAL(float) -> "FLOAT_LITERAL"
+  | STRING_LITERAL(string) -> "STRING_LITERAL"
+  | BOOL_LITERAL(bool) -> "BOOL_LITERAL"
   | RETURN -> "RETURN"
 
 let _ =
