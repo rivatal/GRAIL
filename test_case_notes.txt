@@ -28,7 +28,7 @@ and then create a Makefile in the tests folder, which can run all the tests in t
 
 NOT COVERED YET:
 1. Scanner
-
+        > Need to check
 2. Parser
         > record (dict)
         > graph
