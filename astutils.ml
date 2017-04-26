@@ -9,37 +9,27 @@ let string_of_op (op: op) =
   | Add -> "+" | Mult -> "*" | Less -> "<" | Greater -> ">"
   | Or -> "||" | And -> "&&" | Sub -> "-" | Div -> "/" | Fadd -> ".+"
   | Equal -> "==" | Neq -> "-" | Leq -> "<=" | Geq -> ">=" | Fsub -> ".-"
-  | Fmult -> ".*" | Fdiv -> "./" 
+  | Fmult -> ".*" | Fdiv -> "./" | To -> "<-" | From -> "->" | Dash -> "--"
+  | In -> "in" | Gadd -> "&" | Eadd -> ".&"
 
 let string_of_uop (uop: uop) =
    match uop with
     |Neg -> "-"
     |Not -> "not "
 
-
 let rec string_of_type (t: primitiveType) =
-  let rec aux (t: primitiveType) (chr: int) (map: genericMap) =
     match t with
-    | TRec(s, l) -> ("record "  ^ s), chr, map
-    | TInt -> "int", chr, map
-    | TBool -> "bool", chr, map
-    | TFloat -> "float", chr, map
-    | TString -> "str", chr, map
-    | TChar -> "char", chr, map
-    | TVoid -> "void", chr, map
-    | TList(x) -> 
-      let str, chr, map = aux x chr map in (("list of " ^ str), chr, map)
-    | T(x) ->
-      let gen_chr, new_chr, new_map = if CharMap.mem x map
-        then Char.escaped (Char.chr (CharMap.find x map)), chr, map
-        else
-          let c = Char.escaped (Char.chr chr) in
-          c, (chr + 1), CharMap.add x chr map
-      in
-      Printf.sprintf "'%s" gen_chr, new_chr, new_map
-  in let s, _, _ = aux t 97 CharMap.empty in s
-
-(*^^What does this even do??*)
+    | TRec(s, l) -> ("record "  ^ s)
+    | TInt -> "int"
+    | TBool -> "bool"
+    | TFloat -> "float"
+    | TString -> "str"
+    | TChar -> "char"
+    | TVoid -> "void"
+    | TEdge(x) -> "edge of " ^ (string_of_type x)
+    | TGraph(a, b) -> "graph of " ^ (string_of_type a) ^ " with " ^ (string_of_type b)
+    | TList(x) -> "list of " ^ (string_of_type x)
+    | T(x) -> Printf.sprintf "'%s" x
 
 let string_of_tuple (t: id * primitiveType) =
   match t with
@@ -77,8 +67,19 @@ let rec string_of_aexpr (ae: aexpr): string =
     let rec helper l str : string =
       (match l with
          [] -> str
-       |h :: t -> helper t (string_of_astmt h))
+        |(id, aexpr) :: t -> helper t (id ^ " " ^ string_of_aexpr aexpr))
     in ((string_of_type t) ^ "{" ^ (helper aexprs "") ^ "}")
+  | AEdge(e1, op, e2, e3, t) -> Printf.sprintf "%s %s %s %s : %s" (string_of_aexpr e1) (string_of_op op) (string_of_aexpr e2) (string_of_aexpr e3) (string_of_type t)
+  | AList(elist, t) -> Printf.sprintf "(%s : %s)" (string_of_aexpr_list elist) (string_of_type t)
+  | AGraph(elist, e1, t) -> Printf.sprintf "(%s %s : %s)" (string_of_aexpr_list elist) (string_of_aexpr e1) (string_of_type t)
+  | ANoexpr(_) -> ""
+
+and string_of_aexpr_list l =
+  match l with
+  [] -> ""
+  |h :: t -> string_of_aexpr h ^ string_of_aexpr_list t
+
+
 
 and string_of_astmt (l: astmt) = 
   match l with 
@@ -142,6 +143,14 @@ and string_of_expr (e: expr): string =
          [] -> str
        |(s, e) :: t -> helper t (str ^ s ^ ": " ^ (string_of_expr e)))
     in ("{" ^ (helper exprs "") ^ "}")
+  | Edge(e1, op, e2, e3) -> Printf.sprintf "%s %s %s %s" (string_of_expr e1) (string_of_op op) (string_of_expr e2) (string_of_expr e3)
+  | List(elist) -> Printf.sprintf "(%s)" (string_of_expr_list elist)
+
+and string_of_expr_list l =
+  match l with
+  [] -> ""
+  |h :: t -> string_of_expr h ^ string_of_expr_list t
+
 
 let string_of_func (func: sast_afunc) = 
   let header = func.fname in

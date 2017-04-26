@@ -193,6 +193,7 @@ Character literals in the scanner? Look at how other groups have done string-- D
   in fprintf file "%s\n\n%s\n%s\n"
   stdlib prog (Utils.conclude_program ()); close_out file
 
+f(x){ while(x < 3){ y = 4; } return 4; }
 
 Checking ifs?
 Checking for off indices of lists?
@@ -206,5 +207,52 @@ Arraylist situation-- runtime error for list index.
 ----------------------------------------------------------------------------------------------
 To Do-- fix the system for records and dot for the fields and specific record types.
 
+f(x){ a = {school: x}; return a; } b(){ c = f(3); return c.school; }
+Works!!!
 
+f(x){ y = 2; if(x > 3){ y = 2; } return 2;  }
+No more error predicate return, lol.
+
+f(x){ if(x > 3){ return 3; }}
+Yes error, predicate return.
+
+
+-------------------------------------------------------------------------------------------
+Not sure why anyone would ever do this but this (consistent with our rules) throws an error.
+f(x){ x = 3; } main(){ f("sdf"); }
+
+as does this:
+f(x){ y = 3; if(x > 3){ y = "d"; } h = y; return h; } 
+h should type to int, not string.
+
+f(x){ a = {school: x}; return a; } b(){ c = f(3); return c.school; }
+is still alright.
+
+---------------------------------------------------------------------------------------------
+Need to allow derived types in lists (and check them for consistency).
+
+nodes:
+
+sarah:{a:"hey"; b:3}
+Maybe should just make without keys.
+
+I really need to ensure that each expression takes only  the proper types.
+-----------------------------------------------------------------------------------------------
+Leave space for the first two expressions in edge to be noexpr OR the third, for edge template in graph.
+
+Do we need to update the map for graph assignments? We know what the type of everything is...
+it's not being "assigned" the same way records are-- it's being added to a collection like lists.
+
+f(x){ g = {a: x}; graph = g -- g with {b:x}; } main(){ y = f(3); }
+Types correctly.
+f(x){ g = {a: x}; graph = (g -- g, g -- g) with {b:x}; }
+Um-- this might run infinitely-- gotta figure out why.
+
+f(x){ g = {a: x}; h = {}; graph = (g -- g, h -> h) with {b:x}; }
+Yeah-- we're definitely getting into a really long loop or an infinite one. Oh fixed that but now there's a parse error.
+
+f(x){ h = {school:"moriah"}; g = (h) with {}; }
+h not a valid graph entry?
+
+Banning things connected to themselves.
 
