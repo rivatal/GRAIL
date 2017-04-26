@@ -16,7 +16,6 @@ let string_of_uop (uop: uop) =
     |Neg -> "-"
     |Not -> "not "
 
-
 let rec string_of_type (t: primitiveType) =
   let rec aux (t: primitiveType) (chr: int) (map: genericMap) =
     match t with
@@ -77,7 +76,7 @@ let rec string_of_aexpr (ae: aexpr): string =
     let rec helper l str : string =
       (match l with
          [] -> str
-       |h :: t -> helper t (string_of_astmt h))
+        |(id, aexpr) :: t -> helper t (id ^ " " ^ string_of_aexpr aexpr))
     in ((string_of_type t) ^ "{" ^ (helper aexprs "") ^ "}")
 
 and string_of_astmt (l: astmt) = 

@@ -53,7 +53,7 @@ type aexpr =
   | ACall of string * aexpr list * astmt list * primitiveType  
   | AList of aexpr list * primitiveType         (*Make sure to check that the primitive type is only a TList*)
   | AItem of string * aexpr * primitiveType
-  | ARecord of astmt list * primitiveType      
+  | ARecord of (string * aexpr) list * primitiveType      
   | ADot of aexpr * string * primitiveType
 
 and astmt =

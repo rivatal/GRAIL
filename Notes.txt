@@ -193,6 +193,7 @@ Character literals in the scanner? Look at how other groups have done string-- D
   in fprintf file "%s\n\n%s\n%s\n"
   stdlib prog (Utils.conclude_program ()); close_out file
 
+f(x){ while(x < 3){ y = 4; } return 4; }
 
 Checking ifs?
 Checking for off indices of lists?
@@ -205,6 +206,15 @@ or you could disallow returns in control flow
 Arraylist situation-- runtime error for list index.
 ----------------------------------------------------------------------------------------------
 To Do-- fix the system for records and dot for the fields and specific record types.
+
+f(x){ a = {school: x}; return a; } b(){ c = f(3); return c.school; }
+Works!!!
+
+f(x){ y = 2; if(x > 3){ y = 2; } return 2;  }
+No more error predicate return, lol.
+
+f(x){ if(x > 3){ return 3; }}
+Yes error, predicate return.
 
 
 
