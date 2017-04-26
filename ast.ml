@@ -19,7 +19,7 @@ type primitiveType =
   | TAssoc of primitiveType
   | TRec of string * ((id * primitiveType) list) (*the entire type is explicit in TRec*)
   | TEdge of primitiveType
-  | TNode of primitiveType
+  | TGraph of primitiveType * primitiveType
 
 type expr =
     IntLit of int
@@ -57,8 +57,8 @@ type aexpr =
   | ARecord of (string * aexpr) list * primitiveType      
   | ADot of aexpr * string * primitiveType
   | AEdge of aexpr * op * aexpr * aexpr * primitiveType
-  | ANode of string * aexpr * primitiveType
   | ANoexpr of primitiveType
+  | AGraph of aexpr list * aexpr * primitiveType
 
 and astmt =
   | AAsn of id * aexpr * bool * primitiveType

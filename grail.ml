@@ -87,9 +87,10 @@ let get_func_if_def (id: string) (genv: genvironment)  =
 (*Add in the formals for called functions, but mapped to the function names so they can only be used in that call.*)
 let rec get_ids_expr (e: expr) (genv: genvironment): string list =
   match e with
-  | IntLit(_) | BoolLit(_) | StrLit(_) | FloatLit(_) | List(_) | Record(_) | Dot(_) -> []
+  | IntLit(_) | BoolLit(_) | StrLit(_) | FloatLit(_) | List(_) | Record(_) | Dot(_) | CharLit(_) | Graph(_) -> []
   | Id(x) -> []
-  | Binop(e1, _, e2) -> []
+  | Noexpr -> []
+  | Binop(e1, _, e2) -> [] | Edge(_,_,_,_) -> []
   | Unop(_,_) -> []
   | Item(_,_) -> []
   | Call(id, elist) ->  

@@ -151,7 +151,9 @@ and annotate_expr (allenv: allenv) (e: expr) (* (env: environment) *) : aexpr =
     (match ael with
        [] -> AList(ael, TList(gen_new_type()))
      | head :: _ -> let t = type_of head
-       in ignore(check_list_exprs ael);
+       in 
+       ignore(check_list_exprs ael);
+       ignore(check_list_consistency ael);
        AList(ael, TList(t)))
   | Call(id, elist) ->    (*Function calls derive their type from the function declaration*)
     let ael = annotate_expr_list allenv elist in
@@ -175,12 +177,36 @@ and annotate_expr (allenv: allenv) (e: expr) (* (env: environment) *) : aexpr =
     in let apairlist = helper (List.rev pairlist) in
     ARecord(apairlist, gen_new_rec(apairlist))
    (* type records = (primitiveType * ((id * primitiveType) list)) list *)
+ | Graph(elist, tedge) ->
+   let atedge = annotate_expr allenv tedge in
+   let aelist = annotate_expr_list allenv (elist) in
+   let rec splitlists l elist rlist =
+   match l with
+   |[] -> (elist, rlist)
+   |h :: t -> 
+   (match h with 
+    |AEdge(a,b,c,d,e) -> splitlists l (AEdge(a,b,c,d,e) :: elist) rlist
+    |ARecord(a,b) -> splitlists l elist (ARecord(a,b) :: rlist)
+    |AList(somelist, _) -> splitlists (List.hd somelist :: l) elist rlist
+    |x -> raise(failwith("error " ^ (string_of_aexpr x) ^ " not a valid graph entry."))
+    )  (*if there's a list, we've already checked for consistency so you can just sample the first thing*)
+   in 
+   let elist, rlist = splitlists aelist [] [] in 
+   let temptype = type_of atedge in 
+   ignore(check_list_consistency (AEdge(ANoexpr(gen_new_void()), Dash, ANoexpr(gen_new_void()), atedge, temptype) :: elist));
+   ignore(check_list_consistency (rlist)); 
+   AGraph(aelist, atedge, TGraph(type_of (List.hd rlist), temptype))
+  (*a. check the list for consistency between nodes and edges. (which could be noexprs or lists themselves, or type of e.)
+   b. type of e imposes a constraint on ^ and on the graph type. c-- what if there are no nodes? Graph should be a trec of any, and should be overwritable when the first node comes in.
+   Remember, edges have nodes in them.
+  *)
+
  | Noexpr -> ANoexpr(gen_new_type())
  | Edge(e1, op, e2, e3) -> 
    let ae1 = annotate_expr allenv e1 and
        ae2 = annotate_expr allenv e2 and
        ae3 = annotate_expr allenv e3 in 
-   AEdge(ae1, op, ae2, ae3, TEdge(type_of ae3))
+   AEdge(ae1, op, ae2, ae3, TEdge(type_of ae3))   
 
 and annotate_expr_list (allenv: allenv) (e: expr list): aexpr list =
   let helper e =
@@ -202,6 +228,7 @@ and type_of (ae: aexpr): primitiveType =
   | ADot(_,_,t) -> t
   | AUnop(_,_,t) -> t
   | ANoexpr(t) -> t
+  | AGraph(_,_,t) -> t
 
 
 and gen_new_rec (fieldslist : (id * aexpr) list) : primitiveType =
@@ -224,11 +251,16 @@ and check_bool (e: aexpr) : unit =
 and check_list_consistency (e: aexpr list) : unit =
   match e with 
   |x :: y :: t -> 
-    if ((type_of x) != (type_of y))
-    then (raise (failwith "List: mismatched types."))
-    else (check_list_consistency (y :: t))
-  |[] -> ()
-  | _ -> ()
+    let tx = type_of x and ty = type_of y in
+    (match tx, ty with
+     | a, T(_) -> check_list_consistency (x :: t)
+     | T(_), a -> check_list_consistency (y :: t)
+     | a, b -> 
+      if(a = b) 
+      then(check_list_consistency (y :: t))
+      else(raise (failwith "List: mismatched types."))
+    )
+  |[] | _ -> ()
 and check_list_exprs (e: aexpr list) : unit =
   match e with 
     [] -> ()
@@ -257,7 +289,7 @@ and print_formals (asnlist) =
 and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
   (*   ignore(print_string "collecting"); *)
   match ae with
-  | AIntLit(_) | ABoolLit(_) | AStrLit(_) | AFloatLit(_) | ACharLit(_) | ARecord(_,_) -> []  (* no constraints to impose on literals *)
+  | AIntLit(_) | ABoolLit(_) | AStrLit(_) | AFloatLit(_) | ACharLit(_) | ARecord(_,_) | AGraph(_,_,_) -> []  (* no constraints to impose on literals *)
   | AId(_) -> []                   (* single occurence of val gives us no info *)
   | AUnop(uop, ae1, t) ->
     let et1 = type_of ae1 in 
@@ -281,10 +313,9 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
     let opc = match op with
           | To | From | Dash ->
           (match et1, et2 with
-          |TNode(_), TNode(_) -> [(et1, et2)]
+          |TRec(_), TRec(_) -> [(et1, et2)]
           | _ -> raise(failwith("error: " ^ string_of_aexpr ae1 ^ " and " ^ string_of_aexpr ae2 ^ " must be nodes.")))
           | _ -> raise(failwith((string_of_op op) ^ " not an edge operator."))
-
      in 
      ignore(match et3 with
         | TRec(_) | T(_) -> ()
@@ -306,6 +337,7 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
       |[] | _ -> []
     in (helper ael)
 
+
 (*Collection of functions dealing with unify: *)
 and unify (constraints: (primitiveType * primitiveType) list) : substitutions =
   (*     ignore(print_string "unifying"); *)
@@ -325,6 +357,8 @@ and unify_one (t1: primitiveType) (t2: primitiveType) : substitutions =
   | TInt, TInt | TBool, TBool | TString, TString | TFloat, TFloat | TVoid, TVoid -> []
   | T(x), z | z, T(x) -> [(x, z)]
   | TList(x), TList(y) -> unify_one x y
+  | TGraph(a, b), TGraph(c, d) -> unify_one a c @ unify_one b d
+  | TEdge(u), TEdge(v) -> unify_one u v
   | TRec(a, b), TRec(c, d) -> if (c = a)
       then [] 
       else raise (failwith "mismatched types")
@@ -352,6 +386,7 @@ and apply_expr (subs: substitutions) (ae: aexpr): aexpr =
   | ACharLit(c,t) -> ACharLit(c, apply subs t)
   | AFloatLit(f, t) -> AFloatLit(f, apply subs t)
   | AId(s, t) -> AId(s, apply subs t)
+  | AGraph(aelist, e, t) -> AGraph(apply_expr_list subs aelist, e, apply subs t) (*no apply on the edge template, right?*)
   | AList(e, t) -> AList(apply_expr_list subs e, apply subs t)
   | ABinop(e1, op, e2, t) -> ABinop(apply_expr subs e1, op, apply_expr subs e2, apply subs t)
   | AUnop(op, e1, t) -> AUnop(op, apply_expr subs e1, apply subs t)
