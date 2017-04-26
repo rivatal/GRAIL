@@ -217,4 +217,17 @@ f(x){ if(x > 3){ return 3; }}
 Yes error, predicate return.
 
 
+-------------------------------------------------------------------------------------------
+Not sure why anyone would ever do this but this (consistent with our rules) throws an error.
+f(x){ x = 3; } main(){ f("sdf"); }
+
+as does this:
+f(x){ y = 3; if(x > 3){ y = "d"; } h = y; return h; } 
+h should type to int, not string.
+
+f(x){ a = {school: x}; return a; } b(){ c = f(3); return c.school; }
+is still alright.
+
+---------------------------------------------------------------------------------------------
+Need to allow derived types in lists (and check them for consistency).
 

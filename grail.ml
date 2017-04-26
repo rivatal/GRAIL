@@ -70,8 +70,6 @@ let rec mapformals (fname: string) (aformals: ((string * primitiveType) list)) :
       (id, _) ->
       [(mapid id)] @ mapformals fname t
 
-
-
 let rec get_ids_formals(e: string list) =
   checkformals e;
   match e with 
