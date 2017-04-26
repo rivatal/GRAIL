@@ -118,7 +118,7 @@ let translate (functions) =
                 | A.ABinop (e1, op, e2, t) ->     let e1' = aexpr builder local_var_map e1
                                               and e2' = aexpr builder local_var_map e2 in
                                               (match t with 
-                                              | A.ATFloat _ -> (float_ops op) e1' e2' "tmp" builder
+                                              | A.TFloat _ -> (float_ops op) e1' e2' "tmp" builder
                                               | _ -> (int_ops op) e1' e2' "tmp" builder                                              
                                             )
                 (* Edge, Graph, Node, Record *)
@@ -126,7 +126,7 @@ let translate (functions) =
         
         (* Invoke "f builder" if the current block does not already 
            have a terminal (e.g., a branch). *)        
-       in  let add_terminal builder f =
+       in  let add_terminal (builder, local_var_map) f =
                 match L.block_terminator (L.insertion_block builder) with
                         Some _ -> ()
                         | None -> ignore (f builder) 
@@ -134,57 +134,57 @@ let translate (functions) =
         (* Build the code for the given statement; return the builder for
        the statement's successor *)
 
-        in let rec astmt (builder,local_var_map) = function
-           A.AExpr(e,_) -> ignore (aexpr builder local_var_map e); (builder,local_var_map)
+        in let rec astmt (builder, local_var_map) = function
+           A.AExpr(e) -> ignore (aexpr builder local_var_map e); (builder, local_var_map)
         | A.AReturn(e, t) -> ignore(match t with
             A.TVoid -> L.build_ret_void builder
-          | _ -> L.build_ret (aexpr builder local_var_map e) builder); (builder,local_var_map)
+          | _ -> L.build_ret (aexpr builder local_var_map e) builder); (builder, local_var_map)
 	  | A.AAsn(s, e, b, t) -> 
 		let add_local m (t,n) =            
         	let local_var = L.build_alloca (ltype_of_typ t) n builder
         	in StringMap.add n local_var m in
       		let local_var_map = add_local local_var_map (t,s) in 
-	  let e' = aexpr builder local_var_map e in ignore (L.build_store e' (lookup s local_var_map) builder); (builder,local_var_map) 
-       | A.If (predicate, then_stmt, else_stmt) ->
+	  let e' = aexpr builder local_var_map e in ignore (L.build_store e' (lookup s local_var_map) builder); (builder, local_var_map)
+       | A.AIf (predicate, then_stmt, else_stmt) ->
         let bool_val = aexpr builder local_var_map predicate in
         let merge_bb = L.append_block context "merge" the_function in
 
         let then_bb = L.append_block context "then" the_function in
-        add_terminal (List.fold_left astmt (L.builder_at_end context then_bb) then_stmt)
+        add_terminal (List.fold_left astmt (L.builder_at_end context then_bb, local_var_map) then_stmt)
           (L.build_br merge_bb);
 
         let else_bb = L.append_block context "else" the_function in
-          add_terminal (List.fold_left astmt (L.builder_at_end context else_bb) else_stmt)
+          add_terminal (List.fold_left astmt ((L.builder_at_end context else_bb), local_var_map) else_stmt)
           (L.build_br merge_bb);
 
         ignore (L.build_cond_br bool_val then_bb else_bb builder);
         (L.builder_at_end context merge_bb, local_var_map)
 
-        | A.While (predicate, body) ->
+        | A.AWhile (predicate, body) ->
         let pred_bb = L.append_block context "while" the_function in
          ignore (L.build_br pred_bb builder);
 
         let body_bb = L.append_block context "while_body" the_function in
-        add_terminal (List.fold_left astmt (L.builder_at_end context body_bb) body)
+        add_terminal (List.fold_left astmt ((L.builder_at_end context body_bb), local_var_map) body)
         (L.build_br pred_bb);
 
         let pred_builder = L.builder_at_end context pred_bb in
-        let bool_val = aexpr pred_builder predicate in
+        let bool_val = aexpr pred_builder local_var_map predicate in
 
         let merge_bb = L.append_block context "merge" the_function in
         ignore (L.build_cond_br bool_val body_bb merge_bb pred_builder);
         (L.builder_at_end context merge_bb, local_var_map)
 
 
-      | A.For (s1, e2, s3, body) -> (List.fold_left astmt builder 
-      [s1 ; A.While(e2, List.rev s3::(List.rev body))],local_var_map) 
+      | A.AFor (s1, e2, s3, body) -> List.fold_left astmt (builder, local_var_map)
+      [s1 ; A.AWhile(e2, List.rev (s3::(List.rev body)))]
         (* Build the code for each statement in the function *)
 
   in let (builder,local_vars) = List.fold_left 
 			 astmt (builder,local_vars) afunc.A.body 
 	in
         (* Add a return if the last block falls off the end *)
-        add_terminal builder (match afunc.A.typ with
+        add_terminal (builder, local_vars) (match afunc.A.typ with
             A.TVoid -> L.build_ret_void
           | t -> L.build_ret (L.const_int (ltype_of_typ t) 0))
       in
