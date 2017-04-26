@@ -10,6 +10,7 @@ let string_of_op (op: op) =
   | Or -> "||" | And -> "&&" | Sub -> "-" | Div -> "/" | Fadd -> ".+"
   | Equal -> "==" | Neq -> "-" | Leq -> "<=" | Geq -> ">=" | Fsub -> ".-"
   | Fmult -> ".*" | Fdiv -> "./" | To -> "<-" | From -> "->" | Dash -> "--"
+  | In -> "in" | Gadd -> "&" | Eadd -> ".&"
 
 let string_of_uop (uop: uop) =
    match uop with
@@ -70,6 +71,9 @@ let rec string_of_aexpr (ae: aexpr): string =
     in ((string_of_type t) ^ "{" ^ (helper aexprs "") ^ "}")
   | AEdge(e1, op, e2, e3, t) -> Printf.sprintf "%s %s %s %s : %s" (string_of_aexpr e1) (string_of_op op) (string_of_aexpr e2) (string_of_aexpr e3) (string_of_type t)
   | AList(elist, t) -> Printf.sprintf "(%s : %s)" (string_of_aexpr_list elist) (string_of_type t)
+  | AGraph(elist, e1, t) -> Printf.sprintf "(%s %s : %s)" (string_of_aexpr_list elist) (string_of_aexpr e1) (string_of_type t)
+  | ANoexpr(_) -> ""
+
 and string_of_aexpr_list l =
   match l with
   [] -> ""

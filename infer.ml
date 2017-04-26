@@ -181,15 +181,16 @@ and annotate_expr (allenv: allenv) (e: expr) (* (env: environment) *) : aexpr =
    let atedge = annotate_expr allenv tedge in
    let aelist = annotate_expr_list allenv (elist) in
    let rec splitlists l elist rlist =
-   match l with
+   (match l with
    |[] -> (elist, rlist)
    |h :: t -> 
-   (match h with 
-    |AEdge(a,b,c,d,e) -> splitlists l (AEdge(a,b,c,d,e) :: elist) rlist
-    |ARecord(a,b) -> splitlists l elist (ARecord(a,b) :: rlist)
-    |AList(somelist, _) -> splitlists (List.hd somelist :: l) elist rlist
-    |x -> raise(failwith("error " ^ (string_of_aexpr x) ^ " not a valid graph entry."))
-    )  (*if there's a list, we've already checked for consistency so you can just sample the first thing*)
+    (match h with 
+    |AEdge(a,b,c,d,e) -> splitlists t (AEdge(a,b,c,d,e) :: elist) rlist
+    |ARecord(aexprs, typ) ->  splitlists t elist (ARecord(aexprs, typ) :: rlist)
+    |AList(somelist, _) -> splitlists (List.hd somelist :: t) elist rlist
+    |x -> raise(failwith("error " ^ (string_of_aexpr x) ^ " not a valid graph entry@191")))
+    ) 
+     (*if there's a list, we've already checked for consistency so you can just sample the first thing*)
    in 
    let elist, rlist = splitlists aelist [] [] in 
    let temptype = type_of atedge in 
@@ -197,7 +198,7 @@ and annotate_expr (allenv: allenv) (e: expr) (* (env: environment) *) : aexpr =
    ignore(check_list_consistency (rlist)); 
    AGraph(aelist, atedge, TGraph(type_of (List.hd rlist), temptype))
   (*a. check the list for consistency between nodes and edges. (which could be noexprs or lists themselves, or type of e.)
-   b. type of e imposes a constraint on ^ and on the graph type. c-- what if there are no nodes? Graph should be a trec of any, and should be overwritable when the first node comes in.
+    b. type of e imposes a constraint on ^ and on the graph type. c-- what if there are no nodes? Graph should be a trec of any, and should be overwritable when the first node comes in.
    Remember, edges have nodes in them.
   *)
 
@@ -252,6 +253,7 @@ and check_list_consistency (e: aexpr list) : unit =
   match e with 
   |x :: y :: t -> 
     let tx = type_of x and ty = type_of y in
+     ignore(print_string("matching " ^ string_of_type tx ^ " and " ^ string_of_type ty));
     (match tx, ty with
      | a, T(_) -> check_list_consistency (x :: t)
      | T(_), a -> check_list_consistency (y :: t)
@@ -306,6 +308,15 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
       | Greater | Less | Equal | Geq | Leq | Neq -> [(et1, et2); (t, TBool)]
       | And | Or -> [(et1, TBool); (et2, TBool); (t, TBool)]
       | Fadd | Fsub | Fmult | Fdiv -> [(et1, TFloat); (et2, TFloat); (t, TFloat)]
+      | In -> 
+      (match et2 with |TList(x) ->     
+              [(et1, x); 
+              (et2, TList(gen_new_type())); 
+              (t, TBool)])
+      | Gadd -> 
+      (match et1, et2 with |TGraph(n, e), TRec(_, _) -> [(et2, n); (t, TGraph(et2, e))])     
+      | Eadd -> 
+      (match et1, et2 with |TGraph(n, e), TEdge(f) -> [(et2, e); (t, TGraph(n, et2))])
      in
     (collect_expr ae1) @ (collect_expr ae2) @ opc (*opc appended at the rightmost since we apply substitutions right to left *)
   | AEdge(ae1, op, ae2, ae3, t) ->

@@ -57,8 +57,8 @@ type aexpr =
   | ARecord of (string * aexpr) list * primitiveType      
   | ADot of aexpr * string * primitiveType
   | AEdge of aexpr * op * aexpr * aexpr * primitiveType
-  | ANoexpr of primitiveType
   | AGraph of aexpr list * aexpr * primitiveType
+  | ANoexpr of primitiveType
 
 and astmt =
   | AAsn of id * aexpr * bool * primitiveType
@@ -89,7 +89,6 @@ type afunc_dec = AFdecl of id * (id * primitiveType) list * primitiveType
 
 type func = Fbody of func_dec * stmt list
 type afunc = AFbody of afunc_dec * astmt list
-
 
 
 type sast_afunc = { 

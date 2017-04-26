@@ -249,4 +249,10 @@ f(x){ g = {a: x}; graph = (g -- g, g -- g) with {b:x}; }
 Um-- this might run infinitely-- gotta figure out why.
 
 f(x){ g = {a: x}; h = {}; graph = (g -- g, h -> h) with {b:x}; }
-Yeah-- we're definitely getting into a really long loop or an infinite one.
+Yeah-- we're definitely getting into a really long loop or an infinite one. Oh fixed that but now there's a parse error.
+
+f(x){ h = {school:"moriah"}; g = (h) with {}; }
+h not a valid graph entry?
+
+Banning things connected to themselves.
+
