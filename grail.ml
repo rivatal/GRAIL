@@ -87,12 +87,12 @@ let get_func_if_def (id: string) (genv: genvironment)  =
 (*Add in the formals for called functions, but mapped to the function names so they can only be used in that call.*)
 let rec get_ids_expr (e: expr) (genv: genvironment): string list =
   match e with
-  | IntLit(_) | BoolLit(_) | StrLit(_) | FloatLit(_) | List(_) | Record(_) | Dot(_) | CharLit(_) | Graph(_) -> []
-  | Id(x) -> []
+  | IntLit(_) | BoolLit(_) | StrLit(_) | FloatLit(_) | Item(_,_) | List(_) | Record(_) |  CharLit(_) | Graph(_) -> []
+  | Id(x) -> [mapid x]
+  | Dot(e, _)  -> (get_ids_expr e genv)
   | Noexpr -> []
   | Binop(e1, _, e2) -> [] | Edge(_,_,_,_) -> []
   | Unop(_,_) -> []
-  | Item(_,_) -> []
   | Call(id, elist) ->  
     Stack.push id callstack;
     let aformals = get_func_if_def id genv in
@@ -105,7 +105,7 @@ let rec get_all_ids_stmts (e: stmt list) (g: genvironment): string list =
   | [] -> []
   | hd :: tl ->
     match hd with
-    | Asn(x, _, _) -> [(mapid x)] @ get_all_ids_stmts tl g
+    | Asn(x, _, _) -> (get_ids_expr x g) @ get_all_ids_stmts tl g
     | While(_,y) -> (get_all_ids_stmts y g)  @ get_all_ids_stmts tl g
     | Return(x) -> (get_ids_expr x g) @ get_all_ids_stmts tl g
     | Expr(x) -> (get_ids_expr x g) @ get_all_ids_stmts tl g

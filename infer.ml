@@ -67,7 +67,7 @@ let rec infer_stmt (allenv: allenv) (e: stmt): (allenv * astmt) =
   | Asn(e1, e2, switch) -> 
     let ae1 = infer_expr allenv e1 and 
         ae2 = infer_expr allenv e2 in 
-    (allenv, AAsn(ae1, aexpr, switch, type_of ae2))
+    (allenv, AAsn(ae1, ae2, switch, type_of ae2))
   | Return(expr) ->
     let aexpr = infer_expr allenv expr in 
     (allenv, AReturn(aexpr, type_of aexpr))
@@ -430,7 +430,7 @@ and update_map (allenv: allenv) (a: astmt) : (environment * records) =
 (*    ignore(print_string ("updating map for " ^ (string_of_astmt a)));  *)
   let env, genv, allrecs = allenv in
   match a with
-  |AAsn(id, aexpr, _,_) ->
+  |AAsn(AId(id, _), aexpr, _,_) ->
 (*     ignore(print_string (" updating " ^ id ^ " with type " ^ (string_of_aexpr aexpr))); *)
     let t = type_of aexpr in
     ignore((check_asn_type env id t));
