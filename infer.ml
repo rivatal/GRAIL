@@ -68,6 +68,8 @@ let check_asn (a: stmt) : unit =
 
 (* Group of functions dealing with annotation:
    stmt, list, type of; expr, list, type of
+
+   f(x){ for(x = 4; x < 2; x = x + 1){ y = 5; }}
 *)
 let rec infer_stmt (allenv: allenv) (e: stmt): (allenv * astmt) =
   ignore(print_string (" inferring " ^ (string_of_stmt e)));  
@@ -122,11 +124,9 @@ and annotate_expr (allenv: allenv) (e: expr) (* (env: environment) *) : aexpr =
   | FloatLit(f) -> AFloatLit(f, TFloat)
   | CharLit(c) -> ACharLit(c, TChar)
   | Id(x) -> 
-(*      ignore(print_string ("Finding " ^ x ^ "\n"));  *)
     let typ = findinmap x env in 
     (match typ with
-     (* TVoid(_) -> raise (failwith (x ^ " not defined @ 109.")) *)
-     |t ->  AId(x, typ))
+     |t ->  AId(x, t))
   | Item(s, e) -> 
     let et1 = annotate_expr allenv e in 
     let typ = findinmap s env in
@@ -324,11 +324,16 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
       (match et2 with |TList(x) ->     
               [(et1, x); 
               (et2, TList(gen_new_type())); 
-              (t, TBool)])
+              (t, TBool)]
+                      | _ -> raise(failwith("Error @330")))
       | Gadd -> 
-      (match et1, et2 with |TGraph(n, e), TRec(_, _) -> [(et2, n); (t, TGraph(et2, e))])     
+      (match et1, et2 with |TGraph(n, e), TRec(_, _) -> [(et2, n); (t, TGraph(et2, e))]
+                           | _ -> raise(failwith("Error-- " ^ (string_of_op et1) ^ "," ^ (string_of_op et2) ^ " not a valid graph operator")))     
       | Eadd -> 
-      (match et1, et2 with |TGraph(n, e), TEdge(f) -> [(et2, e); (t, TGraph(n, et2))])
+      (match et1, et2 with |TGraph(n, e), TEdge(f) -> [(et2, e); (t, TGraph(n, et2))]
+                           | _ -> raise(failwith("Error-- " ^ (string_of_op et1) ^ "," ^ (string_of_op et2) ^ " not a valid graph operator"))
+      )
+      | _ -> raise(failwith("error"))
      in
     (collect_expr ae1) @ (collect_expr ae2) @ opc (*opc appended at the rightmost since we apply substitutions right to left *)
   | AEdge(ae1, op, ae2, ae3, t) ->
@@ -394,7 +399,7 @@ and unify_one (t1: primitiveType) (t2: primitiveType) : substitutions =
 and substitute (u: primitiveType) (x: id) (t: primitiveType) : primitiveType =
   (*   print_string "substituting"; *)  
   match t with
-  | TInt | TBool | TString | TFloat | TList(_) | TRec(_,_) | TVoid-> t 
+  | TInt | TBool | TString | TFloat | TList(_) | TRec(_,_) | TChar | TEdge(_) | TGraph(_,_) | TVoid-> t 
   | T(c)  -> if c = x then u else t 
 and apply (subs: substitutions) (t: primitiveType) : primitiveType =
   List.fold_right (fun (x, u) t -> substitute u x t) subs t

@@ -251,4 +251,14 @@ f(x){ g = {a: x}; h = {b:x}; edge = g -- g; }
 Classify open and closed scopes.
 recorsd = closed.
 
-Is for broken again???
+f(x){ for(x = 3; x < 3; x = x + 1;){ y = 3; } }  
+
+for ((x: 'c) = (3: int); ((x: int) < (3: int): bool) ; (x: 'c) = ((x: int) + (1: int): int); (y: 'b) = (3: int); }
+
+^Why is x a c instead of an int?
+
+Need to fix for scoping.
+New values:
+f(){ y = [1,2,3]; y[0] = 2; }
+
+for(starting here, everything applies to the statement block only){}
