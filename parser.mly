@@ -82,12 +82,12 @@ stmt:
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE IF LPAREN expr RPAREN LBRACE stmt_list RBRACE  { If($3, List.rev $6, [If($11, List.rev $14, [])]) }
   | FOR LPAREN stmt expr SEMI stmt RPAREN LBRACE stmt_list RBRACE
      { For($3, $4, $6, List.rev $9) }
-  | ID ASSIGN expr SEMI { Asn($1, $3, true) }
-  | ID COPY expr SEMI { Asn($1, $3, false) }
-  | ID PLUSEQ expr SEMI { Asn($1, Binop(Id($1), Add, $3), true) }
-  | ID FPLUSEQ expr SEMI { Asn($1, Binop(Id($1), Fadd, $3), true) }
-  | ID ADDEQ expr SEMI { Asn($1, Binop(Id($1), Gadd, $3), true) }
-  | ID EADDEQ expr SEMI { Asn($1, Binop(Id($1), Eadd, $3), true) }
+  | expr ASSIGN expr SEMI { Asn($1, $3, true) }
+  | expr COPY expr SEMI { Asn($1, $3, false) }
+  | expr PLUSEQ expr SEMI { Asn($1, Binop($1, Add, $3), true) }
+  | expr FPLUSEQ expr SEMI { Asn($1, Binop($1, Fadd, $3), true) }
+  | expr ADDEQ expr SEMI { Asn($1, Binop($1, Gadd, $3), true) }
+  | expr EADDEQ expr SEMI { Asn($1, Binop($1, Eadd, $3), true) }
   | WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE { While($3, $6) }
   | BREAK SEMI{ Break }
   | CONTINUE SEMI{ Continue }
