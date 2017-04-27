@@ -118,6 +118,7 @@ let rec dedup = function
   | x :: xs -> x :: dedup xs
 
 let infer (e: Ast.func) (genv : genvironment) : (Ast.afunc * genvironment) =
+  ignore(print_string("first!"));
   checknooverload e genv; 
   match e with 
   |Fbody(Fdecl(name, formals), stmts) ->

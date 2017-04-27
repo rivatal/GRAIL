@@ -31,6 +31,7 @@ let gen_new_void () : primitiveType =
 
 (*Store variables with function names*)
 let mapidwith (fname: string )(id: string) : string =
+(*   ignore(print_string("mapidwith " ^ fname ^ "#" ^ id ^ "\n")); *)
   (fname ^ "#" ^ id)
 
 let mapid (id: string) : string =
@@ -39,17 +40,24 @@ let mapid (id: string) : string =
 
 (*Store variables with record names*)
 let mapidrec (rname: string) (id: string) : string =
-  ignore(print_string ("getting name: " ^ rname ^ ";" ^ id)); 
+(*   ignore(print_string ("getting name: " ^ rname ^ ";" ^ id));  *)
   let name = (rname ^ ";" ^ id) in name
 
 let rec findinmap(id: string) (env: environment): primitiveType =
   let curr = Stack.copy callstack in
-  let myl = Stack.pop curr in
-  let mapped = mapidwith myl id in
-(*   ignore(print_string (" finding " ^ mapped ^ " ")); *)
-  if (NameMap.mem (mapped) env)  
-  then (NameMap.find (mapped) env)
-  else (raise(failwith(mapped ^ " not defined.")))
+  let rec fold (myl: string list) =          (*First fold the call stack into a list for searching*)
+    if Stack.length curr <= 0 then (List.rev myl)
+    else 
+      let myl = Stack.pop curr :: myl in fold myl
+  in let m = fold []
+  in let rec find(l: string list) (id: string) = (*Then find the id in the list*)
+       match l with
+         [] -> gen_new_void()
+       |h :: t -> 
+         if (NameMap.mem (mapidwith h id) env)  
+         then (NameMap.find (mapidwith h id) env)
+         else (find t id)
+  in find m id
 
 let check_asn (a: stmt) : unit =
   (*   print_string "Checking assign";*)  
@@ -62,7 +70,7 @@ let check_asn (a: stmt) : unit =
    stmt, list, type of; expr, list, type of
 *)
 let rec infer_stmt (allenv: allenv) (e: stmt): (allenv * astmt) =
-(*   ignore(print_string (" inferring " ^ (string_of_stmt e))); *)
+  ignore(print_string (" inferring " ^ (string_of_stmt e)));  
   match e with
   | Asn(e1, e2, switch) -> 
     let ae1 = infer_expr allenv e1 and 
@@ -114,7 +122,7 @@ and annotate_expr (allenv: allenv) (e: expr) (* (env: environment) *) : aexpr =
   | FloatLit(f) -> AFloatLit(f, TFloat)
   | CharLit(c) -> ACharLit(c, TChar)
   | Id(x) -> 
-(*     ignore(print_string ("Finding " ^ x ^ "\n")); *)
+(*      ignore(print_string ("Finding " ^ x ^ "\n"));  *)
     let typ = findinmap x env in 
     (match typ with
      (* TVoid(_) -> raise (failwith (x ^ " not defined @ 109.")) *)
@@ -158,12 +166,13 @@ and annotate_expr (allenv: allenv) (e: expr) (* (env: environment) *) : aexpr =
        AList(ael, TList(t)))
   | Call(id, elist) ->    (*Function calls derive their type from the function declaration*)
     let ael = annotate_expr_list allenv elist in
-      Stack.push id callstack;  
+    Stack.push id callstack;  
     let (oldtype, aformals, stmts) =
       if (GlobalMap.mem id genv)
       then (GlobalMap.find id genv)
       else (raise (failwith "function not defined @ 147")) in
-    let assignments = assign_formals (List.combine aformals elist) id in
+    let assignments, env = assign_formals (List.combine aformals elist) env id in
+    let allenv = env, genv, recs in
     let(allenv, _) = (infer_stmt_list allenv assignments) in
     let (_, astmts) = (infer_stmt_list allenv stmts) in
     let t = get_return_type astmts in 
@@ -254,8 +263,8 @@ and check_list_consistency (e: aexpr list) : unit =
   match e with 
   |x :: y :: t -> 
     let tx = type_of x and ty = type_of y in
-     ignore(print_string("matching " ^ string_of_type tx ^ " and " ^ string_of_type ty));
-    (match tx, ty with
+(*      ignore(print_string("matching " ^ string_of_type tx ^ " and " ^ string_of_type ty)); *)    
+(match tx, ty with
      | a, T(_) -> check_list_consistency (x :: t)
      | T(_), a -> check_list_consistency (y :: t)
      | a, b -> 
@@ -272,14 +281,16 @@ and check_list_exprs (e: aexpr list) : unit =
     | AIntLit(_,_) | ABoolLit(_,_) | AStrLit(_,_) | AFloatLit(_,_) | ACharLit(_,_) | AId(_,_) | AList(_,_) -> check_list_exprs t
     | y -> raise(failwith ((string_of_aexpr y) ^ " does not belong in a list."))
 
-and assign_formals (asnlist: ((id * primitiveType) * expr) list) (id: string): stmt list =
-  let rec helper asnlist id = 
-    match asnlist with
-      [] -> []
+and assign_formals (stufflist: ((id * primitiveType) * expr) list) (env: environment) (id: string): stmt list * environment =
+  let rec helper assns env l   = 
+    match l with
+      [] -> (List.rev assns, env)
     |h :: t ->     (*_ is the old "bad" type*)
       match h with
-        ((x, _), e) -> [Asn(Id(x), e, false)] @ helper t id (*Really should make x's type the original formal types...?*)
-  in helper asnlist id
+        ((x, _), e) -> 
+        let env = NameMap.add (mapid x) (gen_new_type()) env in 
+        helper (Asn(Id(x), e, false) :: assns) env t (*Really should make x's type the original formal types...?*)
+  in helper [] env stufflist
 
 and print_formals (asnlist) =
   match asnlist with  

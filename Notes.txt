@@ -3,14 +3,7 @@ function calls need to also infer the type if the type is stricter than that of 
 
 4.2.17
 of:
-function(x){ return x; }
-
-nf:
-main(){
-	y = function(3);
-	return y;
-}
-
+	function(x){ return x; } main(){ y = function(3); return y; }
 new:
 main(){
 	x = 3;
@@ -46,24 +39,15 @@ Say we do a whole inference call on those actuals, so that we for sure have them
 
 What if we call a function twice in two ways?
 
-function(x){ return x; }
-
-main(){
-	x = 3;
-	function("sdf");
-}
+function(x){ return x; } main(){	x = 3; function("sdf"); }
 
 Then we'd want "x" in both to be different things. Solution: map ids to function#id.
 
 What about this?
-function(x){ return x; }
 
-main(){
-	x = 3;
-	function(x);
-	y = "sdf";
-	function(y);
-}
+function(x){ return x; } main(){ z = 3; function(z); y = "sdf"; function(y); }
+
+
 Solution: statements are inferred in order, so overwriting function#x isn't a problem?
 
 We still need to compare the function with its declaration typing, I think!
@@ -110,18 +94,22 @@ I also need to decide if 'if' can make changes to the environment-- I can't see 
 	f(x){if(x < 11){ return 3; } return x;} problematically says mismatched returns when it should really force x to be an int.
 
 	f(x){if(x < 11){ return 3; } return 5;} 
-	is fine
+	is fine (error: predicate returns-- good)
 
 Need to make everything work for optional for
 
-f(x){ for(x = 3; x < 10; x = x + 1){ return 3; }; return 5; }
+f(x){ for(x = 3; x < 10; x = x + 1){ y = 4; }; return 5; }
 
 Okay, something is weird with parsing for. Fixed! It was extra semicolons in the parser.
 
-Oooh might have messed up scoping-- I shouldn't be able to access variables above the call but we totally can. (Not sure if I tied the formals to the inner function or the outer one).
+Oooh might have messed up scoping-- I shouldn't be able to access variables above the call but we totally can. (Not sure if I tied the formals to the inner function or the outer one). Oh no we should.
+
 -----------------------------------------------------------------------------------------------------------
 f(x){ x = [1,2,3]; return x[0]; } main(){ return f(3); }
-Should not work.
+Should not work. And now it doesn't. Oh snap.
+
+f(x){ x = [1,2,3]; return x[0]; } main(){ return f([1,2,4]); }
+Does work.
 
 Fancy subset.
 Updating expression map?
@@ -160,12 +148,13 @@ omg what if I do this?
 
 f(x){ a = {school: 3}; a = {weight: 6, x: 9}; return a.school; }
 
-a.school is still there..... !!!!
+a.school is still there..... !!!! Fixed!!!
 
-what about records with any type? Hmmm should be resolved through functions though.
+what about records with any type? Hmmm should be resolved through functions though. And got that!
 
 f(x){ a = {school: x}; return a.school; } a(){ y = f("234"); return f(23); }
 If we disallow reassigning to variables, we have to allow this.
+Okay-- it's allowed but not sure about this-- why are the formals voids?
 ----------------------------------------------------------------------------------------------
 
 Superlocal for scoping needs to happen for assignments.
@@ -262,3 +251,4 @@ f(x){ g = {a: x}; h = {b:x}; edge = g -- g; }
 Classify open and closed scopes.
 recorsd = closed.
 
+Is for broken again???
