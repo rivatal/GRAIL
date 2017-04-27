@@ -65,8 +65,6 @@ and astmt =
   | AFor of astmt * aexpr * astmt * astmt list
   | AWhile of aexpr * astmt list
   | AReturn of aexpr * primitiveType
-  | ABreak
-  | AContinue
   | AExpr of aexpr
 
 and stmt =
@@ -75,8 +73,6 @@ and stmt =
   | While of expr * stmt list
   | For of stmt * expr * stmt * stmt list
   | Return of expr
-  | Break
-  | Continue
   | Expr of expr
 
 type stmt_list = stmt list

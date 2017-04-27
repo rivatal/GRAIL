@@ -91,8 +91,6 @@ let rec infer_stmt (allenv: allenv) (e: stmt): (allenv * astmt) =
     in                   (*Make sure second stmts isn't empty? More importantly-- currently this env overwrites. But I think we need to be sure any if assignments are the same? *)
     let _, as2 = infer_stmt_list allenv s2
     in (allenv, AIf(conditional, as1, as2))
-  | Break -> allenv, ABreak
-  | Continue -> allenv, AContinue
   | While(e1, stmts) ->
     let genv, env, recs = allenv in 
     let ae1 = infer_expr allenv e1 in ignore(check_bool ae1); 

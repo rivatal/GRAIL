@@ -47,8 +47,6 @@ rule token = parse
 | ':'      { COLON }
 | "accio"  { ACCIO }
 | "boolean" { BOOLEAN }
-| "break"  { BREAK }
-| "continue" { CONTINUE }
 | "else"   { ELSE }
 | "false"  { FALSE }
 | "for"    { FOR }

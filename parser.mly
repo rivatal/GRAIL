@@ -8,7 +8,7 @@ open Ast
 %token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR
 %token RETURN IF ELSE FOR WHILE INT BOOLEAN VOID
 %token TIMES LBRACKET RBRACKET DASH RARROW LARROW
-%token ACCIO BREAK CHAR DOUBLE EDGE EMPTY CONTINUE
+%token ACCIO CHAR DOUBLE EDGE EMPTY 
 %token TO FROM IN RECORD TYPE WITH FREE
 %token FPLUS FMINUS FTIMES FDIVIDE ADD EADD
 %token PLUSEQ FPLUSEQ ADDEQ EADDEQ COPY
@@ -88,8 +88,6 @@ stmt:
   | expr ADDEQ expr SEMI { Asn($1, Binop($1, Gadd, $3), true) }
   | expr EADDEQ expr SEMI { Asn($1, Binop($1, Eadd, $3), true) }
   | WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE { While($3, $6) }
-  | BREAK SEMI{ Break }
-  | CONTINUE SEMI{ Continue }
 
   expr:
     INTLIT           { IntLit($1) }
