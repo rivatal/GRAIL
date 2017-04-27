@@ -328,10 +328,10 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
                       | _ -> raise(failwith("Error @330")))
       | Gadd -> 
       (match et1, et2 with |TGraph(n, e), TRec(_, _) -> [(et2, n); (t, TGraph(et2, e))]
-                           | _ -> raise(failwith("Error-- " ^ (string_of_op et1) ^ "," ^ (string_of_op et2) ^ " not a valid graph operator")))     
+                           | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ "," ^ (string_of_type et2) ^ " not valid graph types")))     
       | Eadd -> 
       (match et1, et2 with |TGraph(n, e), TEdge(f) -> [(et2, e); (t, TGraph(n, et2))]
-                           | _ -> raise(failwith("Error-- " ^ (string_of_op et1) ^ "," ^ (string_of_op et2) ^ " not a valid graph operator"))
+                           | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ "," ^ (string_of_type et2) ^ " not valid graph types"))
       )
       | _ -> raise(failwith("error"))
      in

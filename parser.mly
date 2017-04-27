@@ -9,7 +9,7 @@ open Ast
 %token RETURN IF ELSE FOR WHILE INT BOOLEAN VOID
 %token TIMES LBRACKET RBRACKET DASH RARROW LARROW
 %token ACCIO BREAK CHAR DOUBLE EDGE EMPTY CONTINUE
-%token TO FROM IN NODE RECORD TYPE WITH FREE
+%token TO FROM IN RECORD TYPE WITH FREE
 %token FPLUS FMINUS FTIMES FDIVIDE ADD EADD
 %token PLUSEQ FPLUSEQ ADDEQ EADDEQ COPY
 %token <int> INTLIT
@@ -32,7 +32,6 @@ open Ast
 %nonassoc NOWITH
 %nonassoc GRAPH
 %nonassoc WITH
-%nonassoc NODE
 %nonassoc RBRACKET
 %nonassoc LARROW RARROW DASH
 %left PLUS MINUS FPLUS FMINUS
@@ -132,7 +131,6 @@ stmt:
   | LPAREN RPAREN WITH expr { Graph([], $4) }
   | LPAREN expr RPAREN WITH expr { Graph([$2], $5) }
   | LPAREN graph_list RPAREN WITH expr { Graph($2, $5) }
-  | ID COLON expr %prec NODE { Node($1, $3) }
   | LBRACE rec_opt RBRACE { Record($2) }
   | LPAREN expr RPAREN %prec NOWITH { $2 }
 

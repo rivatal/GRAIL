@@ -37,7 +37,6 @@ type expr =
   | Binop of expr * op * expr
   | Edge of expr * op * expr * expr
   | Graph of expr list * expr
-  | Node of string * expr
   | Record of (string * expr) list
   | Noexpr
 
