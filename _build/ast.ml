@@ -61,7 +61,7 @@ type aexpr =
   | ANoexpr of primitiveType
 
 and astmt =
-  | AAsn of aexpr * aexpr * bool * primitiveType
+  | AAsn of id * aexpr * bool * primitiveType
   | AIf of aexpr * astmt list * astmt list
   | AFor of astmt * aexpr * astmt * astmt list
   | AWhile of aexpr * astmt list
@@ -71,7 +71,7 @@ and astmt =
   | AExpr of aexpr
 
 and stmt =
-  | Asn of expr * expr * bool
+  | Asn of id * expr * bool
   | If of expr * stmt list * stmt list
   | While of expr * stmt list
   | For of stmt * expr * stmt * stmt list

@@ -84,7 +84,7 @@ and string_of_aexpr_list l =
 and string_of_astmt (l: astmt) = 
   match l with 
   | AReturn(aexpr,typ) -> "return " ^ string_of_aexpr aexpr ^ "; " ^ string_of_type typ ^ "\n";
-  | AAsn(ae1,ae2,_,_) -> string_of_aexpr ae1 ^ " = " ^ string_of_aexpr ae2 ^ "; ";
+  | AAsn(id,aexpr,_,_) -> id ^ " = " ^ string_of_aexpr aexpr ^ "; ";
   | AExpr(aexpr) -> " " ^ string_of_aexpr aexpr ^ "; "
   | AIf(e, s1, s2) ->  
     let a = "if (" ^ string_of_aexpr e ^ ") {" ^ string_of_astmt_list s1 ^ "; " in
@@ -103,7 +103,7 @@ and string_of_astmt_list (stmts : astmt list) : string =
 and string_of_stmt (l: stmt)= 
   match l with 
   | Return(expr) -> "return " ^ string_of_expr expr ^ ";\n";
-  | Asn(e1,e2,_) -> string_of_expr e1 ^ " = " ^ string_of_expr e2 ^ ";\n"
+  | Asn(id,expr,_) -> id ^ " = " ^ string_of_expr expr ^ ";\n"
   | Expr(expr) -> " " ^ string_of_expr expr ^ ";\n"
   | If(e, s1,  s2) -> let a = "if (" ^ string_of_expr e ^ ") {" ^ string_of_stmt_list s1 ^ "; }" in
     let b =

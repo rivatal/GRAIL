@@ -64,10 +64,9 @@ let check_asn (a: stmt) : unit =
 let rec infer_stmt (allenv: allenv) (e: stmt): (allenv * astmt) =
 (*   ignore(print_string (" inferring " ^ (string_of_stmt e))); *)
   match e with
-  | Asn(e1, e2, switch) -> 
-    let ae1 = infer_expr allenv e1 and 
-        ae2 = infer_expr allenv e2 in 
-    (allenv, AAsn(ae1, aexpr, switch, type_of ae2))
+  | Asn(id, expr, switch) -> 
+    let aexpr = infer_expr allenv expr in 
+    (allenv, AAsn(id, aexpr, switch, type_of aexpr))
   | Return(expr) ->
     let aexpr = infer_expr allenv expr in 
     (allenv, AReturn(aexpr, type_of aexpr))
@@ -278,7 +277,7 @@ and assign_formals (asnlist: ((id * primitiveType) * expr) list) (id: string): s
       [] -> []
     |h :: t ->     (*_ is the old "bad" type*)
       match h with
-        ((x, _), e) -> [Asn(Id(x), e, false)] @ helper t id (*Really should make x's type the original formal types...?*)
+        ((x, _), e) -> [Asn(x, e, false)] @ helper t id
   in helper asnlist id
 
 and print_formals (asnlist) =

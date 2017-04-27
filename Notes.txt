@@ -254,5 +254,11 @@ Yeah-- we're definitely getting into a really long loop or an infinite one. Oh f
 f(x){ h = {school:"moriah"}; g = (h) with {}; }
 h not a valid graph entry?
 
-Banning things connected to themselves.
+f(x){ h = {school:"moriah"}; g = (h) with {}; }
+f(x){ g = {a: x}; h = {b:x}; graph = (g -- g, h -> h) with {b:x}; }
+f(x){ g = {a: x}; h = {b:x}; edge = g -- g with {b:x}; }
+f(x){ g = {a: x}; h = {b:x}; edge = g -- g; }  
+
+Classify open and closed scopes.
+recorsd = closed.
 
