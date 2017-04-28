@@ -291,3 +291,16 @@ I really have to refactor, though.
 
 f(){ a = [1,2,3]; a[0] = 2; }
 Works now. Astutils!
+
+
+f(){ a = {x: "a", x: 3}; } 
+and 
+f(){ a = {x: 2, x: 3}; } 
+now throw duplicate record entry.
+
+f(){ a = {a: 2, b: 3}; } 
+f(){ a = {school: 2, b: 3, hi: "wer"}; } 
+are throwing a weirdo error where they only catch one field?. Oh tg, it was just the print.
+
+
+

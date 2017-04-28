@@ -167,7 +167,7 @@ let rec interpreter (ast: Ast.sast_afunc list) : Ast.sast_afunc list =
     | Failure(msg) ->
       if msg = "lexing: empty token" then [] @ interpreter (ast)
       else (print_endline msg; [] @ interpreter(ast))
-    | _ -> print_endline "Error Parsing"; [] @  interpreter (ast)
+    | _ -> print_endline "Syntax Error"; [] @  interpreter (ast)
 
 
 (*     let say() = 

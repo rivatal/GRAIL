@@ -43,7 +43,6 @@ let rec string_of_aexpr (ae: aexpr): string =
   | AStrLit(b, t) -> Printf.sprintf "(%s: %s)" (b) (string_of_type t)
   | ACharLit(c, t) -> Printf.sprintf "(%s: %s)" (String.make 1 c) (string_of_type t)
   | AId(x, t) -> Printf.sprintf "(%s: %s)" x (string_of_type t)
-  | AList(_, t) -> Printf.sprintf "(%s)" (string_of_type t)
   | ADot(s,entry,t) -> Printf.sprintf "(%s.%s : %s)" (string_of_aexpr s) entry (string_of_type t)
   | AItem(s, e1, t) -> Printf.sprintf "(%s[%s] : %s)" s (string_of_aexpr e1) (string_of_type t)
   (*   | ASubset(_,_,t) -> Printf.sprintf "(%s)" (string_of_type t)
@@ -67,8 +66,10 @@ let rec string_of_aexpr (ae: aexpr): string =
     let rec helper l str : string =
       (match l with
          [] -> str
-        |(id, aexpr) :: t -> helper t (id ^ " " ^ string_of_aexpr aexpr))
-    in ((string_of_type t) ^ "{" ^ (helper aexprs "") ^ "}")
+        |(id, aexpr) :: t -> helper t (id ^ " " ^ string_of_aexpr aexpr ^ str))
+    in 
+    ignore(print_string ("list is length " ^ string_of_int (List.length aexprs)));
+    ((string_of_type t) ^ "{" ^ (helper aexprs "") ^ "}")
   | AEdge(e1, op, e2, e3, t) -> Printf.sprintf "%s %s %s %s : %s" (string_of_aexpr e1) (string_of_op op) (string_of_aexpr e2) (string_of_aexpr e3) (string_of_type t)
   | AList(elist, t) -> Printf.sprintf "(%s : %s)" (string_of_aexpr_list elist) (string_of_type t)
   | AGraph(elist, e1, t) -> Printf.sprintf "(%s %s : %s)" (string_of_aexpr_list elist) (string_of_aexpr e1) (string_of_type t)
@@ -78,8 +79,6 @@ and string_of_aexpr_list l =
   match l with
   [] -> ""
   |h :: t -> string_of_aexpr h ^ string_of_aexpr_list t
-
-
 
 and string_of_astmt (l: astmt) = 
   match l with 
@@ -146,6 +145,8 @@ and string_of_expr (e: expr): string =
   | Edge(e1, op, e2, e3) -> Printf.sprintf "%s %s %s %s" (string_of_expr e1) (string_of_op op) (string_of_expr e2) (string_of_expr e3)
   | List(elist) -> Printf.sprintf "(%s)" (string_of_expr_list elist)
   | Item(l, e) -> Printf.sprintf "%s[%s]" l (string_of_expr e)
+  | Graph(elist, e) -> Printf.sprintf "(%s) with {%s}" (string_of_expr_list elist) (string_of_expr e)
+  | Noexpr -> ""
 
 and string_of_expr_list l =
   match l with

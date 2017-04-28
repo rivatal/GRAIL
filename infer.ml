@@ -27,7 +27,15 @@ let gen_new_type () =
 let gen_new_void () : primitiveType =
   TVoid (*just chr escaped, no T in the TVoid*)
 
+let comp (x: id * expr) (y: id * expr) : int = 
+  match x, y with
+  |(a,_), (b,_) -> if(a = b) then(0) else(if(a < b) then(-1) else(1))
+  | _ -> raise(failwith("error @33."))
 
+let rec hasdups l = 
+  match l with
+  |(a,_) :: (b,c) :: tail -> if(a = b) then(true) else(hasdups((b,c)::tail))
+  |[]| _ -> false
 
 (*Store variables with function names*)
 let mapidwith (fname: string )(id: string) : string =
@@ -87,6 +95,7 @@ let rec infer_stmt (allenv: allenv) (e: stmt): (allenv * astmt) =
           |AId(a, t) -> AId(a, typ)
           |AItem(a,b,t) -> AItem(a,b,typ)
           |ADot(a,b,t) -> ADot(a,b,typ) 
+          |x -> raise(failwith(string_of_aexpr x ^ " is not a valid lval"))
         in
     (allenv, AAsn(lval, ae2, switch, typ))
   | Return(expr) ->
@@ -189,7 +198,9 @@ and annotate_expr (allenv: allenv) (e: expr) (* (env: environment) *) : aexpr =
     [] -> []
     |(id, expr) :: tl ->
     (id, (annotate_expr allenv expr)) :: helper tl 
-    in let apairlist = helper (List.rev pairlist) in
+    in let apairlist = helper (List.sort comp pairlist) in
+    ignore(if(hasdups pairlist) then(raise(failwith("error: duplicate record entry"))) else());
+    ignore(print_string ("record is size " ^ string_of_int (List.length apairlist)));
     ARecord(apairlist, gen_new_rec(apairlist))
    (* type records = (primitiveType * ((id * primitiveType) list)) list *)
  | Graph(elist, tedge) ->
