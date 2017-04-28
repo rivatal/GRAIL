@@ -248,17 +248,46 @@ f(x){ g = {a: x}; h = {b:x}; graph = (g -- g, h -> h) with {b:x}; }
 f(x){ g = {a: x}; h = {b:x}; edge = g -- g with {b:x}; }
 f(x){ g = {a: x}; h = {b:x}; edge = g -- g; }  
 
-Classify open and closed scopes.
+Classify open and closed scopes. (open = can see above them)
 recorsd = closed.
 
-f(x){ for(x = 3; x < 3; x = x + 1;){ y = 3; } }  
 
-for ((x: 'c) = (3: int); ((x: int) < (3: int): bool) ; (x: 'c) = ((x: int) + (1: int): int); (y: 'b) = (3: int); }
 
-^Why is x a c instead of an int?
 
 Need to fix for scoping.
 New values:
 f(){ y = [1,2,3]; y[0] = 2; }
 
 for(starting here, everything applies to the statement block only){}
+records-- duplicate fields?
+
+
+f(x){ x = {a: 3, a:4 }; }
+f(x){ while(x < 3){ y = 5; }}
+
+-----------------------------------------------------------------------------------------------------
+f(x){ for(x = 3; x < 3; x = x + 1;){ y = 3; } }  
+
+for ((x: 'c) = (3: int); ((x: int) < (3: int): bool) ; (x: 'c) = ((x: int) + (1: int): int); (y: 'b) = (3: int); }
+
+
+^Why is x a 'c instead of an int? Any implications?
+
+f(x){ x = 5; return x; }
+f(x){ : int
+(x: 'c) = (5: int); return (x: int); int
+}
+
+Hm, no, I think it's okay. It infers the id before it infers the rest, and never updates the id field. I changed it so that it checks ids up in infer_assign.
+#Okay what, why is this still an any type?
+f(x){ return x.school; } g(){ f(3); }
+Okay, now oorrectly throws (x: int) not a record.
+
+
+f(x){ return x.school; } g(){ a = {f1: "hi", school: 2}; return f(a); }
+f(x){ return x.school; } g(){ a = {f1: "hi", school: 2}; b = {school: "sdf"}; c = f(a); d = f(b); }
+Okay, no longer running weirdly. Yay!
+I really have to refactor, though.
+
+f(){ a = [1,2,3]; a[0] = 2; }
+Works now. Astutils!

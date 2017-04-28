@@ -145,6 +145,7 @@ and string_of_expr (e: expr): string =
     in ("{" ^ (helper exprs "") ^ "}")
   | Edge(e1, op, e2, e3) -> Printf.sprintf "%s %s %s %s" (string_of_expr e1) (string_of_op op) (string_of_expr e2) (string_of_expr e3)
   | List(elist) -> Printf.sprintf "(%s)" (string_of_expr_list elist)
+  | Item(l, e) -> Printf.sprintf "%s[%s]" l (string_of_expr e)
 
 and string_of_expr_list l =
   match l with
