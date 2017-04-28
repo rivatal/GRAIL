@@ -15,3 +15,4 @@ parser.mli
 .DS_Store
 out
 *~
+grail.native
