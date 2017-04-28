@@ -13,23 +13,23 @@ let string_of_op (op: op) =
   | In -> "in" | Gadd -> "&" | Eadd -> ".&"
 
 let string_of_uop (uop: uop) =
-   match uop with
-    |Neg -> "-"
-    |Not -> "not "
+  match uop with
+  |Neg -> "-"
+  |Not -> "not "
 
 let rec string_of_type (t: primitiveType) =
-    match t with
-    | TRec(s, l) -> ("record "  ^ s)
-    | TInt -> "int"
-    | TBool -> "bool"
-    | TFloat -> "float"
-    | TString -> "str"
-    | TChar -> "char"
-    | TVoid -> "void"
-    | TEdge(x) -> "edge of " ^ (string_of_type x)
-    | TGraph(a, b) -> "graph of " ^ (string_of_type a) ^ " with " ^ (string_of_type b)
-    | TList(x) -> "list of " ^ (string_of_type x)
-    | T(x) -> Printf.sprintf "'%s" x
+  match t with
+  | TRec(s, l) -> ("record "  ^ s)
+  | TInt -> "int"
+  | TBool -> "bool"
+  | TFloat -> "float"
+  | TString -> "str"
+  | TChar -> "char"
+  | TVoid -> "void"
+  | TEdge(x) -> "edge of " ^ (string_of_type x)
+  | TGraph(a, b) -> "graph of " ^ (string_of_type a) ^ " with " ^ (string_of_type b)
+  | TList(x) -> "list of " ^ (string_of_type x)
+  | T(x) -> Printf.sprintf "'%s" x
 
 let string_of_tuple (t: id * primitiveType) =
   match t with
@@ -66,7 +66,7 @@ let rec string_of_aexpr (ae: aexpr): string =
     let rec helper l str : string =
       (match l with
          [] -> str
-        |(id, aexpr) :: t -> helper t (id ^ " " ^ string_of_aexpr aexpr ^ str))
+       |(id, aexpr) :: t -> helper t (id ^ " " ^ string_of_aexpr aexpr ^ str))
     in 
     ignore(print_string ("list is length " ^ string_of_int (List.length aexprs)));
     ((string_of_type t) ^ "{" ^ (helper aexprs "") ^ "}")
@@ -77,7 +77,7 @@ let rec string_of_aexpr (ae: aexpr): string =
 
 and string_of_aexpr_list l =
   match l with
-  [] -> ""
+    [] -> ""
   |h :: t -> string_of_aexpr h ^ string_of_aexpr_list t
 
 and string_of_astmt (l: astmt) = 
@@ -150,7 +150,7 @@ and string_of_expr (e: expr): string =
 
 and string_of_expr_list l =
   match l with
-  [] -> ""
+    [] -> ""
   |h :: t -> string_of_expr h ^ string_of_expr_list t
 
 

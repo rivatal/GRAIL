@@ -4,10 +4,10 @@ open Ast
 open Astutils   
 
 module NameMap = Map.Make(String)
-  type environment = primitiveType NameMap.t
+type environment = primitiveType NameMap.t
 
 (*type, formals and types list, stmt list*)
-type genvironment = (primitiveType * (string * primitiveType) list * stmt list) NameMap.t
+type genvironment = (primitiveType * string list * stmt list) NameMap.t
 let callstack = Stack.create()
 type records = (primitiveType * ((id * primitiveType) list)) list
 type allenv = environment * genvironment * records
@@ -38,7 +38,7 @@ let rec hasdups l =
 
 (*Store variables with function names*)
 let mapidwith (fname: string )(id: string) : string =
-(*    ignore(print_string("mapidwith " ^ fname ^ "#" ^ id ^ "\n"));  *)
+  ignore(print_string("mapidwith " ^ fname ^ "#" ^ id ^ "\n")); 
   (fname ^ "#" ^ id)
 
 let mapid (id: string) : string =
@@ -47,7 +47,7 @@ let mapid (id: string) : string =
 
 (*Store variables with record names*)
 let mapidrec (rname: string) (id: string) : string =
-(*   ignore(print_string ("getting name: " ^ rname ^ ";" ^ id));  *)
+  (*   ignore(print_string ("getting name: " ^ rname ^ ";" ^ id));  *)
   let name = (rname ^ ";" ^ id) in name
 
 let rec findinmap(id: string) (env: environment): primitiveType =
@@ -75,7 +75,7 @@ let check_asn (a: stmt) : unit =
 
 let rec getfieldtype (elist: (id * primitiveType) list) (id: id) =
   match elist with
-  [] -> raise (failwith (id ^ "  not defined @ 133"))
+    [] -> raise (failwith (id ^ "  not defined @ 133"))
   |(field, typ) :: tail -> if(field = id) then(typ) else(getfieldtype tail id)
 
 
@@ -83,19 +83,19 @@ let rec getfieldtype (elist: (id * primitiveType) list) (id: id) =
    stmt, list, type of; expr, list, type of
 *)
 let rec infer_stmt (allenv: allenv) (e: stmt): (allenv * astmt) =
-(*   ignore(print_string (" inferring " ^ (string_of_stmt e)));   *)
+  ignore(print_string (" inferring " ^ (string_of_stmt e)));  
   match e with
   | Asn(e1, e2, switch) -> 
     let ae2 = infer_expr allenv e2 and 
-        ae1 = infer_expr allenv e1 in 
-        let typ = type_of ae2 in 
-        ignore(check_asn_type ae1 typ);
-        let lval = match ae1 with
-          |AId(a, t) -> AId(a, typ)
-          |AItem(a,b,t) -> AItem(a,b,typ)
-          |ADot(a,b,t) -> ADot(a,b,typ) 
-          |x -> raise(failwith(string_of_aexpr x ^ " is not a valid lval"))
-        in
+    ae1 = infer_expr allenv e1 in 
+    let typ = type_of ae2 in 
+    ignore(check_asn_type ae1 typ);
+    let lval = match ae1 with
+      |AId(a, t) -> AId(a, typ)
+      |AItem(a,b,t) -> AItem(a,b,typ)
+      |ADot(a,b,t) -> ADot(a,b,typ) 
+      |x -> raise(failwith(string_of_aexpr x ^ " is not a valid lval"))
+    in
     (allenv, AAsn(lval, ae2, switch, typ))
   | Return(expr) ->
     let aexpr = infer_expr allenv expr in 
@@ -125,12 +125,12 @@ let rec infer_stmt (allenv: allenv) (e: stmt): (allenv * astmt) =
     in (check_bool ae1);
     let (_, as2) = (infer_stmt allenv s2) in
     let _, astmts = infer_stmt_list allenv stmts in 
-(*     let allenv = backupenv, genv, recs in
- *)    (allenv, AFor(as1, ae1, as2, astmts))
+    (*     let allenv = backupenv, genv, recs in
+    *)    (allenv, AFor(as1, ae1, as2, astmts))
 
 and annotate_expr (allenv: allenv) (e: expr) (* (env: environment) *) : aexpr =
-(*   ignore(print_string ("annotating " ^ (string_of_expr e)));     *)  
-let env, genv, recs = allenv in
+  ignore(print_string ("annotating " ^ (string_of_expr e)));    
+  let env, genv, recs = allenv in
   match e with
   | IntLit(n) -> AIntLit(n, TInt)
   | BoolLit(b) -> ABoolLit(b, TBool)
@@ -145,7 +145,7 @@ let env, genv, recs = allenv in
     let et1 = annotate_expr allenv e in 
     let typ = findinmap s env in
     (match typ with
-      TVoid -> raise (failwith (s ^ " not defined @ 115."))
+       TVoid -> raise (failwith (s ^ " not defined @ 115."))
      |TList(t) -> AItem(s, et1, t)
      | _ -> raise (failwith (s ^ " not a list.")))
   | Binop(e1, op, e2) ->
@@ -157,16 +157,16 @@ let env, genv, recs = allenv in
     let et1 = annotate_expr allenv e1 and t = gen_new_type() in 
     AUnop(uop, et1, t)
   | Dot(e1, entry) -> 
-(*     ignore(print_string "annotating dot"); *)
+    (*     ignore(print_string "annotating dot"); *)
     let ae1 = annotate_expr allenv e1 in 
     let et1 = type_of ae1 in
     let sae1 = string_of_aexpr ae1 in
     let typ = 
-         (match et1 with
-          |TRec(str, elist) -> 
-          getfieldtype elist entry
-          |T(x) -> T(x)
-          |x -> raise(failwith (sae1 ^ " not a record.")))    
+      (match et1 with
+       |TRec(str, elist) -> 
+         getfieldtype elist entry
+       |T(x) -> T(x)
+       |x -> raise(failwith (sae1 ^ " not a record.")))    
     in ADot(ae1, entry, typ)
   | List(e) -> 
     let ael = annotate_expr_list allenv e in 
@@ -180,65 +180,64 @@ let env, genv, recs = allenv in
   | Call(id, elist) ->    (*Function calls derive their type from the function declaration*)
     Stack.push id callstack;    
     let ael = annotate_expr_list allenv elist in
-    let (oldtype, aformals, stmts) =
+    let (oldtype, formals, stmts) =
       if (NameMap.mem id genv)
       then (NameMap.find id genv)
       else (raise (failwith "function not defined @ 147")) in
-    let assignments, env = assign_formals (List.combine aformals elist) env id in
+    let assignments, env = assign_formals (List.combine formals elist) env id in
     let allenv = env, genv, recs in
     let(allenv, _) = (infer_stmt_list allenv assignments) in
-    ignore(check_formals aformals allenv);
     let (_, astmts) = (infer_stmt_list allenv stmts) in
     let t = get_return_type astmts in 
     ignore(Stack.pop callstack);
     ACall(id, ael, astmts, t) 
-| Record(pairlist) -> 
+  | Record(pairlist) -> 
     let rec helper (l : (string * expr) list) =
-    match l with
-    [] -> []
-    |(id, expr) :: tl ->
-    (id, (annotate_expr allenv expr)) :: helper tl 
+      match l with
+        [] -> []
+      |(id, expr) :: tl ->
+        (id, (annotate_expr allenv expr)) :: helper tl 
     in let apairlist = helper (List.sort comp pairlist) in
     ignore(if(hasdups pairlist) then(raise(failwith("error: duplicate record entry"))) else());
-(*     ignore(print_string ("record is size " ^ string_of_int (List.length apairlist))); *)
+    ignore(print_string ("record is size " ^ string_of_int (List.length apairlist)));
     ARecord(apairlist, gen_new_rec(apairlist))
-   (* type records = (primitiveType * ((id * primitiveType) list)) list *)
- | Graph(elist, tedge) ->
-   let atedge = annotate_expr allenv tedge in
-   let aelist = annotate_expr_list allenv (elist) in
-   let rec splitlists l elist rlist =
-   (match l with
-   |[] -> (elist, rlist)
-   |h :: t -> 
-    (match h with 
-    |AEdge(a,b,c,d,e) -> splitlists t (AEdge(a,b,c,d,e) :: elist) rlist
-    |ARecord(aexprs, typ) ->  splitlists t elist (ARecord(aexprs, typ) :: rlist)
-    |AList(somelist, _) -> splitlists (List.hd somelist :: t) elist rlist
-    |x -> raise(failwith("error " ^ (string_of_aexpr x) ^ " not a valid graph entry@191")))
-    ) 
-     (*if there's a list, we've already checked for consistency so you can just sample the first thing*)
-   in 
-   let elist, rlist = splitlists aelist [] [] in 
-   let temptype = type_of atedge in 
-   ignore(check_list_consistency (AEdge(ANoexpr(gen_new_void()), Dash, ANoexpr(gen_new_void()), atedge, temptype) :: elist));
-   ignore(check_list_consistency (rlist)); 
-   AGraph(aelist, atedge, TGraph(type_of (List.hd rlist), temptype))
+  (* type records = (primitiveType * ((id * primitiveType) list)) list *)
+  | Graph(elist, tedge) ->
+    let atedge = annotate_expr allenv tedge in
+    let aelist = annotate_expr_list allenv (elist) in
+    let rec splitlists l elist rlist =
+      (match l with
+       |[] -> (elist, rlist)
+       |h :: t -> 
+         (match h with 
+          |AEdge(a,b,c,d,e) -> splitlists t (AEdge(a,b,c,d,e) :: elist) rlist
+          |ARecord(aexprs, typ) ->  splitlists t elist (ARecord(aexprs, typ) :: rlist)
+          |AList(somelist, _) -> splitlists (List.hd somelist :: t) elist rlist
+          |x -> raise(failwith("error " ^ (string_of_aexpr x) ^ " not a valid graph entry@191")))
+      ) 
+      (*if there's a list, we've already checked for consistency so you can just sample the first thing*)
+    in 
+    let elist, rlist = splitlists aelist [] [] in 
+    let temptype = type_of atedge in 
+    ignore(check_list_consistency (AEdge(ANoexpr(gen_new_void()), Dash, ANoexpr(gen_new_void()), atedge, temptype) :: elist));
+    ignore(check_list_consistency (rlist)); 
+    AGraph(aelist, atedge, TGraph(type_of (List.hd rlist), temptype))
   (*a. check the list for consistency between nodes and edges. (which could be noexprs or lists themselves, or type of e.)
     b. type of e imposes a constraint on ^ and on the graph type. c-- what if there are no nodes? Graph should be a trec of any, and should be overwritable when the first node comes in.
-   Remember, edges have nodes in them.
+    Remember, edges have nodes in them.
   *)
 
- | Noexpr -> ANoexpr(gen_new_type())
- | Edge(e1, op, e2, e3) -> 
-   let ae1 = annotate_expr allenv e1 and
-       ae2 = annotate_expr allenv e2 and
-       ae3 = annotate_expr allenv e3 in 
-   AEdge(ae1, op, ae2, ae3, TEdge(type_of ae3))   
+  | Noexpr -> ANoexpr(gen_new_type())
+  | Edge(e1, op, e2, e3) -> 
+    let ae1 = annotate_expr allenv e1 and
+    ae2 = annotate_expr allenv e2 and
+    ae3 = annotate_expr allenv e3 in 
+    AEdge(ae1, op, ae2, ae3, TEdge(type_of ae3))   
 
 and annotate_expr_list (allenv: allenv) (e: expr list): aexpr list =
   let helper e =
     match e with
-    [] -> []
+      [] -> []
     |h :: t ->
       annotate_expr allenv h :: annotate_expr_list allenv t in helper (List.rev e)
 
@@ -266,11 +265,11 @@ and check_asn_type (lval: aexpr) (asn: primitiveType) : unit  =
 
 and gen_new_rec (fieldslist : (id * aexpr) list) : primitiveType =
   let rec helper l : (id * primitiveType) list= 
-  (match l with
-  [] -> []
-  | (id, aexpr) :: tl -> 
-  (id, type_of aexpr) :: helper tl
-  |_ -> raise(failwith(" not valid a record entry @ 36.")))
+    (match l with
+       [] -> []
+     | (id, aexpr) :: tl -> 
+       (id, type_of aexpr) :: helper tl
+     |_ -> raise(failwith(" not valid a record entry @ 36.")))
   in let fields = helper (List.rev fieldslist)
   in let c1 = !type_variable in
   incr type_variable; 
@@ -285,14 +284,14 @@ and check_list_consistency (e: aexpr list) : unit =
   match e with 
   |x :: y :: t -> 
     let tx = type_of x and ty = type_of y in
-(*      ignore(print_string("matching " ^ string_of_type tx ^ " and " ^ string_of_type ty)); *)    
-(match tx, ty with
+    (*      ignore(print_string("matching " ^ string_of_type tx ^ " and " ^ string_of_type ty)); *)    
+    (match tx, ty with
      | a, T(_) -> check_list_consistency (x :: t)
      | T(_), a -> check_list_consistency (y :: t)
      | a, b -> 
-      if(a = b) 
-      then(check_list_consistency (y :: t))
-      else(raise (failwith "List: mismatched types."))
+       if(a = b) 
+       then(check_list_consistency (y :: t))
+       else(raise (failwith "List: mismatched types."))
     )
   |[] | _ -> ()
 and check_list_exprs (e: aexpr list) : unit =
@@ -303,31 +302,16 @@ and check_list_exprs (e: aexpr list) : unit =
     | AIntLit(_,_) | ABoolLit(_,_) | AStrLit(_,_) | AFloatLit(_,_) | ACharLit(_,_) | AId(_,_) | AList(_,_) -> check_list_exprs t
     | y -> raise(failwith ((string_of_aexpr y) ^ " does not belong in a list."))
 
-and assign_formals (stufflist: ((id * primitiveType) * expr) list) (env: environment) (id: string): stmt list * environment =
+and assign_formals (stufflist: (id * expr) list) (env: environment) (id: string): stmt list * environment =
   let rec helper assns env l   = 
     match l with
       [] -> (List.rev assns, env)
     |h :: t ->     (*_ is the old "bad" type*)
       match h with
-        ((x, _), e) -> 
+        (x, e) -> 
         let env = NameMap.add (mapid x) (gen_new_type()) env in 
         helper (Asn(Id(x), e, false) :: assns) env t (*Really should make x's type the original formal types...?*)
   in helper [] env stufflist
-
-and check_formals (aformals: (id * primitiveType) list) (allenv: allenv)  : unit =
-(*   ignore(print_string("checking formals"));  *)
-  let env, _, _ = allenv in 
-  let rec helper af env = 
-  match af with 
-  [] -> ()
-  |(id, typ) :: tail ->
-   let newtype = NameMap.find (mapid id) env in
-  (match newtype with
-   |T(_) | TVoid -> ()
-   | nt -> if(nt = typ) 
-    then(helper tail env) 
-    else(raise(failwith("Error: " ^ string_of_type nt ^ " not a valid input for this function."))))
-in helper aformals env
 
 and print_formals (asnlist) =
   match asnlist with  
@@ -338,16 +322,16 @@ and print_formals (asnlist) =
       print_string (a ^ " " ^ (string_of_expr c))
 
 and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
-(*     ignore(print_string "collecting"); *)
+  ignore(print_string "collecting");
   match ae with
   | AIntLit(_) | ABoolLit(_) | AStrLit(_) | AFloatLit(_) | ACharLit(_) | ARecord(_,_) | AGraph(_,_,_) -> []  (* no constraints to impose on literals *)
   | AId(_) -> []                   (* single occurence of val gives us no info *)
   | AUnop(uop, ae1, t) ->
     let et1 = type_of ae1 in 
     let opc = match uop with
-    | Not -> [(et1, TBool); (t, TBool)]
-    | Neg -> [(et1, TInt); (t, TInt)]
-  in (collect_expr ae1) @ opc
+      | Not -> [(et1, TBool); (t, TBool)]
+      | Neg -> [(et1, TInt); (t, TInt)]
+    in (collect_expr ae1) @ opc
   | ABinop(ae1, op, ae2, t) ->
     let et1 = type_of ae1 and et2 = type_of ae2 in
     (* impose constraints based on binary operator *)
@@ -358,34 +342,34 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
       | And | Or -> [(et1, TBool); (et2, TBool); (t, TBool)]
       | Fadd | Fsub | Fmult | Fdiv -> [(et1, TFloat); (et2, TFloat); (t, TFloat)]
       | In -> 
-      (match et2 with |TList(x) ->     
-              [(et1, x); 
-              (et2, TList(gen_new_type())); 
-              (t, TBool)]
-                      | _ -> raise(failwith("Error @330")))
+        (match et2 with |TList(x) ->     
+           [(et1, x); 
+            (et2, TList(gen_new_type())); 
+            (t, TBool)]
+                        | _ -> raise(failwith("Error @330")))
       | Gadd -> 
-      (match et1, et2 with |TGraph(n, e), TRec(_, _) -> [(et2, n); (t, TGraph(et2, e))]
-                           | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ "," ^ (string_of_type et2) ^ " not valid graph types")))     
+        (match et1, et2 with |TGraph(n, e), TRec(_, _) -> [(et2, n); (t, TGraph(et2, e))]
+                             | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ "," ^ (string_of_type et2) ^ " not valid graph types")))     
       | Eadd -> 
-      (match et1, et2 with |TGraph(n, e), TEdge(f) -> [(et2, e); (t, TGraph(n, et2))]
-                           | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ "," ^ (string_of_type et2) ^ " not valid graph types"))
-      )
+        (match et1, et2 with |TGraph(n, e), TEdge(f) -> [(et2, e); (t, TGraph(n, et2))]
+                             | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ "," ^ (string_of_type et2) ^ " not valid graph types"))
+        )
       | _ -> raise(failwith("error"))
-     in
+    in
     (collect_expr ae1) @ (collect_expr ae2) @ opc (*opc appended at the rightmost since we apply substitutions right to left *)
   | AEdge(ae1, op, ae2, ae3, t) ->
     let et1 = type_of ae1 and et2 = type_of ae2 and et3 = type_of ae3 in 
     let opc = match op with
-          | To | From | Dash ->
-          (match et1, et2 with
-          |TRec(_), TRec(_) -> [(et1, et2)]
-          | _ -> raise(failwith("error: " ^ string_of_aexpr ae1 ^ " and " ^ string_of_aexpr ae2 ^ " must be nodes.")))
-          | _ -> raise(failwith((string_of_op op) ^ " not an edge operator."))
-     in 
-     ignore(match et3 with
+      | To | From | Dash ->
+        (match et1, et2 with
+         |TRec(_), TRec(_) -> [(et1, et2)]
+         | _ -> raise(failwith("error: " ^ string_of_aexpr ae1 ^ " and " ^ string_of_aexpr ae2 ^ " must be nodes.")))
+      | _ -> raise(failwith((string_of_op op) ^ " not an edge operator."))
+    in 
+    ignore(match et3 with
         | TRec(_) | T(_) -> ()
         | _ -> raise(failwith("error: " ^ string_of_aexpr ae3 ^ " not a record.")));
-     (collect_expr ae1) @ (collect_expr ae2) @ opc @ (collect_expr ae3)     
+    (collect_expr ae1) @ (collect_expr ae2) @ opc @ (collect_expr ae3)     
   | ADot(ae1, _, _) -> [(type_of ae1, type_of ae1)]
   | AItem(s, ae1, t) -> collect_expr ae1
   (*    let et1 = type_of ae1 in 
@@ -405,7 +389,7 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
 
 (*Collection of functions dealing with unify: *)
 and unify (constraints: (primitiveType * primitiveType) list) : substitutions =
-(*       ignore(print_string "unifying"); *)
+  ignore(print_string "unifying");
   match constraints with
   | [] -> []
   | (x, y) :: xs ->
@@ -425,8 +409,8 @@ and unify_one (t1: primitiveType) (t2: primitiveType) : substitutions =
   | TGraph(a, b), TGraph(c, d) -> unify_one a c @ unify_one b d
   | TEdge(u), TEdge(v) -> unify_one u v
   | TRec(a, b), TRec(c, d) -> if (c = a)
-      then [] 
-      else raise (failwith "mismatched types")
+    then [] 
+    else raise (failwith "mismatched types")
   | _ -> raise (failwith "mismatched types")
 
 (* This case is particularly useful when you are calling a function that returns a function *)
@@ -443,7 +427,7 @@ and apply (subs: substitutions) (t: primitiveType) : primitiveType =
 
 (*Used in final application of substitutions*) 
 and apply_expr (subs: substitutions) (ae: aexpr): aexpr =
-(*     ignore(print_string "applying"); *)
+  ignore(print_string "applying");
   match ae with
   | ABoolLit(b, t) -> ABoolLit(b, apply subs t)
   | AIntLit(n, t) -> AIntLit(n, apply subs t)
@@ -471,11 +455,11 @@ and apply_expr_list (subs: substitutions) (ae: aexpr list)  : aexpr list =
 (*Functions dealing with updating the map:*)
 and update_mapl (allenv: allenv) (alist : astmt list): environment * records =
   let rec helper (alist : astmt list) (env: environment) (recs: records): environment * records =
-  match alist with
-  | [] -> env, recs
-  | hd :: tl -> 
-    let (env, recs) = update_map allenv hd in 
-    helper tl env recs 
+    match alist with
+    | [] -> env, recs
+    | hd :: tl -> 
+      let (env, recs) = update_map allenv hd in 
+      helper tl env recs 
   in let env, _, recs = allenv 
   in helper alist env recs
 
@@ -487,14 +471,14 @@ and getid (ae: aexpr) =
   |_ -> raise(failwith("error: " ^ string_of_aexpr ae ^ " not a valid lvalue."))
 
 and update_map (allenv: allenv) (a: astmt) : (environment * records) = 
-(*   ignore(print_string ("updating map for " ^ (string_of_astmt a)));  *)
+  ignore(print_string ("updating map for " ^ (string_of_astmt a))); 
   let env, genv, allrecs = allenv in
   match a with
   |AAsn(ae1, ae2, _,_) ->
     let id = getid ae1 in
-(*     ignore(print_string (" updating " ^ id ^ " with type " ^ (string_of_aexpr ae2)));  *)
+    ignore(print_string (" updating " ^ id ^ " with type " ^ (string_of_aexpr ae2))); 
     let t = type_of ae1 in
-(*      ignore((check_asn_type env id t));  *)
+    (*      ignore((check_asn_type env id t));  *)
     let env = NameMap.add (mapid id) t env in
     (update_map_expr id ae2 env), allrecs
   |AReturn(aexpr, _) -> env, allrecs
@@ -502,28 +486,28 @@ and update_map (allenv: allenv) (a: astmt) : (environment * records) =
   |AIf(_, a1, a2) -> env, allrecs 
   |AFor(_, _, _, _) -> env, allrecs
   |AWhile(_,_) -> env, allrecs
-  
+
 
 (*honestly is this redundant?*)
-  and update_map_expr (id: string) (aexpr: aexpr) (env: environment) : environment = 
-    match aexpr with  (*Get all the record stuff in the map with its scoping.*)
-     | ARecord(et1, t) -> 
-       update_map_derived id t env
-     | ACall(id, _, astmts, t) -> 
-       update_map_derived id t env
-     | _ -> env
+and update_map_expr (id: string) (aexpr: aexpr) (env: environment) : environment = 
+  match aexpr with  (*Get all the record stuff in the map with its scoping.*)
+  | ARecord(et1, t) -> 
+    update_map_derived id t env
+  | ACall(id, _, astmts, t) -> 
+    update_map_derived id t env
+  | _ -> env
 
- and update_map_derived (id: string) (t: primitiveType) (env: environment) : environment = 
-(*     ignore(print_string("update map derived")); *)
-    (match t with
-    TRec(tname, elist) -> 
-      let rec helper l env = 
-      (match l with
-      |[] -> env
-      |(field, fieldtype) :: tail -> 
-      let env = NameMap.add (mapid (mapidrec tname field)) fieldtype env in helper tail env)
-      in helper elist env   
-      |_ -> env)
+and update_map_derived (id: string) (t: primitiveType) (env: environment) : environment = 
+  (*     ignore(print_string("update map derived")); *)
+  (match t with
+     TRec(tname, elist) -> 
+     let rec helper l env = 
+       (match l with
+        |[] -> env
+        |(field, fieldtype) :: tail -> 
+          let env = NameMap.add (mapid (mapidrec tname field)) fieldtype env in helper tail env)
+     in helper elist env   
+   |_ -> env)
 
 (*Checks that return statements are consistent and returns the type*)
 and grab_returns (r: astmt list) : primitiveType list =
@@ -539,15 +523,15 @@ and grab_returns (r: astmt list) : primitiveType list =
        then(raise(failwith("error-- predicate return")))
        else(grab_returns tail)
      |AFor(_, _, _, y) ->
-      let fors = grab_returns y in
-      if(fors != [])
-      then(raise(failwith("error-- predicate return")))
-      else (grab_returns tail)
+       let fors = grab_returns y in
+       if(fors != [])
+       then(raise(failwith("error-- predicate return")))
+       else (grab_returns tail)
      |AWhile(_, y) ->
-      let whiles = grab_returns y in
-      if(whiles != [])
-      then(raise(failwith("error-- predicate return")))
-      else (grab_returns tail)
+       let whiles = grab_returns y in
+       if(whiles != [])
+       then(raise(failwith("error-- predicate return")))
+       else (grab_returns tail)
      | _ -> grab_returns tail)
 and get_return_type(r: astmt list) : primitiveType =
   let returns = grab_returns r in
@@ -569,15 +553,16 @@ and infer_formals (f: string list) (env: environment):  (string * primitiveType)
   | h :: tail -> 
     let fid = (mapid h) in
     let t = if NameMap.mem fid env
-      then ( 
-        NameMap.find fid env )
-      else raise (failwith "formal not used") in (h,t) :: infer_formals tail env
+    then (NameMap.find fid env)
+    else raise (failwith "error: formal not encountered") in (h,t) :: infer_formals tail env
 
 and infer_func (allenv: allenv) (f: func) :  (afunc * genvironment)  =
   let env, genv, recs = allenv in
   match f with
   |Fbody(decl, stmts) -> 
-    ignore(match decl with Fdecl(name, _) -> Stack.push name callstack); (*set scope*)
+    ignore(match decl with 
+           Fdecl(name, _) -> Stack.push name callstack (*set scope*)
+          ); 
     let ((_,genv, _), istmts) = infer_stmt_list allenv stmts (*infer the function statments*)
     in let ret_type = get_return_type istmts                       
     in match decl with
@@ -585,7 +570,7 @@ and infer_func (allenv: allenv) (f: func) :  (afunc * genvironment)  =
       if NameMap.mem name genv
       then 
         let aformals = infer_formals formals env in   
-        let genv = NameMap.add name (ret_type, aformals, stmts) genv in 
+        let genv = NameMap.add name (ret_type, formals, stmts) genv in 
         (ignore(Stack.pop callstack));
         AFbody(AFdecl(name, aformals, ret_type), istmts),genv
       else raise (failwith "function not defined @ 412")
@@ -595,7 +580,7 @@ and infer_stmt_list (allenv: allenv) (e: stmt list) : (allenv * astmt list) =
   let rec helper (allenv: allenv) (a: astmt list) (e: stmt list)  : (allenv * astmt list) = 
     match e with
       [] -> (allenv, List.rev a)
-     |head :: tail -> 
+    |head :: tail -> 
       let allenv, astmt = infer_stmt allenv head in 
       let _, genv, _ = allenv in 
       let env, recs = update_map allenv astmt in
@@ -604,15 +589,15 @@ and infer_stmt_list (allenv: allenv) (e: stmt list) : (allenv * astmt list) =
 
 
 (* and infer_expr_list (env: environment) (genv : genvironment) (e: expr list): (aexpr list * environment * genvironment)  =
-  let rec helper (env: environment) (genv : genvironment) (e: expr list) (a: aexpr list) = 
+   let rec helper (env: environment) (genv : genvironment) (e: expr list) (a: aexpr list) = 
     match e with
       [] -> (a, env, genv)
     |h :: t ->
       (let tofexpr = infer_expr env genv h in
        match tofexpr with
          (ret, env, genv) -> helper env genv t ([ret] @ a))
-  in helper env genv e []
- *)
+   in helper env genv e []
+*)
 and infer_expr (allenv: allenv) (e: expr): (aexpr)  =
   let env, genv, recs = allenv in 
   let annotated_expr = annotate_expr allenv e in
@@ -621,5 +606,5 @@ and infer_expr (allenv: allenv) (e: expr): (aexpr)  =
   let subs = unify constraints in
   (*   ignore(print_string ("at this point")); *)
   let ret = apply_expr subs annotated_expr in ret
-  (* in let env = update_map_expr ret env in (ret, env, genv) *)
+(* in let env = update_map_expr ret env in (ret, env, genv) *)
 (*Update Expression Map-- what's up with that?*)                                                       

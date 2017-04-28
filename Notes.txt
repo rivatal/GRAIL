@@ -302,5 +302,5 @@ f(){ a = {a: 2, b: 3}; }
 f(){ a = {school: 2, b: 3, hi: "wer"}; } 
 are throwing a weirdo error where they only catch one field?. Oh tg, it was just the print.
 
-
+f(x){ display(x); }
 
