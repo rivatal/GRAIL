@@ -365,12 +365,9 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
                       | _ -> raise(failwith("Error @330")))
       | Gadd -> 
       (match et1, et2 with |TGraph(n, e), TRec(_, _) -> [(et2, n); (t, TGraph(et2, e))]
-                           |T(_), TRec(_,_) ->  [(et1, TGraph(et2, gen_new_type())); (t, et1)]
-                           | T(_), T(_) -> [(et1, TGraph(et2, gen_new_type())); (t, et1)]
-                           | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ "," ^ (string_of_type et2) ^ " not valid graph types")))    
+                           | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ "," ^ (string_of_type et2) ^ " not valid graph types")))     
       | Eadd -> 
       (match et1, et2 with |TGraph(n, e), TEdge(f) -> [(et2, e); (t, TGraph(n, et2))]
-                           |T(_), TRec(_,_) | T(_), T(_) -> [(et1, TGraph(gen_new_type(), et2)); (t, et1)]
                            | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ "," ^ (string_of_type et2) ^ " not valid graph types"))
       )
       | _ -> raise(failwith("error"))

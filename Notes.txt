@@ -304,3 +304,6 @@ are throwing a weirdo error where they only catch one field?. Oh tg, it was just
 
 f(x){ display(x); }
 
+--------------------------------------------------------------------------------------
+
+ f(x, y){ x & y; } main(){ a = {}; b = {school:2}; f(a, b); }
