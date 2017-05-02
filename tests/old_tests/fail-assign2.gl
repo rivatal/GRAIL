@@ -1,7 +1,0 @@
-myvoid(){
-}
-
-main(){
-        i;
-        i = myvoid(); /* Fail: assign void to variable */
-}

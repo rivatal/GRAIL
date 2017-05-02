@@ -7,12 +7,6 @@
 *.cmx
 *.cmxs
 *.cmxa
-*.err
-grail
 scanner.ml
 parser.ml
-parser.mli
 .DS_Store
-out
-*~
-grail.native

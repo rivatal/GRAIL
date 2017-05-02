@@ -1,7 +1,0 @@
-func(a, b) {
-    c = 0;
-    return a + b + c;
-}
-
-func(1, 2);
-func(a, b);
