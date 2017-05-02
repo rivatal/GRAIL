@@ -7,51 +7,121 @@ module C = Char
 
 module StringMap = Map.Make(String)
 
+
+
+(*
+================================================================
+        Main Codegen Function
+================================================================
+*)
+
 let translate (functions) = 
-  (* define *)
-  let context = L.global_context () in
-  let the_module = L.create_module context "Grail"
-  and i32_t = L.i32_type context
-  and i8_t  = L.i8_type  context
-  and i1_t  = L.i1_type  context
-  and str_t = L.pointer_type (L.i8_type context)
-  and float_t = L.float_type context
-  and void_t= L.void_type context in
+        (* define *)
+        let context = L.global_context () in
+        let llm = Llvm_bitreader.parse_bitcode llctx customM in
 
-  let ltype_of_typ = function
-      A.TInt -> i32_t
-    | A.TChar -> i8_t
-    | A.TBool -> i1_t
-    | A.TVoid -> void_t
-    | A.TString -> str_t 
-    | A.TFloat -> float_t in 
+        let the_module = L.create_module context "Grail"
+        and i32_t = L.i32_type context
+        and i8_t  = L.i8_type  context
+        and i1_t  = L.i1_type  context
+        and str_t = L.pointer_type (L.i8_type context)
+        and float_t = L.float_type context
+        and void_t= L.void_type context 
+        and list_t = L.pointer_type (match L.type_by_name llm "struct.List" with
+                                      None -> raise (Failure "struct.List doesn't defined.")
+                                     | Some x -> x)
+        in
+        
+        let ltype_of_typ = function
+                  A.Int -> i32_t
+                | A.Bool -> i1_t
+                | A.Void -> void_t         
+                | A.List _ -> list_t
+                | A.TString -> str_t 
+                | A.TFloat -> float_t in
+
+        let lconst_of_typ = function
+                  A.Int -> L.const_int i32_t 0
+                | A.Float -> L.const_int i32_t 1
+                | A.Bool -> L.const_int i32_t 2
+             (*   | A.String_t -> L.const_int i32_t 3
+                | A.Node_t -> L.const_int i32_t 4
+                | A.Graph_t -> L.const_int i32_t 5
+                | A.Edge_t -> L.const_int i32_t 8     These data structures are not implemented yet *)
+                | _ -> raise (Failure ("[Error] Type Not Found for lconst_of_typ.")) in
 
 
-  (* Declare printf(), which the print built-in function will call *)
-  let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
-  let printf_func = L.declare_function "printf" printf_t the_module in
+        (* Declare each global variable; remember its value in a map *)
+        (* let global_vars = 
+                let global_var m (t, n) = 
+                        let init = L.const_int (ltype_of_typ t) 0
+                        in StringMap.add n (L.define_global n init the_module) m in
+                List.fold_left global_var StringMap.empty globals in
+        *)
 
-  (* Define each function (arguments and return type) so we can call it *) (** Fix the type thing here **)
-  let function_decls =
-    let function_decl m afunc=
-      let name = afunc.A.fname
-      and formal_types =
-        Array.of_list (List.map (fun (_,t) -> ltype_of_typ t) afunc.A.formals)
-      in let ftype = L.function_type (ltype_of_typ afunc.A.typ) formal_types in
-      StringMap.add name (L.define_function name ftype the_module, afunc) m in
-    List.fold_left function_decl StringMap.empty functions in
 
-  (* Fill in the body of the given function *) (* FIX The Type Thing Here *)
-  let build_function_body afunc =
-    let (the_function, _) = StringMap.find afunc.A.fname function_decls in
-    let builder = L.builder_at_end context (L.entry_block the_function) in
 
-    (*let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in*)
 
-    (* Construct the function's "locals": formal arguments and locally
-       declared variables.  Allocate each on the stack, initialize their
-       value, if appropriate, and remember their values in the "locals" map *)
-    let local_vars =
+        (*
+        ================================================================
+          Declare printf(), which the print built-in function will call
+        ================================================================
+        *)
+        let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
+        let printf_func = L.declare_function "print" printf_t the_module in
+
+
+        (*
+        ================================================================
+          List (Array)
+        ================================================================
+        *)
+                
+        let create_list_t  = L.function_type list_t [| i32_t |] in
+        let create_list_f  = L.declare_function "createList" create_list_t the_module in
+        let create_list typ llbuilder =
+          let actuals = [|lconst_of_typ typ|]in (
+            L.build_call create_list_f actuals "createList" llbuilder
+          ) in
+
+        let rec add_multi_elements_list l_ptr typ llbuilder = function
+          | [] -> l_ptr
+          | h :: tl -> add_multi_elements_list (add_list (cast_float h typ llbuilder) l_ptr llbuilder) typ llbuilder tl
+        in
+
+
+
+
+
+
+
+
+        (*
+        ================================================================
+          Function Declaration
+        ================================================================
+        *)
+        (* Define each function (arguments and return type) so we can call it *) (** Fix the type thing here **)
+        let function_decls =
+            let function_decl m funcs =
+            let name = funcs.A.fname
+              and formal_types =
+            Array.of_list (List.map (fun (t,_) -> ltype_of_typ t) funcs.A.formals)
+              in let ftype = L.function_type (ltype_of_typ fdecl.A.typ) formal_types in
+              StringMap.add name (L.define_function name ftype the_module, fdecl) m in
+            List.fold_left function_decl StringMap.empty functions in
+          
+          (* Fill in the body of the given function *) (* FIX The Type Thing Here *)
+        let build_function_body fdecl =
+            let (the_function, _) = StringMap.find fdecl.A.fname function_decls in
+            let builder = L.builder_at_end context (L.entry_block the_function) in
+
+            let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in
+            
+            (* Construct the function's "locals": formal arguments and locally
+               declared variables.  Allocate each on the stack, initialize their
+               value, if appropriate, and remember their values in the "locals" map *)
+                let local_vars =
       let add_formal m (n, t) p = L.set_value_name n p;
         let local = L.build_alloca (ltype_of_typ t) n builder in
         ignore (L.build_store p local builder);
@@ -93,7 +163,7 @@ let translate (functions) =
        | A.Geq     -> L.build_fcmp L.Fcmp.Oge
        | _ -> raise (Failure "wrong operation applied to floats")
       )
-    in
+      in
     let rec aexpr builder local_var_map = function
         A.AIntLit(i, _) -> L.const_int i32_t i
       | A.ABoolLit(b, _) -> L.const_int i1_t (if b then 1 else 0)
@@ -101,7 +171,6 @@ let translate (functions) =
       (*| A.ACharLit(c, _) -> L.const_int i8_t c*)
       | A.AFloatLit(f, _) -> L.const_float float_t f
       | A.AId(s,_) -> L.build_load (lookup s local_var_map) s builder 
-      (* | A.List ->  why is List an expression, should not it be a data staructure?  *)
       | A.ACall ("print", [e], _, _) -> L.build_call printf_func [| (aexpr builder local_var_map e) |] "printf" builder
       | A.ACall (f, act, _, _) ->
         let (fdef, fdecl) = StringMap.find f function_decls in
@@ -109,7 +178,46 @@ let translate (functions) =
         let result = (match fdecl.A.typ with A.TVoid -> ""
                                            | _ -> f ^ "_result") in
         L.build_call fdef (Array.of_list actuals) result builder
-      (* | A.List ->  why is List an expression, should not it be a data staructure?  *)
+      | A.AList (l,t) ->  
+                    let from_expr_typ_to_list_typ = function 
+                         A.IntLit -> A.List
+                        | A.BoolLit -> A.List  (* need to add options if have list of floats, nodes, edges and graphs *)
+                        | A.StrLit -> A.List
+                        | A.CharLit -> A.List
+                        | _ -> A.List (* how are we gonna take care of void, id, list of list? *)
+                    in
+
+                    let rec check_float_typ = function
+                         [] -> A.Int_t
+                         | hd::ls -> if (snd(expr builder hd)) == A.Float then A.Float else check_float_typ ls in
+
+                    let list_typ = snd (expr builder (List.hd ls)) in (* the second element is type since 'aexpr * primitiveType' *)
+                    let list_typ = if list_typ == A.Int then check_float_typ ls else list_typ in
+
+                    (* converting a list of nodes to a graph, if did not understand wrong *)
+                    let list_conversion el =
+                          let (e_val, e_typ) = expr builder el in
+                          ( match e_typ with 
+                              _ -> (e_val, e_typ)
+                          )
+                        (*  (   match e_typ with
+                            | A.Node_t when list_typ = A.Graph_t -> (
+                                let gh = create_graph builder in (
+                                    ignore(graph_add_node gh e_val builder);
+                                    (gh, A.Graph_t)
+                                )
+                              )
+                            | _ -> (e_val, e_typ)
+                          )
+                        *)
+                      in 
+
+
+
+                    (* create a new list here *)
+                    let l_ptr_type = (create_list list_typ builder, from_expr_typ_to_list_typ list_typ) in
+                    (* then add all initial values to the list *)
+                    add_multi_elements_list (fst l_ptr_type) list_typ builder (List.map fst (List.map list_conversion ls)), (snd l_ptr_type)
       (*| A.Unop(op, e) ->
             let e' = expr builder e in
            (match op with
@@ -130,6 +238,9 @@ let translate (functions) =
           match L.block_terminator (L.insertion_block builder) with
             Some _ -> ()
           | None -> ignore (f builder) 
+
+        
+
 
     (* Build the code for the given statement; return the builder for
        the statement's successor *)
