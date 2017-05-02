@@ -1,25 +1,9 @@
 3.28.17
-function calls need to also infer the type if the type is stricter than that of the function declaration. Proposed solution: re-infer the type of the function when we call it, using the actuals in place of the function formals.
+function calls need to also infer the type if the type is stricter than that of the function declaration. Solution: add fake assignment statements from actuals to formals and infer them before inferring the rest of the statements in the function.
 
 4.2.17
-Things we're inferring about Call:
-We have to type-check all the statements (and later infer? edges and stuff are global) but infer only the types themselves.
-The problem is, how to store all this stuff? I'm not sure how global changes will be enacted yet!
-Well nothing wrong with sticking local for now, I think. 
-
-So we've already done a bit of inference for this function. The trick is to redo it-- with actuals.
-We need a framework for redoing that inference.
-
-So if we treated a function call as this:
 of:
-function(x){ return x; }
-
-nf:
-main(){
-	y = function(3);
-	return y;
-}
-
+	function(x){ return x; } main(){ y = function(3); return y; }
 new:
 main(){
 	x = 3;
@@ -35,43 +19,44 @@ main(a){
 	return y;
 }
 We'd just want everything to be typed to a's type. But what if it were never resolved?
+g(c){
+	return c;
+}
+f(b){
+	return g(b);	
+}
 
 Well, main has to be called, or it doesn't. If it's called, it needs to be called with resolveable actuals, aka, actuals resolvable through annotate expr, right? We can't get information of them from inside their functions, but we could from their larger context, like:
+
 main(){
 	x = 3;
 	function(x);
 }
+
+(So-- no formals for main?).
 But either by assignment or by annotate_expr, by that point they should be resolved? What if they have both-- don't we need to collect them? Do we need to "infer" them? By what point can we be certain of their types?
 Say we do a whole inference call on those actuals, so that we for sure have them resolved to types. That's what we're doing now, or should be.
-What next?
-I feel like we need to resolve the function but add a couple assignment statements. 
-Do we do this in call or in our own construct?
-What have we done in call? inferred the actuals.
-Okay, so we could probably proceed in call.
-Now biggest hurtle so far has been adding assignment statements to variables we didn't know we'd need. The first time we need them is when we see call. Can we figure that out in grail? Why not?
+
 What if we call a function twice in two ways?
 
-main(){
-	x = 3;
-	function(x);
-	y = "sdf";
-	function(y);
-}
-Then we'd want "x" in both. I think we need a way to replace the formals in the functions with our own new local variable. That should be able to be done further down too. I think the only way to do it though is with some serious matching.
-What form of the function do we want to replace? Just the (unannotated) stmt list-- though we want to compare the two lists eventually... ack.
+function(x){ return x; } main(){	x = 3; function("sdf"); }
 
-Make a temporary namemap environment to map all function variables to their in-function counterparts, then update the real namemap with the second.
+Then we'd want "x" in both to be different things. Solution: map ids to function#id.
 
-(Can we ever run out of new variables?)
+What about this?
 
-Two options-- stick all the replace_ids work into grail, which means traversing the tree to find all the calls and get the stmts from the global map again, OR pass the env along every single function call.
-Is there any way to just alter the env?
+function(x){ return x; } main(){ z = 3; function(z); y = "sdf"; function(y); }
 
-ref for global variables (should be worried about local instances now)
-Check if easier HM solution
+
+Solution: statements are inferred in order, so overwriting function#x isn't a problem?
+
+We still need to compare the function with its declaration typing, I think!
+
+Can we ever run out of new variables?
 
 4.4.17 - 4.5.17
 Okay-- function calls look good. Onto error-checking!
+
 Accounted:
 Wrong-length variable lists
 Overloading functions not permitted	
@@ -79,15 +64,10 @@ Variables need to be defined before they're used.
 Same formal twice
 If conditional must be boolean, For middle stmt must be boolean, For first and last must be assignments
 
-
 Not:
 If assignments and returns must occur in all cases.
 
 Recursive functions? (How would we handle those?)
-
-
-Um... we gave statements types. Oops. The only statement that really needs a type is return.
-Is there a problem with annotating expression lists at the same time? Okay, I think I fixed all that.
 
 Possible point of concern:
 >f(a, b){ return b; } 
@@ -98,36 +78,229 @@ return (b: 'a); 'a
 }
 b and a seem to be of the same any type. I feel like this is wrong, though I can't figure out how to get a nafka mina. Oh-- it's due to the way things are printed. Maybe I'll fix when I'm less tired.
 
-
 Okay, I think I fixed statements.
 Included if, but there seems to be a problem with parsing them.
 
 > f(x){ if(x > 0){ return true; }}
 Error Parsing
 
-I also need to decide if if can make changes to the environment-- I can't see a way to allow x to be two different types in different branches but checking all assignment statements in all ifs is a bit formidable. Oh well.
+Fixed.
+
+I also need to decide if 'if' can make changes to the environment-- I can't see a way to allow x to be two different types in different branches but checking all assignment statements in all ifs is a bit formidable. Oh well.
 
 	f(x){if(x < 11){ return 3; }} 
-
 	now registers as an int. Issue-- there needs to be a return statement outside the if too.
+	
 	f(x){if(x < 11){ return 3; } return x;} problematically says mismatched returns when it should really force x to be an int.
 
 	f(x){if(x < 11){ return 3; } return 5;} 
-	is fine
-
-
-Meeting:
-For statements (suggest statement lists?)
-Change the charlits
-Tests, please!
-Optional for? If the thing's a statement...
-Oh and parsing for, most important
-Merge
+	is fine (error: predicate returns-- good)
 
 Need to make everything work for optional for
 
-f(x){ for(x = 3; x < 10; x = x + 1){ return 3; }; return 5; }
-Okay, something is weird with parsing for...
-Could be the fact that I messed with stmt stuffs.
+f(x){ for(x = 3; x < 10; x = x + 1){ y = 4; }; return 5; }
 
-Oooh might have messed up scoping-- I shouldn't be able to access variables above the call but we totally can. (Not sure if I tied the formals to the inner function or the outer one).
+Okay, something is weird with parsing for. Fixed! It was extra semicolons in the parser.
+
+Oooh might have messed up scoping-- I shouldn't be able to access variables above the call but we totally can. (Not sure if I tied the formals to the inner function or the outer one). Oh no we should.
+
+-----------------------------------------------------------------------------------------------------------
+f(x){ x = [1,2,3]; return x[0]; } main(){ return f(3); }
+Should not work. And now it doesn't. Oh snap.
+
+f(x){ x = [1,2,3]; return x[0]; } main(){ return f([1,2,4]); }
+Does work.
+
+Fancy subset.
+Updating expression map?
+Checking array bounds?
+
+f(x){ x = [1]; y = x[2]; return x; }
+Registers perfectly as a list of int and an int, even though it's out of bounds.
+
+f(x){ x = []; y = x[0]; return x; }
+Registers as void, which is good, but...
+
+f(x){ x = [10]; } is a list containing a single int, not a list of size ten.
+Should we just #javastyle?
+
+Mismatched types? No longer!
+f(x){ y = {a:x}; return y;} main(){ return f(3); }
+
+
+	f(){ y = {a:3}; return y.a; }
+Newest mystery-- why on earth is y a void in the map? Why is it printing backwards?
+Oh okay, phew. It was the way I was updating assisnments in the map, not indicative of a larger prob. Fixed now.
+
+------------------------------------------------------------------------------------------
+
+We need to make main a prereq.
+-------------------------------------------------------------------------------------------
+Unops!
+f(x){ return !x; }
+f(x){ return -x; }
+
+both work now
+
+---------------------------------------------------------------------------------------------
+
+omg what if I do this?
+
+f(x){ a = {school: 3}; a = {weight: 6, x: 9}; return a.school; }
+
+a.school is still there..... !!!! Fixed!!!
+
+what about records with any type? Hmmm should be resolved through functions though. And got that!
+
+f(x){ a = {school: x}; return a.school; } a(){ y = f("234"); return f(23); }
+If we disallow reassigning to variables, we have to allow this.
+Okay-- it's allowed but not sure about this-- why are the formals voids?
+----------------------------------------------------------------------------------------------
+
+Superlocal for scoping needs to happen for assignments.
+
+----------------------------------------------------------------------------------------------
+
+
+Are we still dynamic typing?
+
+----------------------------------------------------------------------------------------------
+
+Note-- breaking for and if handling of scope.
+
+-----------------------------------------------------------------------------------------------
+Okay-- with for and if-- it was broken before because we inferred the statement in annotate expression but didn't update the map for statements inside those scopes. What we need to do is pass the map variables from annotate expression back to their infer_stmt_list and also to always call infer_stmt_list rather than infer_stmt on those inner stmts.
+-----------------------------------------------------------------------------------------------
+Questions for Danny-- 
+Feeding in a file? Sys.argv.(1) (May create new dependencies)
+Character literals in the scanner? Look at how other groups have done string-- Danny's group (| '"' (([^ '"'] | "\\\"")* as strlit) '"' { STRING_LITERAL(strlit) }) <-- ours are too complicated
+
+| Compile -> 
+  let output_file = Sys.argv.(2) and stdlib_file = Sys.argv.(3) in
+  let stdlib = Utils.str_of_file stdlib_file in
+  let file = open_out output_file
+  in fprintf file "%s\n\n%s\n%s\n"
+  stdlib prog (Utils.conclude_program ()); close_out file
+
+f(x){ while(x < 3){ y = 4; } return 4; }
+
+Checking ifs?
+Checking for off indices of lists?
+
+Don't initialize inside the if-- it needs to be outside. (though it can be modified there)
+(if you initialize in if it's only accessible there)
+recursively check inside control flow for return
+or you could disallow returns in control flow
+
+Arraylist situation-- runtime error for list index.
+----------------------------------------------------------------------------------------------
+To Do-- fix the system for records and dot for the fields and specific record types.
+
+f(x){ a = {school: x}; return a; } b(){ c = f(3); return c.school; }
+Works!!!
+
+f(x){ y = 2; if(x > 3){ y = 2; } return 2;  }
+No more error predicate return, lol.
+
+f(x){ if(x > 3){ return 3; }}
+Yes error, predicate return.
+
+
+-------------------------------------------------------------------------------------------
+Not sure why anyone would ever do this but this (consistent with our rules) throws an error.
+f(x){ x = 3; } main(){ f("sdf"); }
+
+as does this:
+f(x){ y = 3; if(x > 3){ y = "d"; } h = y; return h; } 
+h should type to int, not string.
+
+f(x){ a = {school: x}; return a; } b(){ c = f(3); return c.school; }
+is still alright.
+
+---------------------------------------------------------------------------------------------
+Need to allow derived types in lists (and check them for consistency).
+
+nodes:
+
+sarah:{a:"hey"; b:3}
+Maybe should just make without keys.
+
+I really need to ensure that each expression takes only  the proper types.
+-----------------------------------------------------------------------------------------------
+Leave space for the first two expressions in edge to be noexpr OR the third, for edge template in graph.
+
+Do we need to update the map for graph assignments? We know what the type of everything is...
+it's not being "assigned" the same way records are-- it's being added to a collection like lists.
+
+f(x){ g = {a: x}; graph = g -- g with {b:x}; } main(){ y = f(3); }
+Types correctly.
+f(x){ g = {a: x}; graph = (g -- g, g -- g) with {b:x}; }
+Um-- this might run infinitely-- gotta figure out why.
+
+f(x){ g = {a: x}; h = {}; graph = (g -- g, h -> h) with {b:x}; }
+Yeah-- we're definitely getting into a really long loop or an infinite one. Oh fixed that but now there's a parse error.
+
+f(x){ h = {school:"moriah"}; g = (h) with {}; }
+h not a valid graph entry?
+
+f(x){ h = {school:"moriah"}; g = (h) with {}; }
+f(x){ g = {a: x}; h = {b:x}; graph = (g -- g, h -> h) with {b:x}; }
+f(x){ g = {a: x}; h = {b:x}; edge = g -- g with {b:x}; }
+f(x){ g = {a: x}; h = {b:x}; edge = g -- g; }  
+
+Classify open and closed scopes. (open = can see above them)
+recorsd = closed.
+
+
+
+
+Need to fix for scoping.
+New values:
+f(){ y = [1,2,3]; y[0] = 2; }
+
+for(starting here, everything applies to the statement block only){}
+records-- duplicate fields?
+
+
+f(x){ x = {a: 3, a:4 }; }
+f(x){ while(x < 3){ y = 5; }}
+
+-----------------------------------------------------------------------------------------------------
+f(x){ for(x = 3; x < 3; x = x + 1;){ y = 3; } }  
+
+for ((x: 'c) = (3: int); ((x: int) < (3: int): bool) ; (x: 'c) = ((x: int) + (1: int): int); (y: 'b) = (3: int); }
+
+
+^Why is x a 'c instead of an int? Any implications?
+
+f(x){ x = 5; return x; }
+f(x){ : int
+(x: 'c) = (5: int); return (x: int); int
+}
+
+Hm, no, I think it's okay. It infers the id before it infers the rest, and never updates the id field. I changed it so that it checks ids up in infer_assign.
+#Okay what, why is this still an any type?
+f(x){ return x.school; } g(){ f(3); }
+Okay, now oorrectly throws (x: int) not a record.
+
+
+f(x){ return x.school; } g(){ a = {f1: "hi", school: 2}; return f(a); }
+f(x){ return x.school; } g(){ a = {f1: "hi", school: 2}; b = {school: "sdf"}; c = f(a); d = f(b); }
+Okay, no longer running weirdly. Yay!
+I really have to refactor, though.
+
+f(){ a = [1,2,3]; a[0] = 2; }
+Works now. Astutils!
+
+
+f(){ a = {x: "a", x: 3}; } 
+and 
+f(){ a = {x: 2, x: 3}; } 
+now throw duplicate record entry.
+
+f(){ a = {a: 2, b: 3}; } 
+f(){ a = {school: 2, b: 3, hi: "wer"}; } 
+are throwing a weirdo error where they only catch one field?. Oh tg, it was just the print.
+
+f(x){ display(x); }
+

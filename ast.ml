@@ -1,9 +1,9 @@
 type id = string
 
-type eop = To | From | Dash
+(* type eop =   make all op *)
 
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq |
-          And | Or | In | Fadd | Fsub | Fmult | Fdiv | Gadd | Eadd
+          And | Or | In | Fadd | Fsub | Fmult | Fdiv | Gadd | Eadd | To | From | Dash
 
 type uop = Neg | Not 
 
@@ -14,9 +14,12 @@ type primitiveType =
   | TFloat
   | TChar 
   | T of string
-  | TVoid of string
-  | TStmt of primitiveType * primitiveType
+  | TVoid
   | TList of primitiveType
+  (*   | TAssoc of primitiveType *)
+  | TRec of string * ((id * primitiveType) list) (*the entire type is explicit in TRec*)
+  | TEdge of primitiveType
+  | TGraph of primitiveType * primitiveType
 
 type expr =
     IntLit of int
@@ -32,9 +35,8 @@ type expr =
   | Dot of expr * string
   | Unop of uop * expr
   | Binop of expr * op * expr
-  | Edge of expr * eop * expr * expr
+  | Edge of expr * op * expr * expr
   | Graph of expr list * expr
-  | Node of string * expr
   | Record of (string * expr) list
   | Noexpr
 
@@ -47,26 +49,30 @@ type aexpr =
   | AFloatLit of float * primitiveType
   | AId of string * primitiveType
   | ABinop of aexpr * op * aexpr * primitiveType
-  | ACall of string * astmt list * primitiveType  
+  | AUnop of uop * aexpr * primitiveType
+  | ACall of string * aexpr list * astmt list * primitiveType  
   | AList of aexpr list * primitiveType         (*Make sure to check that the primitive type is only a TList*)
+  | AItem of string * aexpr * primitiveType
+  | ARecord of (string * aexpr) list * primitiveType      
+  | ADot of aexpr * string * primitiveType
+  | AEdge of aexpr * op * aexpr * aexpr * primitiveType
+  | AGraph of aexpr list * aexpr * primitiveType
+  | ANoexpr of primitiveType
 
 and astmt =
-  | AAsn of id * aexpr * bool 
+  | AAsn of aexpr * aexpr * bool * primitiveType
   | AIf of aexpr * astmt list * astmt list
   | AFor of astmt * aexpr * astmt * astmt list
+  | AWhile of aexpr * astmt list
   | AReturn of aexpr * primitiveType
-  | ABreak
-  | AContinue
   | AExpr of aexpr
 
 and stmt =
-  | Asn of id * expr * bool
+  | Asn of expr * expr * bool
   | If of expr * stmt list * stmt list
   | While of expr * stmt list
   | For of stmt * expr * stmt * stmt list
   | Return of expr
-  | Break
-  | Continue
   | Expr of expr
 
 type stmt_list = stmt list
@@ -78,7 +84,6 @@ type afunc_dec = AFdecl of id * (id * primitiveType) list * primitiveType
 
 type func = Fbody of func_dec * stmt list
 type afunc = AFbody of afunc_dec * astmt list
-
 
 
 type sast_afunc = { 

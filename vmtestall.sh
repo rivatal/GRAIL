@@ -2,8 +2,8 @@
 #Run testcases under dir /tests
 make
 # Path to the LLVM interpreter
-LLI="/usr/local/opt/llvm/bin/lli"
-LLL="/usr/local/opt/llvm/bin/llvm-link"
+LLI="/usr/bin/lli"
+LLL="/usr/bin/llvm-link"
 
 
 # Path to the grail compiler.  Usually "./grail.native"
@@ -161,7 +161,7 @@ if [ $# -ge 1 ]
 then
     files=$@
 else
-    files="tests/old_tests/test-*.gl tests/old_tests/fail-*.gl"
+    files="tests/test-*.gl tests/fail-*.gl"
 fi
 
 for file in $files

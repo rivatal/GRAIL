@@ -1,5 +1,7 @@
 **make everything mutable (including endpoints and fields but no record structure), 
 no heterogeneity**
+**okay-- what if we use like normal array lists? We don't want to edit the list of nodes or edges by index. 
+
 
 1. Introduction
 
@@ -11,13 +13,13 @@ GRAIL tokens are separated by one or more whitespace characters. Comments delimi
 
 2.1. Identifiers
 
-An identifier is a sequence of characters, all of which must be either alphanumeric or the underscore (_) character. The first character must be a letter. Uppercase and lowercase letters are considered distinct but the choice of case in identifiers holds no significance to the compiler. Identifiers can be used for variables or features of records. (Up to 32 chars). Features of records cannot begin with a number.
+An identifier is a sequence of characters, all of which must be either alphanumeric or the underscore (_) character. The first character must be a letter. Uppercase and lowercase letters are considered distinct but the choice of case in identifiers holds no significance to the compiler. Identifiers are used for variables and features of records. (Up to 32 chars??). 
 
 2.2. Reserved Words
 
 The following identifiers are reserved and may not be used elsewhere: 
 
-accio, break, else, false, for, free, from, if, in, record, return, size, to, true, type, void, while, with
+accio, else, false, for, free, from, if, in, record, return, to, true, type, void, while, with
 
 2.3. Constants
 
@@ -33,45 +35,34 @@ var = 'a';
 Boolean constants are represented by the keywords true and false. Booleans may take on only these two values.
 var = false;
 
-String literals (string) are a series of characters delimited by double quotation marks. Strings cannot be nested, though a double quotation mark can appear inside a string by using the escape sequence \”. Backslashes must similarly be escaped with another backslash. ("\\")
+String literals (string) are a series of characters delimited by double quotation marks. Strings cannot be nested, though a double quotation mark can appear inside a string by using the escape sequence \”. Backslashes must similarly be escaped with another backslash. ("\\")??
 
 3. Types
 3.1. Primitive Types
 
-GRAIL has 5 primitive types: boolean, character, integer, double, and void. A boolean is a true/false Boolean value. A char is a single member of the ASCII character set. An integer is any mathematical integer. A double is a rational non-integer number. The void type is a null type, used in functions that return no variables.
+GRAIL has 5 primitive types: boolean, character, integer, double, and void. A boolean is a true/false Boolean value. A char is a single member of the ASCII character set. An integer is any mathematical integer. A double is a rational floating point number. The void type is a null type, used in functions that return no variables.
 
 3.2. Derived types
 Record:
-Records are user-defineable data-structure consisting of comma-separated pairs of keys (which must be unique within the record) and data. The data may be any primitive or derived type. 
+Records are user-definable data-structure consisting of comma-separated pairs of keys (which must be unique within the record) and data. The data may be any primitive or derived type. (including records??- works in the typer). Records inside a graph are called nodes, and all nodes in a graph must contain the same record type.
 
-Edge Descriptor:
-An edge descriptor connects two nodes and can be directed or undirected, but contains no records. It is what you get when you declare an edge without a with field and irrespective of a graph:
+Edges:
+An edge connects two nodes and can be directed or undirected. It consists of two parts, a descriptor, which describes the connection between two nodes (directed or undirected, and in which direction), and an optional record, which contains the data associated with the edge.
 
 e = u->v; //where u and v are nodes.
 
-This is a way of defining edges before you know the record, and adding the relation (and nodes) to different graphs. (Really just an edge with a void record).
+A graph can contain only one edge between two nodes in the each direction.??
 
-It's not exactly a primitive operation-- edge descriptors really contain copies of their nodes. However, when they're added to graphs that already contain nodes with the same keywords, they either throw up an error (if the nodes are different objects), or add the edge between the already present nodes.
-	
-Edge: 
-An edge consists of an edge descriptor and a record. The record's structure (including field types) may not be altered, though its fields may be changed. An edge always has "hidden" to, from, and rel fields that yield the node pointed to by the edge (or the first node in an undirected edge), the node that extends from the edge (or the second node in an undirected edge), and the edge descriptor for the edge respectively.
-
-**don't split the edge syntax: (u->v) with {} is a graph, not an edge.**
-
-Nodes:
-	node = mynode:{street:Dawson, trees:100};
-	graph = (u->v, edge2, edge3, node2, node3) with node;
-
-Nodes are objects containing a key and a record. They can be referred to by their keys and connected by edges to other nodes. Nodes in a graph must contain the same record structure (the same field names and types).
+An edge-record's structure (including types of fields) may not be altered, though the values of its fields can be changed. An edge always has "hidden" to, from, and dir fields that yield the node pointed to by the edge (or the second node??), the node that extends from the edge (or the first node??), and  boolean set to true if the edge is directed.?? (and .data??)
 
 Lists:
 Lists are arrays of primitives or objects of the same type. The type of a list has the type of the first element inserted into a list. If all the elements of a list are removed, it maintains its type.
 
 Associative Arrays:
-Associative arrays are hashmaps. They are the type of graph.edges, for instance.
+Associative arrays are hashmaps. They are the type of graph.edges, for instance. ??
 
 Graphs:
-Graphs are collections of nodes (uniquely identified by keywords) and the edges connecting them (uniquely identified by their endpoints and direction*), with default edge fields defined. Edge fields on a graph cannot be updated, but the relations or edges can be copied to another graph.
+Graphs are collections of nodes and the edges connecting them (uniquely identified by their endpoints and direction*), with default edge fields defined. (Can the with field be changed??)
 
 *
   e = node1--node2;
@@ -85,13 +76,15 @@ What if you wanted to take an edge, extract its record, change it, and put that 
 	edge2.to = u; 	
 	edge2.from = v; 
 **
+??Make sure edges' records cannot be used as nodes. (/that you can only make an edge between real records, not edge-records.) (Do nodes store their own edges? Or only in a graph?? What if someone tries to make a graph without making a graph by connecting a couple of nodes to each other?? What happens if a node is already connected to another node when it gets added to the graph? Do nodes need unique identifiers? How are they found in the graph? What if there are two identical nodes? Shouldn't they have a unique key?)
 
-Strings are arrays of chars.
+Strings are arrays of chars.??
 
 5. Expressions
 Expressions, consisting of type-compatible operators or groups of operators separated by operands, are outlined below in descending order of precedence.
 
-5.1. Subset Operators:
+??*
+5.1. Fancy Subset Operators:
 Graphs:
 node = graph.nodes["key"];  									//access a node by its keyword
 edge = graph.edges[node1 -> node2]; 							//access the edge between the keys of those nodes.
@@ -106,11 +99,13 @@ edgedesc = graph.edges[x -- y: x in my_list && y == "my_key"]; 	//all undirected
 edgedesc = graph.edges[x <> y: x in my_list && y == "my_key"];	//all edges regardless of direction.		
 edges = graph.edges[x -e- y : e.school == "Dawson"];			//How to get edges by edge features.
 nodes = graph.nodes[x -e- y : e.weight > 5];					//get all nodes whose edges' weights are greater than 5.
+*??
+
 
 Records:
 my_field = my_record["name_of_field"];
 
-Edges:
+??Edges:
 my_weight = edge["weight"]; //access a feature in an edge
 b = "weight";				//or
 my_child = edge[b];
@@ -125,6 +120,7 @@ entry = list[0];				//can be accessed by
 Associative Array:
 array["hey"] = "three";			
 
+??Is this being used correctly right now?
 5.15. Dot Operator: Access fields of a record, or nodes of a graph
 node = graph.nodes["Chicago"];				//access a node by its keyword
 edges = graph.edges 						//what if this is an edge, not an edge descriptor?
@@ -137,13 +133,13 @@ node2 = edge.from;							//the node that extends from the edge
 
 
 Nodes:
-graph = node.graph;			//A node can only be in one graph at once.
+??graph = node.graph;			//A node can only be in one graph at once.
 //Traversing the graph from node to node
-my_friends = node.friends;		//Gets all nodes connected by an edge to this node
-my_friends = node.in;			//Gets all nodes whose edges point to this node
-my_friends = node.out;			//Gets all nodes that this node points to
+??my_friends = node.friends;		//Gets all nodes connected by an edge to this node
+??my_friends = node.in;			//Gets all nodes whose edges point to this node
+??my_friends = node.out;			//Gets all nodes that this node points to
 
-**What if we want edges connected to nodes? We can do it through graph, but can we do it through nodes?**
+**What if we want edges connected to nodes? We can do it through graph, but can we do it through nodes? What if we only store the connections in a graph? Can we still use shorthand? (I guess if there's node.graph already, node.friends can just use that).**
 **danger of silently returning a list instead of a single node or edge?**
 
 5.2. Unary Operators:
@@ -254,10 +250,7 @@ The general format of the initialization of variables is:
 The following examples shows the declaration and initialization of graphs and nodes:
 
 graph = (edge, your_node, his_node, her_node, node -> your_node, his_node <- her_node, her_node -- node) with {weight:1};
-u = nitwit:my_record;														//node
-v = blubber:my_record
-n = oddment:my_record
-m = tweak:my_record
+u = my_record;														//node
 
 g &= u -> v; //add an edge between u and v with weight:1
 g .&= n -- m with {weight:7}  //add an edge with a different record;
@@ -269,18 +262,18 @@ g &= a;		//adds the node to the node list of g.
 	If it's an edge it'll throw up an error. 
 	You can always change an edge's to, from, and rel fields, however.**
 
-6.5 Update
+??6.5 Update
 Edges:									//let u, v, and w be already initialized nodes
 	e = u--v with {weight:4, height:7};	//initialize
 	g = w--v with {weight:3, height:3}; 
 	h = w--v with {height:2}			
 	h -> g;								//error. Nodes must have the same record structure to be connected.
 
-	e.rel = u--w;						//update edges
+??	e.rel = u--w;						//update edges
 	e.to = u;							//e = u--u
 
 	e.weight = 5;						//To adjust only one field
-	e = e.rel {4,6};					//To update all fields. Note no need for keywords or with on update.
+??	e = e.rel {4,6};					//To update all fields. Note no need for keywords or with on update.
 	e = e.rel {weight:4, height:6};		//Also okay. **with is unique to declaration~?**
 	f = e.rel {4,6}						//error, since f has not been declared with fields yet.
 	f = e.rel with g.nodes;					//f = u--u {weight:3, height:3};

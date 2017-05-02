@@ -8,8 +8,8 @@ open Ast
 %token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR
 %token RETURN IF ELSE FOR WHILE INT BOOLEAN VOID
 %token TIMES LBRACKET RBRACKET DASH RARROW LARROW
-%token ACCIO BREAK CHAR DOUBLE EDGE EMPTY CONTINUE
-%token TO FROM IN NODE RECORD TYPE WITH FREE
+%token ACCIO CHAR DOUBLE EDGE EMPTY 
+%token TO FROM IN RECORD TYPE WITH FREE
 %token FPLUS FMINUS FTIMES FDIVIDE ADD EADD
 %token PLUSEQ FPLUSEQ ADDEQ EADDEQ COPY
 %token <int> INTLIT
@@ -32,7 +32,6 @@ open Ast
 %nonassoc NOWITH
 %nonassoc GRAPH
 %nonassoc WITH
-%nonassoc NODE
 %nonassoc RBRACKET
 %nonassoc LARROW RARROW DASH
 %left PLUS MINUS FPLUS FMINUS
@@ -76,21 +75,19 @@ stmt_list:
 
 stmt:
    expr SEMI  { Expr($1) }    
-  |RETURN expr SEMI { Return($2) }
+  | RETURN expr SEMI { Return($2) }
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE { If($3, $6, []) }
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE   { If($3, $6, List.rev $10) }
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE IF LPAREN expr RPAREN LBRACE stmt_list RBRACE  { If($3, List.rev $6, [If($11, List.rev $14, [])]) }
   | FOR LPAREN stmt expr SEMI stmt RPAREN LBRACE stmt_list RBRACE
      { For($3, $4, $6, List.rev $9) }
-  | ID ASSIGN expr SEMI { Asn($1, $3, true) }
-  | ID COPY expr SEMI { Asn($1, $3, false) }
-  | ID PLUSEQ expr SEMI { Asn($1, Binop(Id($1), Add, $3), true) }
-  | ID FPLUSEQ expr SEMI { Asn($1, Binop(Id($1), Fadd, $3), true) }
-  | ID ADDEQ expr SEMI { Asn($1, Binop(Id($1), Gadd, $3), true) }
-  | ID EADDEQ expr SEMI { Asn($1, Binop(Id($1), Eadd, $3), true) }
-  | WHILE LPAREN expr RPAREN stmt_list SEMI { While($3, $5) }
-  | BREAK SEMI{ Break }
-  | CONTINUE SEMI{ Continue }
+  | expr ASSIGN expr SEMI { Asn($1, $3, true) }
+  | expr COPY expr SEMI { Asn($1, $3, false) }
+  | expr PLUSEQ expr SEMI { Asn($1, Binop($1, Add, $3), true) }
+  | expr FPLUSEQ expr SEMI { Asn($1, Binop($1, Fadd, $3), true) }
+  | expr ADDEQ expr SEMI { Asn($1, Binop($1, Gadd, $3), true) }
+  | expr EADDEQ expr SEMI { Asn($1, Binop($1, Eadd, $3), true) }
+  | WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE { While($3, $6) }
 
   expr:
     INTLIT           { IntLit($1) }
@@ -132,7 +129,6 @@ stmt:
   | LPAREN RPAREN WITH expr { Graph([], $4) }
   | LPAREN expr RPAREN WITH expr { Graph([$2], $5) }
   | LPAREN graph_list RPAREN WITH expr { Graph($2, $5) }
-  | ID COLON expr %prec NODE { Node($1, $3) }
   | LBRACE rec_opt RBRACE { Record($2) }
   | LPAREN expr RPAREN %prec NOWITH { $2 }
 
