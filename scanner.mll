@@ -46,7 +46,6 @@ rule token = parse
 | "<-"     { LARROW }
 | ':'      { COLON }
 | "accio"  { ACCIO }
-| "boolean" { BOOLEAN }
 | "else"   { ELSE }
 | "false"  { FALSE }
 | "for"    { FOR }
