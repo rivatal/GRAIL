@@ -152,8 +152,10 @@ let translate (functions) =
           let add_local m (t,n) =            
             let local_var = L.build_alloca (ltype_of_typ t) n builder
             in StringMap.add n local_var m in
-          let local_var_map = add_local local_var_map (t,s) in 
-          let e' = aexpr builder local_var_map e in ignore (L.build_store e' (lookup s local_var_map) builder); (builder, local_var_map)
+          (match s with
+          AId(name, typ) -> let local_var_map = add_local local_var_map (t,name) in 
+           let e' = aexpr builder local_var_map e in ignore (L.build_store e' (lookup name local_var_map) builder); (builder, local_var_map)
+          | _ -> (*do something to store an item in a list*) (builder, local_var_map))
         | A.AIf (predicate, then_stmt, else_stmt) ->
           let bool_val = aexpr builder local_var_map predicate in
           let merge_bb = L.append_block context "merge" the_function in
