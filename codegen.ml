@@ -27,10 +27,7 @@ let translate (functions) =
     | A.TBool -> i1_t
     | A.TVoid -> void_t
     | A.TString -> str_t 
-    | A.TFloat -> float_t
-    | A.TRec -> record_t
-    | A.TEdge -> edge_t
-    | A.TGraph -> graph_t in `
+    | A.TFloat -> float_t in 
 
  (* Declare printf(), which the print built-in function will call *)
   let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
@@ -120,19 +117,20 @@ let translate (functions) =
            (match op with
             A.Neg     -> L.build_neg
            | A.Not     -> L.build_not) e' "tmp" builder *)
-      | A.ABinop (e1, op, e2, t) ->     let e1' = aexpr builder local_var_map e1
+      | A.ABinop (e1, op, e2, t) -> let e1' = aexpr builder local_var_map e1
         and e2' = aexpr builder local_var_map e2 in
         (match t with 
          | A.TFloat _ -> (float_ops op) e1' e2' "tmp" builder
          | _ -> (int_ops op) e1' e2' "tmp" builder                                              
         )
         (* Edge, Graph, Record *)
-      | A.ARecord(alist,rec_type) ->
-  		ignore(L.struct_set_body record_t
-  		[| pointer_type str_t;
-      	 	pointer_t data_t;
-       		pointer_t record_t
-	 |] false);
+      | A.ARecord(alist,trec) ->
+		(match trec with
+		| A.TRec(name,tlist) -> 
+			let ret_types = Array.of_list (List.map (fun (_,t) -> ltype_of_typ t) tlist) in 
+  				L.struct_set_body record_t ret_types false
+		);
+        L.const_int i32_t 0
         (*| A.Noexpr -> L.const_int i32_t 0*)
 
     (* Invoke "f builder" if the current block does not already 
