@@ -76,18 +76,18 @@ stmt_list:
 stmt:
    expr SEMI  { Expr($1) }    
   | RETURN expr SEMI { Return($2) }
-  | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE { If($3, $6, []) }
-  | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE   { If($3, $6, List.rev $10) }
+  | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE { If($3, List.rev $6, []) }
+  | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE   { If($3, List.rev $6, List.rev $10) }
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE IF LPAREN expr RPAREN LBRACE stmt_list RBRACE  { If($3, List.rev $6, [If($11, List.rev $14, [])]) }
-  | FOR LPAREN stmt expr SEMI stmt RPAREN LBRACE stmt_list RBRACE
-     { For($3, $4, $6, List.rev $9) }
+  | FOR LPAREN stmt expr SEMI stmt RPAREN LBRACE stmt_list RBRACE { For($3, $4, $6, List.rev $9) }
+  | FOR LPAREN expr IN expr RPAREN LBRACE stmt_list RBRACE { Forin($3, $5, List.rev $8) }
   | expr ASSIGN expr SEMI { Asn($1, $3, true) }
   | expr COPY expr SEMI { Asn($1, $3, false) }
   | expr PLUSEQ expr SEMI { Asn($1, Binop($1, Add, $3), true) }
   | expr FPLUSEQ expr SEMI { Asn($1, Binop($1, Fadd, $3), true) }
   | expr ADDEQ expr SEMI { Asn($1, Binop($1, Gadd, $3), true) }
   | expr EADDEQ expr SEMI { Asn($1, Binop($1, Eadd, $3), true) }
-  | WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE { While($3, $6) }
+  | WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE { While($3, List.rev $6) }
 
   expr:
     INTLIT           { IntLit($1) }
