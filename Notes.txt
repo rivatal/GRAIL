@@ -233,26 +233,28 @@ Do we need to update the map for graph assignments? We know what the type of eve
 it's not being "assigned" the same way records are-- it's being added to a collection like lists.
 
 f(x){ g = {a: x}; graph = g -- g with {b:x}; } main(){ y = f(3); }
-Types correctly.
+Types correctly no longer.
+
 f(x){ g = {a: x}; graph = (g -- g, g -- g) with {b:x}; }
-Um-- this might run infinitely-- gotta figure out why.
+Um-- this might run infinitely-- gotta figure out why. Nope! Works now!
+f(x){ g = {a: x}; graph = (g -- g, g -- g) with {b:x}; graph & {a:3}; } Works!
+f(x){ g = {a: x}; graph = (g -- g, g -- g) with {b:x}; graph = graph & {a:3}; } Works, I think.
 
 f(x){ g = {a: x}; h = {}; graph = (g -- g, h -> h) with {b:x}; }
-Yeah-- we're definitely getting into a really long loop or an infinite one. Oh fixed that but now there's a parse error.
+Yeah-- we're definitely getting into a really long loop or an infinite one. Oh fixed that but now there's a parse error. And now there isn't, yay!
 
 f(x){ h = {school:"moriah"}; g = (h) with {}; }
-h not a valid graph entry?
+h not a valid graph entry? Not any more, baby!
 
 f(x){ h = {school:"moriah"}; g = (h) with {}; }
 f(x){ g = {a: x}; h = {b:x}; graph = (g -- g, h -> h) with {b:x}; }
 f(x){ g = {a: x}; h = {b:x}; edge = g -- g with {b:x}; }
 f(x){ g = {a: x}; h = {b:x}; edge = g -- g; }  
+All work, as far as I can tell!
+
 
 Classify open and closed scopes. (open = can see above them)
-recorsd = closed.
-
-
-
+records = closed.
 
 Need to fix for scoping.
 New values:
@@ -265,7 +267,7 @@ records-- duplicate fields?
 f(x){ x = {a: 3, a:4 }; }
 f(x){ while(x < 3){ y = 5; }}
 
------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------
 f(x){ for(x = 3; x < 3; x = x + 1;){ y = 3; } }  
 
 for ((x: 'c) = (3: int); ((x: int) < (3: int): bool) ; (x: 'c) = ((x: int) + (1: int): int); (y: 'b) = (3: int); }
@@ -304,3 +306,8 @@ are throwing a weirdo error where they only catch one field?. Oh tg, it was just
 
 f(x){ display(x); }
 
+--------------------------------------------------------------------------------------
+
+ f(x, y){ x & y; } main(){ a = {}; b = () with {school:2}; f(b, a); }
+ f(x, y){ x & y; } main(){ x = {a: 3}; y = {weight:2}; g = (x) with {x}; }
+  f(g, x); }
