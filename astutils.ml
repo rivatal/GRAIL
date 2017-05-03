@@ -1,8 +1,5 @@
 open Ast
 
-module CharMap = Map.Make(String)
-type genericMap = int CharMap.t
-
 (*Let the strings begin *)
 let string_of_op (op: op) =
   match op with
@@ -19,7 +16,7 @@ let string_of_uop (uop: uop) =
 
 let rec string_of_type (t: primitiveType) =
   match t with
-  | TRec(s, l) -> ("record "  ^ s)
+  | TRec(s, l) -> (Printf.sprintf "record '%s" s)
   | TInt -> "int"
   | TBool -> "bool"
   | TFloat -> "float"

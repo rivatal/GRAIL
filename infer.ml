@@ -15,11 +15,11 @@ type substitutions = (id * primitiveType) list
 
 (* generates a new unknown type placeholder.
  *    returns T(string) of the generated alphabet *)
-let type_variable = ref (Char.code 'a')
+let type_variable = ref 1
 let gen_new_type () =
   let c1 = !type_variable in
   incr type_variable; 
-  T(Char.escaped (Char.chr c1))
+  T(string_of_int c1)
 
 let gen_new_void () : primitiveType =
   TVoid (*just chr escaped, no T in the TVoid*)
@@ -116,6 +116,8 @@ let rec check_type_consistency (tl: primitiveType list) : unit =
   (match x, y with
      | a, T(_) | a, TVoid -> check_type_consistency (x :: t)
      | T(_), a | TVoid, a-> check_type_consistency (y :: t)
+     | TEdge(TRec(_, _)), TEdge(T(_)) -> check_type_consistency (x :: t)
+     | TEdge(T(_)), TEdge(TRec(_, _)) -> check_type_consistency (y :: t)
      | a, b -> 
      if(a = b) 
      then(check_type_consistency (y :: t))
@@ -142,7 +144,7 @@ let rec infer_stmt (allenv: allenv) (e: stmt): (allenv * astmt) =
     let ae2 = infer_expr allenv e2 and 
         ae1 = infer_expr allenv e1 in 
         let typ = type_of ae2 in 
-        ignore(check_asn_type ae1 typ);
+        ignore(check_asn_type (type_of ae1) typ);
         let lval = match ae1 with
           |AId(a, t) -> AId(a, typ)
           |AItem(a,b,t) -> AItem(a,b,typ)
@@ -275,7 +277,9 @@ let env, genv, recs = allenv in
    let edgelist, nodelist = split_list aelist in
    ignore(check_type_consistency (temptype :: edgelist));
    ignore(check_type_consistency (nodelist)); 
-   AGraph(aelist, atedge, TGraph(List.hd nodelist, temptype))
+   let gtype = if(List.length nodelist = 0) then(gen_new_type()) else(List.hd nodelist) in
+   print_string("checked.");
+   AGraph(aelist, atedge, TGraph(gtype, temptype))
   (*a. check the list for consistency between nodes and edges. (which could be noexprs or lists themselves, or type of e.)
     b. type of e imposes a constraint on ^ and on the graph type. 
     c-- what if there are no nodes? Graph should be a trec of any, and should be overwritable when the first node comes in.
@@ -306,14 +310,18 @@ and gen_new_rec (fieldslist : (id * aexpr) list) : primitiveType =
   in let fields = helper (List.rev fieldslist)
   in let c1 = !type_variable in
   incr type_variable; 
-  TRec(Char.escaped (Char.chr c1), fields)
+  TRec(string_of_int c1, fields)
 
 (*ensure thing you're assigning to has that type. (No my_bool = 3; )*)
-and check_asn_type (lval: aexpr) (asn: primitiveType) : unit  =
-  let t = type_of lval in
-  match t with
+and check_asn_type (lval: primitiveType) (asn: primitiveType) : unit  =
+  match lval with
   |TVoid | T(_) -> ()
-  | x -> if(x = asn) then(()) else (raise(failwith("error: " ^ string_of_aexpr lval ^ " was defined as " ^ string_of_type x)))
+  | x -> if(x = asn) then(()) else (
+    match lval, asn with
+    |TEdge(a), TEdge(b)-> check_asn_type a b
+    |TGraph(n1, e1), TGraph(n2, e2) -> ignore(check_asn_type n1 n2); (check_asn_type e1 e2)
+    |_ -> raise(failwith("error: " ^ string_of_type asn ^ " was defined as " ^ string_of_type x))
+   )
 
 (*Ensures an expression is a conditional (e.g. for predicate statements)*)
 and check_bool (e: aexpr) : unit =
@@ -404,12 +412,12 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
     let opc = match op with
           | To | From | Dash ->
           (match et1, et2 with
-          |TRec(_), TRec(_) -> [(et1, et2)]
+          |TRec(_,_), TRec(_,_) -> [(et1, et2)]
           | _ -> raise(failwith("error: " ^ string_of_aexpr ae1 ^ " and " ^ string_of_aexpr ae2 ^ " must be nodes.")))
           | _ -> raise(failwith((string_of_op op) ^ " not an edge operator."))
      in 
      ignore(match et3 with
-        | TRec(_) | T(_) -> ()
+        | TRec(_,_) | T(_) -> ()
         | _ -> raise(failwith("error: " ^ string_of_aexpr ae3 ^ " not a record.")));
      (collect_expr ae1) @ (collect_expr ae2) @ opc @ (collect_expr ae3)     
   | ADot(ae1, _, _) -> [(type_of ae1, type_of ae1)]
