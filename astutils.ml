@@ -68,7 +68,7 @@ let rec string_of_aexpr (ae: aexpr): string =
          [] -> str
        |(id, aexpr) :: t -> helper t (id ^ " " ^ string_of_aexpr aexpr ^ str))
     in 
-    ignore(print_string ("list is length " ^ string_of_int (List.length aexprs)));
+(*     ignore(print_string ("list is length " ^ string_of_int (List.length aexprs))); *)
     ((string_of_type t) ^ "{" ^ (helper aexprs "") ^ "}")
   | AEdge(e1, op, e2, e3, t) -> Printf.sprintf "%s %s %s %s : %s" (string_of_aexpr e1) (string_of_op op) (string_of_aexpr e2) (string_of_aexpr e3) (string_of_type t)
   | AList(elist, t) -> Printf.sprintf "(%s : %s)" (string_of_aexpr_list elist) (string_of_type t)
@@ -145,7 +145,7 @@ and string_of_expr (e: expr): string =
   | Edge(e1, op, e2, e3) -> Printf.sprintf "%s %s %s %s" (string_of_expr e1) (string_of_op op) (string_of_expr e2) (string_of_expr e3)
   | List(elist) -> Printf.sprintf "(%s)" (string_of_expr_list elist)
   | Item(l, e) -> Printf.sprintf "%s[%s]" l (string_of_expr e)
-  | Graph(elist, e) -> Printf.sprintf "(%s) with {%s}" (string_of_expr_list elist) (string_of_expr e)
+  | Graph(elist, e) -> Printf.sprintf "(%s) with %s" (string_of_expr_list elist) (string_of_expr e)
   | Noexpr -> ""
 
 and string_of_expr_list l =

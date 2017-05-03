@@ -233,7 +233,7 @@ Do we need to update the map for graph assignments? We know what the type of eve
 it's not being "assigned" the same way records are-- it's being added to a collection like lists.
 
 f(x){ g = {a: x}; graph = g -- g with {b:x}; } main(){ y = f(3); }
-Types correctly.
+Types correctly no longer.
 f(x){ g = {a: x}; graph = (g -- g, g -- g) with {b:x}; }
 Um-- this might run infinitely-- gotta figure out why.
 
@@ -307,3 +307,5 @@ f(x){ display(x); }
 --------------------------------------------------------------------------------------
 
  f(x, y){ x & y; } main(){ a = {}; b = {school:2}; f(a, b); }
+ f(x, y){ x & y; } main(){ x = {a: 3}; y = {weight:2}; g = (x) with {x}; }
+  f(g, x); }
