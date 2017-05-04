@@ -187,7 +187,7 @@ let rec interpreter (ast: Ast.sast_afunc list) : Ast.sast_afunc list =
 
       say();
       let l = interpreter([]) in display l *)
-   let compile() = let sast = List.map format_sast_codegen (grail [] "main() { print(\"hello world\"); node={value:\"aashima\",age:25};}") in
+   let compile() = let sast = List.map format_sast_codegen (grail [] "main() { print(\"hello world\");node={a:1,b:2};x=2;y=node;}") in
     let m = Codegen.translate sast in
     Llvm_analysis.assert_valid_module m; print_string (Llvm.string_of_llmodule m) ;;
     compile(); 

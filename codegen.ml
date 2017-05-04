@@ -12,6 +12,7 @@ let translate (functions) =
   let context = L.global_context () in
   let the_module = L.create_module context "Grail"
   and i32_t = L.i32_type context
+  and i64_t = L.i64_type context
   and i8_t  = L.i8_type  context
   and i1_t  = L.i1_type  context
   and str_t = L.pointer_type (L.i8_type context)
@@ -101,7 +102,9 @@ let translate (functions) =
     let rec aexpr builder local_var_map = function
         A.AIntLit(i, _) -> L.const_int i32_t i
       | A.ABoolLit(b, _) -> L.const_int i1_t (if b then 1 else 0)
-      | A.AStrLit(s, _) -> L.build_global_stringptr s "str" builder
+      | A.AStrLit(s, _) -> 
+                let ptr = L.build_global_stringptr s "str" builder
+                in L.build_ptrtoint ptr str_t "" builder
       (*| A.ACharLit(c, _) -> L.const_int i8_t c*)
       | A.AFloatLit(f, _) -> L.const_float float_t f
       | A.AId(s,_) -> L.build_load (lookup s local_var_map) s builder 
@@ -136,7 +139,7 @@ let translate (functions) =
         in let load_loc = L.build_load loc "" builder
 		in let rec populate_structure fields i = 
 			match fields with 
-			| x :: []  -> L.build_insertvalue load_loc x i "" builder
+			| x :: []  -> L.build_insertvalue load_loc x i "" builder;loc
 			| hd :: tl -> 
 	          ( L.build_insertvalue load_loc hd i "" builder;
 			    populate_structure tl (i+1) 
