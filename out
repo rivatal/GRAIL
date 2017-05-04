@@ -1,6 +1,7 @@
 ; ModuleID = 'Grail'
 
-%record_t = type { i32, i32 }
+%struct.k = type { i32, i32 }
+%struct.l = type { i32, i32, i32 }
 
 @str = private unnamed_addr constant [12 x i8] c"hello world\00"
 
@@ -9,12 +10,20 @@ declare i32 @printf(i8*, ...)
 define void @main() {
 entry:
   %printf = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([12 x i8]* @str, i32 0, i32 0))
-  %i = alloca %record_t
-  %0 = load %record_t* %i
-  %1 = insertvalue %record_t %0, i32 1, 0
-  %2 = insertvalue %record_t %0, i32 2, 1
+  %k = alloca %struct.k
+  %0 = load %struct.k* %k
+  %loc = insertvalue %struct.k %0, i32 1, 0
+  %loc1 = insertvalue %struct.k %0, i32 2, 1
+  store %struct.k %0, %struct.k* %k
   %x = alloca i32
   store i32 2, i32* %x
-  %node = load %record_t* %i
+  %node = load %struct.k* %k
+  %l = alloca %struct.l
+  %1 = load %struct.l* %l
+  %loc2 = insertvalue %struct.l %1, i32 1, 0
+  %loc3 = insertvalue %struct.l %1, i32 2, 1
+  %loc4 = insertvalue %struct.l %1, i32 3, 2
+  store %struct.l %1, %struct.l* %l
+  %k5 = load %struct.l* %l
   ret void
 }

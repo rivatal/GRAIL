@@ -19,18 +19,19 @@ let translate (functions) =
   and float_t = L.float_type context
   and void_t= L.void_type context
   and pointer_t = L.pointer_type
-  in let ltype_of_typ = function
+  and record_t = L.named_struct_type context "record_t"
+  and edge_t = L.named_struct_type context "edge_t"
+  and graph_t = L.named_struct_type context "graph_t" in 
+  let ltype_of_typ = function
       A.TInt -> i32_t
     | A.TChar -> i8_t
     | A.TBool -> i1_t
     | A.TVoid -> void_t
     | A.TString -> str_t 
-    | A.TFloat -> float_t 
-  in let ltype_of_struct name = function
-      A.TRec(_,_) -> L.named_struct_type context name
-    | A.TEdge(_) -> L.named_struct_type context name 
-    | A.TGraph(_,_) -> L.named_struct_type context name 
-  in   
+    | A.TFloat -> float_t  
+    | A.TRec(_,_) -> record_t
+    | A.TEdge(_) -> edge_t 
+    | A.TGraph(_,_) -> graph_t in  
  (* Declare printf(), which the print built-in function will call *)
   let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
   let printf_func = L.declare_function "printf" printf_t the_module in
@@ -130,20 +131,17 @@ let translate (functions) =
         (* Edge, Graph, Record *)
       | A.ARecord(alist,trec) ->
 		match trec with
-		| A.TRec(name,tlist) ->
-            let struct_name = "struct."^name in 
-            let record_t = ltype_of_struct struct_name trec in 
+		| A.TRec(name,tlist) -> 
 			let ret_types = 
-			Array.of_list(List.map (fun (_,t) -> ltype_of_typ t) tlist) 
-            in L.struct_set_body record_t ret_types false;
-            let argslist = (List.map (fun f -> aexpr builder local_var_map (snd f)) alist)
-         in let loc = L.build_alloca record_t name builder
-         in let load_loc = L.build_load loc "" builder
-		 in let rec populate_structure fields i = 
+			Array.of_list(List.map (fun (_,t) -> ltype_of_typ t) tlist) in L.struct_set_body record_t ret_types false;
+        let argslist = (List.map (fun f -> aexpr builder local_var_map (snd f)) alist)
+        in let loc = L.build_alloca (ltype_of_typ trec) name builder
+        in let load_loc = L.build_load loc "" builder
+		in let rec populate_structure fields i = 
 			match fields with 
 			| [] -> L.build_store load_loc loc builder;loc
 			| hd :: tl ->
-	          ( L.build_insertvalue load_loc hd i "loc" builder;
+	          ( L.build_insertvalue load_loc hd i "loc_1" builder;
 			    populate_structure tl (i+1) 
               )
 		in populate_structure argslist 0
