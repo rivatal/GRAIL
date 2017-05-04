@@ -49,7 +49,8 @@ let translate (functions) =
     let (the_function, _) = StringMap.find afunc.A.fname function_decls in
     let builder = L.builder_at_end context (L.entry_block the_function) in
 
-    (*let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in*)
+    let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in
+    let float_format_str = L.build_global_stringptr "%f\n" "fmt" builder in
 
     (* Construct the function's "locals": formal arguments and locally
        declared variables.  Allocate each on the stack, initialize their
@@ -129,6 +130,8 @@ let translate (functions) =
       | A.AItem(s, e, t) -> let ar = L.build_load (lookup s local_var_map) "ar" builder and ad = aexpr builder local_var_map e in
                             let p = L.build_in_bounds_gep ar [|ad|] "ptr" builder in L.build_load p "item" builder 
       | A.ACall ("print", [e], _, _) -> L.build_call printf_func [| (aexpr builder local_var_map e) |] "printf" builder
+      | A.ACall("printint", [e], _, _) | A.ACall ("printbool", [e], _, _) -> L.build_call printf_func [| int_format_str ; (aexpr builder local_var_map e) |] "printf" builder
+      | A.ACall("printfloat", [e], _, _) -> L.build_call printf_func [| float_format_str ; (aexpr builder local_var_map e) |] "printf" builder
       | A.ACall (f, act, _, _) ->
         let (fdef, fdecl) = StringMap.find f function_decls in
         let actuals = List.rev (List.map (aexpr builder local_var_map) (List.rev act)) in
