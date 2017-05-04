@@ -5,6 +5,13 @@ make
 LLI="/usr/local/opt/llvm/bin/lli"
 LLL="/usr/local/opt/llvm/bin/llvm-link"
 
+# success = green
+# warning or err = red
+# help or neutral things = yellow
+NC='\033[0m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+RED='\033[0;31m'
 
 # Path to the grail compiler.  Usually "./grail.native"
 # Try "_build/grail.native" if ocamlbuild was unable to create a symbolic link.
@@ -78,15 +85,15 @@ Check() {
     echo -n "$basename..."
 
     echo 1>&2
-    echo "###### Testing $basename" 1>&2
+    echo "${YELLOW} ###### Testing $basename ${NC}" 1>&2
 
     generatedfiles=""
 
     generatedfiles="$generatedfiles ${basename}.ll ${basename}.out" &&
-    Run "clang -emit-llvm -o list.bc -c src/list.c" &&
+  #  Run "clang -emit-llvm -o list.bc -c src/list.c" &&
     Run "$GRAIL" "<" $1 ">" "${basename}.ll" &&
-        Run "$LLL" "${basename}.ll list.bc" "-o" "a.out" &&
-    Run "$LLI" "a.out" ">" "${basename}.out"&&
+  #  Run "$LLL" "${basename}.ll list.bc" "-o" "a.out" &&
+  #  Run "$LLI" "a.out" ">" "${basename}.out"&&
     Compare ${basename}.out ${reffile}.out ${basename}.diff
 
     # Report the status and clean up the generated files
@@ -96,9 +103,9 @@ Check() {
             rm -f $generatedfiles
         fi
         echo "OK"
-        echo "###### SUCCESS" 1>&2
+        echo "${GREEN} ###### SUCCESS ${NC}" 1>&2
     else
-        echo "###### FAILED" 1>&2
+        echo "${RED} ###### FAILED ${NC}" 1>&2
         globalerror=$error
     fi
 }
@@ -113,7 +120,7 @@ CheckFail() {
     echo -n "$basename..."
 
     echo 1>&2
-    echo "###### Testing $basename" 1>&2
+    echo "${YELLOW} ###### Testing $basename ${NC}" 1>&2
 
     generatedfiles=""
 
@@ -128,9 +135,9 @@ CheckFail() {
             rm -f $generatedfiles
         fi
         echo "OK"
-        echo "###### SUCCESS" 1>&2
+        echo "${GREEN} ###### SUCCESS ${NC}" 1>&2
     else
-        echo "###### FAILED" 1>&2
+        echo "${RED} ###### FAILED ${NC}" 1>&2
         globalerror=$error
     fi
 }
@@ -179,6 +186,8 @@ do
             ;;
     esac
 done
+
+cat testall.log
 
 exit $globalerror
 

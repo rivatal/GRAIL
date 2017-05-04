@@ -47,6 +47,7 @@ let stringify = function
   | VOID -> "VOID"
   | RETURN -> "RETURN"
 
+
 let _ =
   let lexbuf = Lexing.from_channel stdin in
   let rec print_tokens = function
