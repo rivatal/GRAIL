@@ -92,8 +92,8 @@ Check() {
     generatedfiles="$generatedfiles ${basename}.ll ${basename}.out" &&
   #  Run "clang -emit-llvm -o list.bc -c src/list.c" &&
     Run "$GRAIL" "<" $1 ">" "${basename}.ll" &&
-  #  Run "$LLL" "${basename}.ll list.bc" "-o" "a.out" &&
-  #  Run "$LLI" "a.out" ">" "${basename}.out"&&
+    Run "$LLL" "${basename}.ll" "-o" "a.out" &&
+    Run "$LLI" "a.out" ">" "${basename}.out"&&
     Compare ${basename}.out ${reffile}.out ${basename}.diff
 
     # Report the status and clean up the generated files
@@ -106,6 +106,9 @@ Check() {
         echo "${GREEN} ###### SUCCESS ${NC}" 1>&2
     else
         echo "${RED} ###### FAILED ${NC}" 1>&2
+        mv ${basename}.out ./test_output/
+        mv ${basename}.ll ./test_output/
+        mv ${basename}.diff ./test_output/
         globalerror=$error
     fi
 }
@@ -138,6 +141,8 @@ CheckFail() {
         echo "${GREEN} ###### SUCCESS ${NC}" 1>&2
     else
         echo "${RED} ###### FAILED ${NC}" 1>&2
+        mv ${basename}.err ./test_output/
+        mv ${basename}.diff ./test_output/
         globalerror=$error
     fi
 }
@@ -163,6 +168,7 @@ LLIFail() {
 
 which "$LLI" >> $globallog || LLIFail
 
+mkdir test_output
 
 if [ $# -ge 1 ]
 then
