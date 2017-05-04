@@ -166,7 +166,7 @@ let rec infer_stmt (allenv: allenv) (e: stmt): (allenv * astmt) =
     let ae1 = infer_expr allenv e1 in ignore(check_bool ae1); 
     let (_, astmts) = infer_stmt_list allenv stmts in 
     (allenv, AWhile(ae1, astmts))
-  | For(s1, e1, s2, stmts) -> (*Needs some fixing*)
+  | For(s1, e1, s2, stmts) -> 
     let outerenv = allenv in
     (check_asn s1);
     (check_asn s2);
@@ -177,6 +177,11 @@ let rec infer_stmt (allenv: allenv) (e: stmt): (allenv * astmt) =
     let _, astmts = infer_stmt_list allenv stmts in  (*change type_stmt to update the map*)
     let allenv = outerenv in
      (allenv, AFor(as1, ae1, as2, astmts))
+  | Forin(id, expr, stmts) -> 
+    let ae = infer_expr allenv expr in 
+    let _, astmts = infer_stmt_list allenv stmts in  (*change type_stmt to update the map*)
+     (allenv, AForin(id, ae, astmts))
+
 
 and type_stmt (allenv: allenv) (e: stmt) : allenv * astmt  = 
   let allenv, astmt = infer_stmt allenv e in 

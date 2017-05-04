@@ -65,13 +65,15 @@ and astmt =
   | AWhile of aexpr * astmt list
   | AReturn of aexpr * primitiveType
   | AExpr of aexpr
+  | AForin of string * aexpr * astmt list
+
 
 and stmt =
   | Asn of expr * expr * bool
   | If of expr * stmt list * stmt list
   | While of expr * stmt list
   | For of stmt * expr * stmt * stmt list
-  | Forin of expr * expr * stmt list
+  | Forin of string * expr * stmt list
   | Return of expr
   | Expr of expr
 
