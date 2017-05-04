@@ -71,6 +71,7 @@ and stmt =
   | If of expr * stmt list * stmt list
   | While of expr * stmt list
   | For of stmt * expr * stmt * stmt list
+  | Forin of expr * expr * stmt list
   | Return of expr
   | Expr of expr
 
