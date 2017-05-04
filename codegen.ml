@@ -147,7 +147,7 @@ let translate (functions) =
          | _ -> (int_ops op) e1' e2' "tmp" builder                                              
         )
         (* Edge, Graph, Node, Record *)
-        (*| A.Noexpr -> L.const_int i32_t 0*)
+        | A.ANoexpr _ -> L.const_int i32_t 0
 
     (* Invoke "f builder" if the current block does not already 
        have a terminal (e.g., a branch). *)        
@@ -169,7 +169,7 @@ let translate (functions) =
             let local_var = L.build_alloca (ltype_of_typ t) n builder
             in StringMap.add n local_var m in
           (match s with
-          A.AId(name, typ) -> let local_var_map = add_local local_var_map (t,name) in 
+            A.AId(name, typ) -> let local_var_map = if StringMap.mem name local_var_map then local_var_map else add_local local_var_map (t,name) in 
            let e' = aexpr builder local_var_map e in ignore (L.build_store e' (lookup name local_var_map) builder); (builder, local_var_map)
           | A.AItem(name, adr, typ) -> let e' = aexpr builder local_var_map e and 
             ar = L.build_load (lookup name local_var_map) "ar" builder and ad = aexpr builder local_var_map adr in
