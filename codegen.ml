@@ -110,11 +110,11 @@ let translate (functions) =
                                            | _ -> f ^ "_result") in
         L.build_call fdef (Array.of_list actuals) result builder
       (* | A.List ->  why is List an expression, should not it be a data staructure?  *)
-      (*| A.Unop(op, e) ->
-            let e' = expr builder e in
+      | A.AUnop(op, e, t) ->
+            let e' = aexpr builder local_var_map e in
            (match op with
             A.Neg     -> L.build_neg
-           | A.Not     -> L.build_not) e' "tmp" builder *)
+           | A.Not     -> L.build_not) e' "tmp" builder
       | A.ABinop (e1, op, e2, t) ->     let e1' = aexpr builder local_var_map e1
         and e2' = aexpr builder local_var_map e2 in
         (match t with 
