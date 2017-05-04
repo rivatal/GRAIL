@@ -6,8 +6,8 @@ type environment = primitiveType NameMap.t
 
 type genvironment = (primitiveType * (string * primitiveType) list * stmt list) NameMap.t
 
-let parse (s: string) : Ast.program =
-  Parser.program Scanner.token (Lexing.from_string s)
+let parse (s) : Ast.program =
+  Parser.program Scanner.token (s)
 
 (*https://www.rosettacode.org/wiki/Sort_using_a_custom_comparator#OCaml*)
 let mycmp l1 l2 =
@@ -52,7 +52,7 @@ let infer_func (e: Ast.func) (genv : genvironment) : (Ast.afunc * genvironment) 
     let genv = NameMap.add fname (Infer.gen_new_type (),[],[]) genv in
     Infer.infer_func (env, genv, []) e
 
-let grail (ast: Ast.afunc list) (input: string) : Ast.afunc list =
+let grail (ast: Ast.afunc list) (input) : Ast.afunc list =
   let rec get_sast(p: Ast.program) (genv : genvironment) (l : Ast.afunc list) : Ast.afunc list  =   
     match p with
     [] -> List.rev l
@@ -68,7 +68,7 @@ let grail (ast: Ast.afunc list) (input: string) : Ast.afunc list =
     |(a, b) :: t -> let genv = NameMap.add a b genv in addbuiltins t genv
   in let genv = addbuiltins builtins NameMap.empty 
   in 
-  get_sast (parse input) genv []
+  get_sast (parse (Lexing.from_string input)) genv []
 
 let format_sast_codegen (ast : Ast.afunc) : Ast.sast_afunc = 
   match ast with 
@@ -80,7 +80,7 @@ let format_sast_codegen (ast : Ast.afunc) : Ast.sast_afunc =
     }
 
 (*Interpreter for debugging purposes*)
-let rec interpreter (ast: Ast.sast_afunc list) : Ast.sast_afunc list =
+(* let rec interpreter (ast: Ast.sast_afunc list) : Ast.sast_afunc list =
   print_string "> ";
   let input = read_line () in
   if input = "exit" then ast
@@ -94,8 +94,7 @@ let rec interpreter (ast: Ast.sast_afunc list) : Ast.sast_afunc list =
       else (print_endline msg; [] @ interpreter(ast))
     | _ -> print_endline "Syntax Error"; [] @  interpreter (ast)
 
-
-(*     let say() = 
+    let say() = 
       let str = "Welcome to Grail, the awesomest language!\n"  in 
       print_string str
 
@@ -108,7 +107,11 @@ let rec interpreter (ast: Ast.sast_afunc list) : Ast.sast_afunc list =
 
       say();
       let l = interpreter([]) in display l *)
-   let compile() = let sast = List.map format_sast_codegen (grail [] "main() { print(\"hello world\"); x = 2; y = x; z = y;}") in
-    let m = Codegen.translate sast in
-    Llvm_analysis.assert_valid_module m; print_string (Llvm.string_of_llmodule m) ;;
-    compile(); 
+      
+   let compile() = 
+   let sast = 
+   let file = Lexing.from_channel stdin in
+   List.map format_sast_codegen (grail [] file) in
+   let m = Codegen.translate sast in
+   Llvm_analysis.assert_valid_module m; print_string (Llvm.string_of_llmodule m) ;; 
+   compile(); 
