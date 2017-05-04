@@ -8,8 +8,7 @@ module NameMap = Map.Make(String)
 
 type genvironment = (primitiveType * (string * primitiveType) list * stmt list) NameMap.t
 let callstack = Stack.create()
-type records = (primitiveType * ((id * primitiveType) list)) list
-type allenv = environment * genvironment * records
+type allenv = environment * genvironment
 
 (* Unknown type,  resolved type. eg.[(T, TInt); (U, TBool)] *)
 type substitutions = (id * primitiveType) list
@@ -49,7 +48,6 @@ let type_of (ae: aexpr): primitiveType =
 let comp (x: id * expr) (y: id * expr) : int = 
   match x, y with
   |(a,_), (b,_) -> if(a = b) then(0) else(if(a < b) then(-1) else(1))
-  | _ -> raise(failwith("error @33."))
 
 (*Helper function for annotating records (check for duplicate fields)*)
 let rec has_dups l = 
@@ -68,8 +66,7 @@ let rec find_in_map(id: string) (env: environment): primitiveType =
   let mapped = map_id id in
    if (NameMap.mem mapped env)  
    then (NameMap.find mapped env)
-   else (raise(failwith(id ^ " not found@79")))
-
+   else (raise(failwith(mapped ^ " not found@79")))
 
 let rec get_type_list (aelist: aexpr list) : primitiveType list = 
   List.map type_of aelist
@@ -126,19 +123,32 @@ let rec get_field_type (elist: (id * primitiveType) list) (id: id) =
 The result is annotated and passed into the sast. *)
 let rec infer_stmt (allenv: allenv) (e: stmt): (allenv * astmt) =
 (*   ignore(print_string (" inferring " ^ (string_of_stmt e) ^ "\n"));   *)
+  let env, genv = allenv in 
   match e with
   | Asn(e1, e2, switch) -> 
-    let ae2 = infer_expr allenv e2 and 
-        ae1 = infer_expr allenv e1 in 
-        let typ = type_of ae2 in 
-        ignore(check_asn_type (type_of ae1) typ);
-        let lval = match ae1 with
-          |AId(a, t) -> AId(a, typ)
-          |AItem(a,b,t) -> AItem(a,b,typ)
-          |ADot(a,b,t) -> ADot(a,b,typ) 
-          |x -> raise(failwith(string_of_aexpr x ^ " is not a valid lval"))
-        in
-    (allenv, AAsn(lval, ae2, switch, typ))
+    let ae2 = infer_expr allenv e2 in 
+    let typ = type_of ae2 in
+    let ae1, env = 
+          match e1 with (*Maybe make into an id map thing?*)
+          |Id(a) -> 
+          let id = map_id a in 
+          let env = 
+          if NameMap.mem (id) env
+          then (
+            let otype = type_of (infer_expr allenv e1) in
+            ignore(check_asn_type otype typ); env
+          )
+          else (NameMap.add id (gen_new_type()) env) in
+          AId(a, typ), env 
+          |Item(a,_)|Dot(Id(a),_) -> 
+          let id = map_id a in
+          if(NameMap.mem id env) 
+          then(infer_expr (env, genv) e1, env) 
+          else(raise(failwith(id ^ " not defined.")))
+          |x -> raise(failwith(string_of_expr x ^ " is not a valid lval"))
+    in
+    (* ignore(print_string("146- " ^ string_of_type (type_of ae2)   )); *)
+    (allenv, AAsn(ae1, ae2, switch, typ))
   | Return(expr) ->
     let aexpr = infer_expr allenv expr in 
     (allenv, AReturn(aexpr, type_of aexpr))
@@ -153,37 +163,40 @@ let rec infer_stmt (allenv: allenv) (e: stmt): (allenv * astmt) =
     let _, as2 = infer_stmt_list allenv s2
     in (allenv, AIf(conditional, as1, as2))
   | While(e1, stmts) ->
-    let genv, env, recs = allenv in 
     let ae1 = infer_expr allenv e1 in ignore(check_bool ae1); 
     let (_, astmts) = infer_stmt_list allenv stmts in 
     (allenv, AWhile(ae1, astmts))
   | For(s1, e1, s2, stmts) -> (*Needs some fixing*)
-    let genv, env, recs = allenv in 
-    let backupenv = env in
+    let outerenv = allenv in
     (check_asn s1);
     (check_asn s2);
-    let ((env, _, recs), as1) = infer_stmt allenv s1 in 
+    let (allenv, as1) = type_stmt allenv s1 in 
     let ae1 = infer_expr allenv e1 
     in (check_bool ae1);
-    let (_, as2) = (infer_stmt allenv s2) in
-    let _, astmts = infer_stmt_list allenv stmts in 
-(*     let allenv = backupenv, genv, recs in
- *)    (allenv, AFor(as1, ae1, as2, astmts))
+    let (allenv, as2) = (type_stmt allenv s2) in
+    let _, astmts = infer_stmt_list allenv stmts in  (*change type_stmt to update the map*)
+    let allenv = outerenv in
+     (allenv, AFor(as1, ae1, as2, astmts))
+
+and type_stmt (allenv: allenv) (e: stmt) : allenv * astmt  = 
+  let allenv, astmt = infer_stmt allenv e in 
+  let _, genv = allenv in 
+  let env = update_map allenv astmt in
+  ((env, genv), astmt)
+
 and infer_stmt_list (allenv: allenv) (e: stmt list) : (allenv * astmt list) =
-  let rec helper (allenv: allenv) (a: astmt list) (e: stmt list)  : (allenv * astmt list) = 
-    match e with
-      [] -> (allenv, List.rev a)
+   let rec helper allenv astmts stmts  : (allenv * astmt list) = 
+    match stmts with
+      [] -> (allenv, List.rev astmts)
      |head :: tail -> 
-      let allenv, astmt = infer_stmt allenv head in 
-      let _, genv, _ = allenv in 
-      let env, recs = update_map allenv astmt in
-      (helper (env, genv, recs) (astmt :: a) tail)
+      let allenv, ae = type_stmt allenv head in 
+      (helper allenv (ae :: astmts) tail)
   in helper allenv [] e 
 
 (*Step 1 of HM: annotate expressions with what can be gathered of their types.*)
 and annotate_expr (allenv: allenv) (e: expr) (* (env: environment) *) : aexpr =
 (*   ignore(print_string ("annotating " ^ (string_of_expr e) ^ "\n"));     *)  
-let env, genv, recs = allenv in
+let env, genv = allenv in
   match e with
   | IntLit(n) -> AIntLit(n, TInt)
   | BoolLit(b) -> ABoolLit(b, TBool)
@@ -231,20 +244,21 @@ let env, genv, recs = allenv in
        ignore(check_list_consistency ael);
        AList(ael, TList(t)))
   | Call(id, elist) ->    (*Function calls derive their type from the function declaration*)
-    Stack.push id callstack;    
-    let ael = annotate_expr_list allenv elist in
+    let aelist = List.map (fun a -> infer_expr allenv a) elist in
+    Stack.push id callstack;     
     let (oldtype, aformals, stmts) =
       if (NameMap.mem id genv)
       then (NameMap.find id genv)
       else (raise (failwith "function not defined @ 147")) in
-    let assignments, env = assign_formals (List.combine aformals elist) env id in
-    let allenv = env, genv, recs in
-    let(allenv, _) = (infer_stmt_list allenv assignments) in
+(*     ignore(print_string("assigning formals")); *)    
+    let env = assign_formals (List.combine aformals aelist) env id in
+    let allenv = env, genv in
+    (* ignore(print_string("check formals"));*)
     ignore(check_formals aformals allenv);
     let (_, astmts) = (infer_stmt_list allenv stmts) in
     let t = get_return_type astmts in 
     ignore(Stack.pop callstack);
-    ACall(id, ael, astmts, t) 
+    ACall(id, aelist, astmts, t) 
 | Record(pairlist) -> 
     let rec helper(l: (string * expr) list) =
     match l with
@@ -293,7 +307,7 @@ and gen_new_rec (fieldslist : (id * aexpr) list) : primitiveType =
   [] -> []
   | (id, aexpr) :: tl -> 
   (id, type_of aexpr) :: helper tl
-  |_ -> raise(failwith(" not valid a record entry @ 36.")))
+  )
   in let fields = helper (List.rev fieldslist)
   in let c1 = !type_variable in
   incr type_variable; 
@@ -326,22 +340,22 @@ and check_bool (e: aexpr) : unit =
     | y -> raise(failwith ((string_of_aexpr y) ^ " does not belong in a list."))
  *)
 (*Generates assignment statements for actual expressions to be inferred and bound to their formals*)
-and assign_formals (stufflist: ((id * primitiveType) * expr) list) (env: environment) (id: string): stmt list * environment =
-  let rec helper assns env l   = 
+and assign_formals (stufflist: ((id * primitiveType) * aexpr) list) (env: environment) (id: string): environment =
+  let rec helper env l   = 
     match l with
-      [] -> (List.rev assns, env)
+      [] -> env
     |h :: t ->     (*_ is the old "bad" type*)
       match h with
         ((x, _), e) -> 
-        let env = NameMap.add (map_id x) (gen_new_type()) env in 
-        helper (Asn(Id(x), e, false) :: assns) env t (*Really should make x's type the original formal types...?*)
-  in helper [] env stufflist
+        let env = NameMap.add (map_id x) (type_of e) env in 
+        helper env t (*Really should make x's type the original formal types...?*)
+  in helper env stufflist
 
 (*Ensures actuals and their corresponding formals have the same type. 
 Required for builtin functions like print.*)
 and check_formals (aformals: (id * primitiveType) list) (allenv: allenv)  : unit =
 (*   ignore(print_string("checking formals\n"));  *)
-  let env, _, _ = allenv in 
+  let env, _ = allenv in 
   let rec helper af env = 
   match af with 
   [] -> ()
@@ -497,31 +511,31 @@ and get_lval (ae: aexpr) =
   |_ -> raise(failwith("error: " ^ string_of_aexpr ae ^ " not a valid lvalue."))
 
 (*Updates environment*)
-and update_map (allenv: allenv) (a: astmt) : (environment * records) = 
+and update_map (allenv: allenv) (a: astmt) : environment = 
 (*   ignore(print_string ("updating map for " ^ (string_of_astmt a)));  *)
-  let env, genv, allrecs = allenv in
+  let env, genv = allenv in
   match a with
   |AAsn(ae1, ae2, _,_) ->
-    let id = get_lval ae1 in
-(*     ignore(print_string (" updating " ^ id ^ " with type " ^ (string_of_aexpr ae2) ^ "\n"));  *)
-    let t = type_of ae1 in
-(*      ignore((check_asn_type env id t));  *)
-    let env = NameMap.add (map_id id) t env in
-    (update_map_expr id ae2 env), allrecs
-  |AReturn(aexpr, _) -> env, allrecs
-  |AExpr(aexpr) -> env, allrecs     
-  |AIf(_, a1, a2) -> env, allrecs 
-  |AFor(_, _, _, _) -> env, allrecs
-  |AWhile(_,_) -> env, allrecs
-and update_mapl (allenv: allenv) (alist : astmt list): environment * records =
-  let rec helper (alist : astmt list) (env: environment) (recs: records): environment * records =
+    let id = map_id (get_lval ae1) in
+(*     ignore(print_string (" updating " ^ id ^ " with type " ^ (string_of_type (type_of ae2)) ^ "\n"));  *)
+    let t = type_of ae2 in
+    let env = NameMap.add id t env in
+    (* ignore(print_string(id ^ " is " ^ string_of_type (NameMap.find(id) env))); *)
+    (update_map_expr id ae2 env)
+  |AReturn(aexpr, _) -> env
+  |AExpr(aexpr) -> env
+  |AIf(_, a1, a2) -> env 
+  |AFor(_, _, _, _) -> env
+  |AWhile(_,_) -> env
+and update_mapl (allenv: allenv) (alist : astmt list): environment =
+  let rec helper (alist : astmt list) (env: environment) : environment =
   match alist with
-  | [] -> env, recs
+  | [] -> env
   | hd :: tl -> 
-    let (env, recs) = update_map allenv hd in 
-    helper tl env recs 
-  in let env, _, recs = allenv 
-  in helper alist env recs
+    let env = update_map allenv hd in 
+    helper tl env
+  in let env, _ = allenv 
+  in helper alist env
   
  (*Used when an expression itself changes the environment, i.e, in records or calls 
  that are secretly records. *)
@@ -529,8 +543,8 @@ and update_mapl (allenv: allenv) (alist : astmt list): environment * records =
     match aexpr with 
      | ARecord(et1, t) -> 
        update_map_derived id t env
-     | ACall(id, _, astmts, t) -> 
-       update_map_derived id t env
+(*      | ACall(id, _, astmts, t) -> 
+       update_map_derived id t env *)
      | _ -> env
 
  and update_map_derived (id: string) (t: primitiveType) (env: environment) : environment = 
@@ -595,7 +609,6 @@ and infer_formals (f: string list) (env: environment):  (string * primitiveType)
 
 (*Called from annotate_stmt, infers expressions inside statements.*)
 and infer_expr (allenv: allenv) (e: expr): (aexpr)  =
-  let env, genv, recs = allenv in 
   let annotated_expr = annotate_expr allenv e in
   let constraints = collect_expr annotated_expr in 
   let subs = unify constraints in
@@ -604,11 +617,11 @@ and infer_expr (allenv: allenv) (e: expr): (aexpr)  =
 (*The calling method for this file. Infers all types for a func (statements, formals), and
 outputs an annotated func. *)
 and infer_func (allenv: allenv) (f: func) :  (afunc * genvironment)  =
-  let env, genv, recs = allenv in
+  let env, genv = allenv in
   match f with
   |Fbody(decl, stmts) -> 
     ignore(match decl with Fdecl(fname, _)-> Stack.push fname callstack); (*set scope*)
-    let ((_,genv, _), istmts) = infer_stmt_list allenv stmts (*infer the function statments*)
+    let ((_,genv), istmts) = infer_stmt_list allenv stmts (*infer the function statments*)
     in let ret_type = get_return_type istmts                       
     in match decl with
     |Fdecl(fname, formals) ->           (*add function to NameMap*) 

@@ -50,7 +50,7 @@ let infer_func (e: Ast.func) (genv : genvironment) : (Ast.afunc * genvironment) 
     let ids = get_ids_formals formals fname in 
     let env = List.fold_left (fun m x -> NameMap.add x (Infer.gen_new_type ()) m) NameMap.empty ids in 
     let genv = NameMap.add fname (Infer.gen_new_type (),[],[]) genv in
-    Infer.infer_func (env, genv, []) e
+    Infer.infer_func (env, genv) e
 
 let grail (ast: Ast.afunc list) (input) : Ast.afunc list =
   let rec get_sast(p: Ast.program) (genv : genvironment) (l : Ast.afunc list) : Ast.afunc list  =   

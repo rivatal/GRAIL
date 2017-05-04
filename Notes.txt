@@ -322,16 +322,27 @@ This works too-- adding an edge.
 Trying to fix scoping.
 
 f(x){ y = x; x = 3; }
-Should not fail, but does
+Should not fail, but does. Okay, nvmnd. we good now.
 
 f(){ y = x; x = 3; }
-Should fail, but doesn't.
+Should fail, and now does.
 
-f(x, y){ x .& y; } main(){ z = {a: 3}; y = z; y.a = 4; edge = z -- z; g = () with z; f(g, z); }
-^Not a valid lvalue issue
 
 f(x, y){ x & y; } main(){ x = {a: 3}; y = {weight:2}; g = () with x; f(g, x); }
 This is really weird-- could it be an x/x scoping problem?
 
 f(){ x = "str\\"; }
 Should work. Currently doesn't.
+
+What if y is a copy of x-- should this:
+f(x){ y = x; x = 3; }
+change its type to int?
+
+f(x){ y = "ser"; for(x = 3; x < 3; x = x + 1;){ y = 3; } return y; }  
+Will have an error because for can see y.
+
+f(x){ for(x = 3; x < 3; x = x + 1;){ y = 3; } y = "ser";  return y; }  
+Won't have an error because scope of y is limited to this for.
+
+f(x, y){ x .& y; } main(){ z = {a: 3}; y = z; y.a = 4; edge = z -- z; g = () with z; f(g, z); }
+^Not a valid lvalue issue
