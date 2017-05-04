@@ -28,7 +28,7 @@ open Ast
 %left EQ NEQ
 %left LT GT LEQ GEQ IN
 %left ADD EADD
-%right DOT
+%left DOT
 %nonassoc NOWITH
 %nonassoc GRAPH
 %nonassoc WITH
