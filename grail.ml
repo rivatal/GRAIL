@@ -43,7 +43,6 @@ let rec get_ids_formals(e: string list)(f: string) =
   (map_id_with f h) :: get_ids_formals t f
 
 let infer_func (e: Ast.func) (genv : genvironment) : (Ast.afunc * genvironment) =
-   ignore(print_string("infer\n")); 
   check_overload e genv; 
   match e with 
   |Fbody(Fdecl(fname, formals), stmts) ->

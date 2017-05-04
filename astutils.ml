@@ -87,14 +87,14 @@ and string_of_astmt (l: astmt) =
     let b =  (match s2 with
           [] -> ""
         |rest -> string_of_astmt_list rest) in (a ^ b)
-  |AFor(as1, ae1, as2, astmts) ->
+  | AFor(as1, ae1, as2, astmts) ->
     "for (" ^ string_of_astmt as1  ^ string_of_aexpr ae1 ^ " ; " ^ string_of_astmt as2 
     ^ string_of_astmt_list astmts
-  |AWhile(ae1, astmts) -> "while (" ^ string_of_aexpr ae1 ^ ") {" ^ string_of_astmt_list astmts ^ "}"
+  | AWhile(ae1, astmts) -> "while (" ^ string_of_aexpr ae1 ^ ") {" ^ string_of_astmt_list astmts ^ "}"
+  | AForin(id, aexpr, astmts) -> "for (" ^ id ^ " in " ^ string_of_aexpr aexpr ^ "){" ^ string_of_astmt_list astmts
 
 and string_of_astmt_list (stmts : astmt list) : string =
   let s1 = List.map(fun a -> (string_of_astmt (a))) stmts in let l = String.concat "" s1 in l
-
 
 and string_of_stmt (l: stmt)= 
   match l with 
@@ -110,6 +110,8 @@ and string_of_stmt (l: stmt)=
   | For(s1, e1, s2, astmts) -> "for (" ^ string_of_stmt s1 ^ string_of_expr e1 ^ string_of_stmt s2 ^" ) {\n" ^
                                string_of_stmt_list astmts ^ "}" 
   | While(e1, stmts) -> "while (" ^ string_of_expr e1 ^ "){\n" ^ string_of_stmt_list stmts ^ "}"
+  | Forin(s, e, stmts) -> "for (" ^ s ^ " in " ^ string_of_expr e ^ "){" ^ string_of_stmt_list stmts
+
 and string_of_stmt_list (stmts : stmt list) : string =
   let s1 = List.map(fun a -> (string_of_stmt (a))) stmts in let l = String.concat "" s1 in l
 

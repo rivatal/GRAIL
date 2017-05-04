@@ -532,6 +532,7 @@ and update_map (allenv: allenv) (a: astmt) : environment =
   |AIf(_, a1, a2) -> env 
   |AFor(_, _, _, _) -> env
   |AWhile(_,_) -> env
+  |AForin(_,_,_) -> env
 and update_mapl (allenv: allenv) (alist : astmt list): environment =
   let rec helper (alist : astmt list) (env: environment) : environment =
   match alist with
