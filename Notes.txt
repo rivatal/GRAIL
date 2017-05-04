@@ -346,3 +346,15 @@ Won't have an error because scope of y is limited to this for.
 
 f(x, y){ x .& y; } main(){ z = {a: 3}; y = z; y.a = 4; edge = z -- z; g = () with z; f(g, z); }
 ^Not a valid lvalue issue
+
+f(x){ for(a in x){ y = 3; } } main(){ f(3); } 
+Should and does throw an error.
+
+f(x){ for(a in x){ y = 3; } } main(){ f([1,2,3]); } 
+works.
+
+Currently graph is commented out-- hopefully we'll have graph.nodes and graph.edges
+
+Introducing the empty list trec. Hope I don't damn us all.
+Nvmnid? Will have to think about that.
+Okay-- we have trouble assigning to dots because we have to go find the record name, attach it back to the field name, you know the drill.
