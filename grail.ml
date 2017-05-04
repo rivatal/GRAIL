@@ -189,5 +189,8 @@ let rec interpreter (ast: Ast.sast_afunc list) : Ast.sast_afunc list =
       let l = interpreter([]) in display l *)
    let compile() = let sast = List.map format_sast_codegen (grail [] "main() { print(\"hello world\"); x = 2; y = x; z = y;}") in
     let m = Codegen.translate sast in
-    Llvm_analysis.assert_valid_module m; print_string (Llvm.string_of_llmodule m) ;;
+    Llvm_analysis.assert_valid_module m; print_string (Llvm.string_of_llmodule m) ;; 
     compile(); 
+
+
+
