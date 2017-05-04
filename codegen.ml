@@ -135,13 +135,13 @@ let translate (functions) =
 			let ret_types = 
 			Array.of_list(List.map (fun (_,t) -> ltype_of_typ t) tlist) in L.struct_set_body record_t ret_types false;
         let argslist = (List.map (fun f -> aexpr builder local_var_map (snd f)) alist)
-        in let loc = L.build_malloc (ltype_of_typ trec) name builder
+        in let loc = L.build_alloca (ltype_of_typ trec) name builder
         in let load_loc = L.build_load loc "" builder
 		in let rec populate_structure fields i = 
 			match fields with 
-			| x :: []  -> L.build_insertvalue load_loc x i "" builder;loc
+			| [] -> L.build_store load_loc loc builder;loc
 			| hd :: tl -> 
-	          ( L.build_insertvalue load_loc hd i "" builder;
+	          ( L.build_insertvalue load_loc hd i "loc_1" builder;
 			    populate_structure tl (i+1) 
               )
 		in populate_structure argslist 0
