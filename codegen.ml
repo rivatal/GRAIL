@@ -27,8 +27,10 @@ let translate (functions) =
     | A.TBool -> i1_t
     | A.TVoid -> void_t
     | A.TString -> str_t 
-    | A.TFloat -> float_t in 
-
+    | A.TFloat -> float_t  
+    | A.TRec(_,_) -> record_t
+    | A.TEdge(_) -> edge_t 
+    | A.TGraph(_,_) -> graph_t in  
  (* Declare printf(), which the print built-in function will call *)
   let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
   let printf_func = L.declare_function "printf" printf_t the_module in
@@ -125,14 +127,22 @@ let translate (functions) =
         )
         (* Edge, Graph, Record *)
       | A.ARecord(alist,trec) ->
-		(match trec with
+		match trec with
 		| A.TRec(name,tlist) -> 
-			let ret_types = Array.of_list (List.map (fun (_,t) -> ltype_of_typ t) tlist) in 
-  				L.struct_set_body record_t ret_types false
-		);
-        L.const_int i32_t 0
-        (*| A.Noexpr -> L.const_int i32_t 0*)
-
+			let ret_types = 
+			Array.of_list(List.map (fun (_,t) -> ltype_of_typ t) tlist) in L.struct_set_body record_t ret_types false;
+        let argslist = (List.map (fun f -> aexpr builder local_var_map (snd f)) alist)
+        in let loc = L.build_malloc (ltype_of_typ trec) name builder
+        in let load_loc = L.build_load loc "" builder
+		in let rec populate_structure fields i = 
+			match fields with 
+			| x :: []  -> L.build_insertvalue load_loc x i "" builder
+			| hd :: tl -> 
+	          ( L.build_insertvalue load_loc hd i "" builder;
+			    populate_structure tl (i+1) 
+              )
+		in populate_structure argslist 0
+    (*| A.Noexpr -> L.const_int i32_t 0*)
     (* Invoke "f builder" if the current block does not already 
        have a terminal (e.g., a branch). *)        
     in  let add_terminal (builder, local_var_map) f =
@@ -149,13 +159,24 @@ let translate (functions) =
               A.TVoid -> L.build_ret_void builder
             | _ -> L.build_ret (aexpr builder local_var_map e) builder); (builder, local_var_map)
         | A.AAsn(s, e, b, t) -> 
-          let add_local m (t,n) =            
+            let add_local m (t,n) =            
             let local_var = L.build_alloca (ltype_of_typ t) n builder
-            in StringMap.add n local_var m in
-          (match s with
-          AId(name, typ) -> let local_var_map = add_local local_var_map (t,name) in 
-           let e' = aexpr builder local_var_map e in ignore (L.build_store e' (lookup name local_var_map) builder); (builder, local_var_map)
-          | _ -> (*do something to store an item in a list*) (builder, local_var_map))
+            in StringMap.add n local_var m in 
+            (match s with
+                A.AId(name, typ) -> 
+                    (match typ with 
+                    | A.TInt| A.TBool| A.TString -> 
+                        let local_var_map = add_local local_var_map (t,name) in 
+                        let e' = aexpr builder local_var_map e 
+                        in ignore (L.build_store e' (lookup name local_var_map) 
+                        builder);(builder, local_var_map)
+                    |A.TRec(_,_) -> 
+                    let e' = aexpr builder local_var_map e 
+                    in let local_var_map = StringMap.add name e' local_var_map
+                    in (builder,local_var_map)
+               | _ -> (builder,local_var_map)
+                    )
+           )         
         | A.AIf (predicate, then_stmt, else_stmt) ->
           let bool_val = aexpr builder local_var_map predicate in
           let merge_bb = L.append_block context "merge" the_function in
