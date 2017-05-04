@@ -170,8 +170,7 @@ Note-- breaking for and if handling of scope.
 
 -----------------------------------------------------------------------------------------------
 Okay-- with for and if-- it was broken before because we inferred the statement in annotate expression but didn't update the map for statements inside those scopes. What we need to do is pass the map variables from annotate expression back to their infer_stmt_list and also to always call infer_stmt_list rather than infer_stmt on those inner stmts.
------------------------------------------------------------------------------------------------
-Questions for Danny-- 
+-------------------------------------------------------------------------------------------Questions for Danny-- 
 Feeding in a file? Sys.argv.(1) (May create new dependencies)
 Character literals in the scanner? Look at how other groups have done string-- Danny's group (| '"' (([^ '"'] | "\\\"")* as strlit) '"' { STRING_LITERAL(strlit) }) <-- ours are too complicated
 
@@ -309,5 +308,30 @@ f(x){ display(x); }
 --------------------------------------------------------------------------------------
 
  f(x, y){ x & y; } main(){ a = {}; b = () with {school:2}; f(b, a); }
- f(x, y){ x & y; } main(){ x = {a: 3}; y = {weight:2}; g = (x) with {x}; }
-  f(g, x); }
+Is throwing an error. No longer!
+
+f(x, y){ x & y; } main(){ x = {a: 3}; y = {weight:2}; g = () with x; }
+
+f(x, y){ x & y; } main(){ z = {a: 3}; y = {weight:2}; g = () with z; f(g, z); }
+Okay-- this works, great.
+
+f(x, y){ x .& y; } main(){ z = {a: 3}; y = z; edge = z -- z; g = () with z; f(g, edge); }
+This works too-- adding an edge.
+
+--------------------------------------------------------------------------------------
+Trying to fix scoping.
+
+f(x){ y = x; x = 3; }
+Should not fail, but does
+
+f(){ y = x; x = 3; }
+Should fail, but doesn't.
+
+f(x, y){ x .& y; } main(){ z = {a: 3}; y = z; y.a = 4; edge = z -- z; g = () with z; f(g, z); }
+^Not a valid lvalue issue
+
+f(x, y){ x & y; } main(){ x = {a: 3}; y = {weight:2}; g = () with x; f(g, x); }
+This is really weird-- could it be an x/x scoping problem?
+
+f(){ x = "str\\"; }
+Should work. Currently doesn't.

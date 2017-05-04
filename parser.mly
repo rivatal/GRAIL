@@ -65,7 +65,7 @@ formals_opt:
     /* nothing */ { [] }
   | formal_list   { List.rev $1 }
 
-formal_list:  /*Changed to id because they're ids*/
+formal_list:  
     ID                   { [$1] }
   | formal_list COMMA ID { $3 :: $1 }
 

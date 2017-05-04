@@ -16,7 +16,7 @@ let string_of_uop (uop: uop) =
 
 let rec string_of_type (t: primitiveType) =
   match t with
-  | TRec(s, l) -> (Printf.sprintf "record '%s" s)
+  | TRec(s, l) -> (Printf.sprintf "record any@%s" s)
   | TInt -> "int"
   | TBool -> "bool"
   | TFloat -> "float"
@@ -26,7 +26,7 @@ let rec string_of_type (t: primitiveType) =
   | TEdge(x) -> "edge of " ^ (string_of_type x)
   | TGraph(a, b) -> "graph of " ^ (string_of_type a) ^ " with " ^ (string_of_type b)
   | TList(x) -> "list of " ^ (string_of_type x)
-  | T(x) -> Printf.sprintf "'%s" x
+  | T(x) -> Printf.sprintf "any@%s" x
 
 let string_of_tuple (t: id * primitiveType) =
   match t with
@@ -164,3 +164,7 @@ let string_of_func (func: sast_afunc) =
        String.concat "" (List.map string_of_astmt func.body) ^ "}\n"
      in t ^ name ^ formals ^body
 *)
+(*Maps a variable to its name in the environment*)
+let map_id_with (fname: string )(id: string) : string =
+(*    ignore(print_string("map_id_with " ^ fname ^ "#" ^ id ^ "\n"));  *)
+  (fname ^ "#" ^ id)
