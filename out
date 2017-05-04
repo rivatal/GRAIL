@@ -9,8 +9,7 @@ declare i32 @printf(i8*, ...)
 define void @main() {
 entry:
   %printf = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([12 x i8]* @str, i32 0, i32 0))
-  %malloccall = tail call i8* @malloc(i32 trunc (i64 mul nuw (i64 ptrtoint (i32* getelementptr (i32* null, i32 1) to i64), i64 2) to i32))
-  %i = bitcast i8* %malloccall to %record_t*
+  %i = alloca %record_t
   %0 = load %record_t* %i
   %1 = insertvalue %record_t %0, i32 1, 0
   %2 = insertvalue %record_t %0, i32 2, 1
@@ -19,5 +18,3 @@ entry:
   %node = load %record_t* %i
   ret void
 }
-
-declare noalias i8* @malloc(i32)
