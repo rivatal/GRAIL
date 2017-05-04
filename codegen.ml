@@ -19,17 +19,17 @@ let translate (functions) =
   and float_t = L.float_type context
   and void_t= L.void_type context
   and pointer_t = L.pointer_type
-  in let ltype_of_typ = function
+ in let ltype_of_typ = function
       A.TInt -> i32_t
     | A.TChar -> i8_t
     | A.TBool -> i1_t
     | A.TVoid -> void_t
     | A.TString -> str_t 
     | A.TFloat -> float_t 
-  in let ltype_of_struct name = function
+ in let ltype_of_struct name = function
       A.TRec(_,_) -> L.named_struct_type context name
-    | A.TEdge(_) -> L.named_struct_type context name 
-    | A.TGraph(_,_) -> L.named_struct_type context name 
+    | A.TEdge(_) -> L.named_struct_type context name
+    | A.TGraph(_,_) -> L.named_struct_type context name
   in   
  (* Declare printf(), which the print built-in function will call *)
   let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
@@ -129,8 +129,8 @@ let translate (functions) =
         )
         (* Edge, Graph, Record *)
       | A.ARecord(alist,trec) ->
-		match trec with
-		| A.TRec(name,tlist) ->
+		(match trec with
+        | A.TRec(name,tlist) ->
             let struct_name = "struct."^name in 
             let record_t = ltype_of_struct struct_name trec in 
 			let ret_types = 
@@ -146,12 +146,48 @@ let translate (functions) =
 	          ( L.build_insertvalue load_loc hd i "loc" builder;
 			    populate_structure tl (i+1) 
               )
+		in populate_structure argslist 0)
+            
+       | A.AEdge(e1,op,e2,item,typ) ->
+       (  match typ with 
+            | A.TEdge(pt) ->
+                let name_var = ref (0) 
+                in let gen_new_name() =
+                let c1 = !name_var in
+                incr name_var; 
+                "struct."^string_of_int(!name_var) 
+                in let struct_name = gen_new_name() in 
+                let edge_t = ltype_of_struct struct_name pt in  
+                let item_name,trec = 
+                match item with
+                    A.ARecord(_,trec) -> 
+                        match trec with 
+                        A.TRec(name,_) -> name,trec
+                        | _ -> "error",A.TVoid
+           in let record_t = ltype_of_struct item_name trec in 
+           let ret_types = Array.of_list((List.map (fun (t) -> ltype_of_typ t)
+           [typ;typ;A.TBool])@[record_t]) 
+           in L.struct_set_body edge_t ret_types false;
+           let (directed,from,into) = 
+            match op with
+             | Dash -> (false,e1,e2)
+             | To -> (true,e1,e2)
+             | From -> (true,e2,e1)
+            in let argslist = 
+            (List.map (aexpr builder local_var_map) [from;into;A.ABoolLit(directed,A.TBool);item])
+         in let loc = L.build_alloca edge_t "" builder
+         in let load_loc = L.build_load loc "" builder
+		 in let rec populate_structure fields i = 
+			match fields with 
+			| [] -> L.build_store load_loc loc builder;loc
+			| hd :: tl ->
+	          ( L.build_insertvalue load_loc hd i "loc" builder;
+			    populate_structure tl (i+1) 
+              )
 		in populate_structure argslist 0
-            
-            
-
+      )      
     (*| A.Noexpr -> L.const_int i32_t 0*)
-    (* Invoke "f builder" if the current block does not already 
+    (* Invok:e "f builder" if the current block does not already 
        have a terminal (e.g., a branch). *)        
     in  let add_terminal (builder, local_var_map) f =
           match L.block_terminator (L.insertion_block builder) with
@@ -182,7 +218,12 @@ let translate (functions) =
                     let e' = aexpr builder local_var_map e 
                     in let local_var_map = StringMap.add name e' local_var_map
                     in (builder,local_var_map)
-               | _ -> (builder,local_var_map)
+                    |A.TEdge(_) -> 
+                    let e' = aexpr builder local_var_map e 
+                    in 
+                    let local_var_map = StringMap.add name e' local_var_map
+                    in (builder,local_var_map)
+                    | _ -> (builder,local_var_map)
                     )
            )         
         | A.AIf (predicate, then_stmt, else_stmt) ->
