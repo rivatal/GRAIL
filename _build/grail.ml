@@ -43,7 +43,7 @@ let rec get_ids_formals(e: string list)(f: string) =
   (map_id_with f h) :: get_ids_formals t f
 
 let infer_func (e: Ast.func) (genv : genvironment) : (Ast.afunc * genvironment) =
-   ignore( (*print_string("infer\n") *)); 
+   ignore(print_string("infer\n")); 
   check_overload e genv; 
   match e with 
   |Fbody(Fdecl(fname, formals), stmts) ->
@@ -61,10 +61,6 @@ let grail (ast: Ast.afunc list) (input) : Ast.afunc list =
     in get_sast tl genv (afunc :: l) 
   in 
   let builtins = [("print", (TVoid, [("x", TString)], [])); 
-                  ("printint", (TVoid, [("x", TInt)], [])); 
-                  ("printfloat", (TVoid, [("x", TFloat)], [])); 
-                  ("printbool", (TVoid, [("x", TBool)], [])); 
-                  ("printchar", (TVoid, [("x", TChar)], [])); 
                   ("display", (TVoid, [("x", TGraph(Infer.gen_new_type(), Infer.gen_new_type()))], []))]
   in let rec addbuiltins l genv =
     match l with
