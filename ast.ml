@@ -2,7 +2,7 @@ type id = string
 
 (* type eop =   make all op *)
 
-type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq |
+type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | Ladd |
           And | Or | In | Fadd | Fsub | Fmult | Fdiv | Gadd | Eadd | To | From | Dash
 
 type uop = Neg | Not 
@@ -65,7 +65,7 @@ and astmt =
   | AWhile of aexpr * astmt list
   | AReturn of aexpr * primitiveType
   | AExpr of aexpr
-  | AForin of string * aexpr * astmt list
+  | AForin of aexpr * aexpr * astmt list
 
 
 and stmt =
@@ -73,7 +73,7 @@ and stmt =
   | If of expr * stmt list * stmt list
   | While of expr * stmt list
   | For of stmt * expr * stmt * stmt list
-  | Forin of string * expr * stmt list
+  | Forin of expr * expr * stmt list
   | Return of expr
   | Expr of expr
 
