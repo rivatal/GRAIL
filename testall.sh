@@ -5,6 +5,7 @@ make
 LLI="/usr/local/opt/llvm/bin/lli"
 LLL="/usr/local/opt/llvm/bin/llvm-link"
 
+# coloring notes
 # success = green
 # warning or err = red
 # help or neutral things = yellow
