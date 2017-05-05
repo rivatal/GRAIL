@@ -1,0 +1,7 @@
+g(c){
+	return "AT THE TOP!";
+}
+
+main(b){
+	return g(b);	
+}
