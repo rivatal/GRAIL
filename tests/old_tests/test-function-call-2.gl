@@ -1,0 +1,8 @@
+f() {
+	print("IN F");	
+}
+
+main() {
+	f();
+	print("MAIN");
+}
