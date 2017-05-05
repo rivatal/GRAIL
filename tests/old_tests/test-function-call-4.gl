@@ -1,0 +1,8 @@
+function(x) { 
+	return x; 
+} 
+
+main(){	
+	x = 3; 
+	function("sdf"); 
+}
