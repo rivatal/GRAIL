@@ -177,11 +177,18 @@ let rec infer_stmt (allenv: allenv) (e: stmt): (allenv * astmt) =
     let _, astmts = infer_stmt_list allenv stmts in  (*change type_stmt to update the map*)
     let allenv = outerenv in
      (allenv, AFor(as1, ae1, as2, astmts))
-  | Forin(id, expr, stmts) -> 
-    let ae = infer_expr allenv expr in 
+  | Forin(e1, e2, stmts) -> 
+    let outerenv = allenv in
+    let env, genv = allenv in 
+    let id = (get_id e1) in 
+    let ae2 = infer_expr allenv e2 in 
+    ignore(print_string("getting subtype"));
+    let it = get_subtype (type_of ae2) in 
+    let env = NameMap.add (map_id id) it env in 
+    let allenv = env, genv in 
+    let aid = infer_expr allenv e1 in
     let _, astmts = infer_stmt_list allenv stmts in  (*change type_stmt to update the map*)
-     (allenv, AForin(id, ae, astmts))
-
+     (outerenv, AForin(aid, ae2 , astmts))
 
 and type_stmt (allenv: allenv) (e: stmt) : allenv * astmt  = 
   let allenv, astmt = infer_stmt allenv e in 
@@ -336,6 +343,17 @@ and check_bool (e: aexpr) : unit =
   then(raise(failwith ((string_of_aexpr e) ^ " not a boolean.")))
   else ()
 
+and get_id (e: expr) : string =
+  match e with
+  |Id(str) -> str 
+  |_ -> raise(failwith(string_of_expr e ^ " is not an id."))
+
+and get_subtype (t: primitiveType) : primitiveType =
+  match t with
+  |(* TGraph(_,_) |  *)TList(st) -> st
+  | T(_) -> t 
+  |x -> raise(failwith("error: " ^ string_of_type x ^ " not iterable."))
+
 (* and check_list_exprs (e: aexpr list) : unit =
   match e with 
     [] -> ()
@@ -396,6 +414,7 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
       | Greater | Less | Equal | Geq | Leq | Neq -> [(et1, et2); (t, TBool)]
       | And | Or -> [(et1, TBool); (et2, TBool); (t, TBool)]
       | Fadd | Fsub | Fmult | Fdiv -> [(et1, TFloat); (et2, TFloat); (t, TFloat)]
+      | Ladd -> [(et1, TList(et2)); (t, TList(et2))]
       | In -> 
       (match et2 with |TList(x) ->     
               [(et1, x); 
@@ -509,11 +528,15 @@ and apply_expr_list (subs: substitutions) (ae: aexpr list)  : aexpr list =
 
 (*Helper function for update map*)
 and get_lval (ae: aexpr) =
+  ignore(print_string("getting lval"));
   match ae with
-  |ACall(str, _, _, _) | AId(str, _) -> str 
-  |ADot(ae, str, TRec(x, _)) -> map_id_rec x str
+  |ACall(str, _, _, _) 
+  |AId(str, _) -> str 
+  |ADot(ae, str, TRec(x, _)) -> ignore(print_string("adot!!!")); map_id_rec x str
   |AItem(str, _, _) -> str
-  |_ -> raise(failwith("error: " ^ string_of_aexpr ae ^ " not a valid lvalue."))
+
+  (*is there a problem if this is a record??*)
+  |_ -> raise(failwith("error: " ^ string_of_aexpr ae ^ " not a valid lvalue@534."))
 
 (*Updates environment*)
 and update_map (allenv: allenv) (a: astmt) : environment = 
@@ -532,6 +555,7 @@ and update_map (allenv: allenv) (a: astmt) : environment =
   |AIf(_, a1, a2) -> env 
   |AFor(_, _, _, _) -> env
   |AWhile(_,_) -> env
+  |AForin(_,_,_) -> env
 and update_mapl (allenv: allenv) (alist : astmt list): environment =
   let rec helper (alist : astmt list) (env: environment) : environment =
   match alist with
