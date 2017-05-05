@@ -1,15 +1,19 @@
 gcd(a, b) {
         while (a != b){
-                if (a > b)
+                if (a > b) {
                         a = a - b;
-                else
-                        b = b - a; }
+                }
+                else {
+                        b = b - a; 
+                }
+        }
         return a;
 }
 
 main(){
-        print(gcd(2,14)); /* Good. Should print 2 */
-        print(gcd(3,15)); /* Good. Should print 3 */
-        print(gcd(99,121)); /* Bad: printed 11. Should print 99 */
+        gcd(2,14); /* Good. Should print 2 */
+     /*   print(gcd(3,15));  Good. Should print 3 */
+     /*   print(gcd(99,121));  Bad: printed 11. Should print 99 */
+     /* */
         return 0;
 }
