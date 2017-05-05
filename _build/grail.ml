@@ -43,7 +43,6 @@ let rec get_ids_formals(e: string list)(f: string) =
   (map_id_with f h) :: get_ids_formals t f
 
 let infer_func (e: Ast.func) (genv : genvironment) : (Ast.afunc * genvironment) =
-   ignore(print_string("infer\n")); 
   check_overload e genv; 
   match e with 
   |Fbody(Fdecl(fname, formals), stmts) ->
@@ -61,6 +60,10 @@ let grail (ast: Ast.afunc list) (input) : Ast.afunc list =
     in get_sast tl genv (afunc :: l) 
   in 
   let builtins = [("print", (TVoid, [("x", TString)], [])); 
+                  ("printint", (TVoid, [("x", TInt)], [])); 
+                  ("printfloat", (TVoid, [("x", TFloat)], [])); 
+                  ("printbool", (TVoid, [("x", TBool)], [])); 
+                  ("printchar", (TVoid, [("x", TChar)], [])); 
                   ("display", (TVoid, [("x", TGraph(Infer.gen_new_type(), Infer.gen_new_type()))], []))]
   in let rec addbuiltins l genv =
     match l with
@@ -109,9 +112,23 @@ let format_sast_codegen (ast : Ast.afunc) : Ast.sast_afunc =
       let l = interpreter([]) in display l *)
       
    let compile() = 
+   let file = Lexing.from_channel stdin in 
    let sast = 
-   let file = Lexing.from_channel stdin in
-   List.map format_sast_codegen (grail [] file) in
+
+   try
+   List.map format_sast_codegen (grail [] file)
+    with
+    |_ -> raise(failwith("Syntax Error"))
+   in 
    let m = Codegen.translate sast in
-   Llvm_analysis.assert_valid_module m; print_string (Llvm.string_of_llmodule m) ;; 
+   Llvm_analysis.assert_valid_module m;  
+   print_string (Llvm.string_of_llmodule m);;
+   compile()
+
+(*  
+    let sast = List.map format_sast_codegen (grail [] file) in   let m = Codegen.translate sast in
+   Llvm_analysis.assert_valid_module m; print_string 
+
+   (Llvm.string_of_llmodule m);; 
    compile(); 
+ *)

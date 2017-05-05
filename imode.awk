@@ -11,7 +11,7 @@ BEGIN{
 	else if(match($0, /let compile/))
 	    print "(* " $0
 	else if(match($0, /compile\(\);/))
-	    print $0 "*)"
+	    print $0 " *)"
 	else
 	    print $0
     }

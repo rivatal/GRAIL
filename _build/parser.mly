@@ -10,8 +10,8 @@ open Ast
 %token TIMES LBRACKET RBRACKET DASH RARROW LARROW
 %token ACCIO CHAR DOUBLE EDGE EMPTY 
 %token TO FROM IN RECORD TYPE WITH FREE
-%token FPLUS FMINUS FTIMES FDIVIDE ADD EADD
-%token PLUSEQ FPLUSEQ ADDEQ EADDEQ COPY
+%token FPLUS FMINUS FTIMES FDIVIDE ADD EADD CARAT
+%token PLUSEQ FPLUSEQ ADDEQ EADDEQ COPY CARATEQ
 %token <int> INTLIT
 %token <char> CHARLIT
 %token <float> DOUBLELIT
@@ -21,13 +21,13 @@ open Ast
 
 %nonassoc NOELSE
 %nonassoc ELSE
-%right ASSIGN COPY PLUSEQ FPLUSEQ ADDEQ EADDEQ
+%right ASSIGN COPY PLUSEQ FPLUSEQ ADDEQ EADDEQ CARATEQ
 %nonassoc COLON 
 %left OR
 %left AND
 %left EQ NEQ
 %left LT GT LEQ GEQ IN
-%left ADD EADD
+%left ADD EADD CARAT
 %left DOT
 %nonassoc NOWITH
 %nonassoc GRAPH
@@ -87,6 +87,7 @@ stmt:
   | expr FPLUSEQ expr SEMI { Asn($1, Binop($1, Fadd, $3), true) }
   | expr ADDEQ expr SEMI { Asn($1, Binop($1, Gadd, $3), true) }
   | expr EADDEQ expr SEMI { Asn($1, Binop($1, Eadd, $3), true) }
+  | expr CARATEQ expr SEMI { Asn($1, Binop($1, Ladd, $3), true)}
   | WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE { While($3, List.rev $6) }
 
   expr:
@@ -120,7 +121,8 @@ stmt:
   | expr OR     expr { Binop($1, Or,    $3) }
   | expr IN     expr { Binop($1, In,    $3) }
   | expr ADD    expr { Binop($1, Gadd, $3) }
-  | expr EADD   expr { Binop($1, Eadd, $3) }  
+  | expr EADD   expr { Binop($1, Eadd, $3) }
+  | expr CARAT  expr { Binop($1, Ladd, $3)}  
   | MINUS expr %prec NEG { Unop(Neg, $2) }
   | NOT expr         { Unop(Not, $2) }
   | expr LARROW expr with_opt { Edge($1, To, $3, $4) }

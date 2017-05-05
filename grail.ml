@@ -112,9 +112,23 @@ let format_sast_codegen (ast : Ast.afunc) : Ast.sast_afunc =
       let l = interpreter([]) in display l *)
       
    let compile() = 
+   let file = Lexing.from_channel stdin in 
    let sast = 
-   let file = Lexing.from_channel stdin in
-   List.map format_sast_codegen (grail [] file) in
+
+   try
+   List.map format_sast_codegen (grail [] file)
+    with
+    |_ -> raise(failwith("Syntax Error"))
+   in 
    let m = Codegen.translate sast in
-   Llvm_analysis.assert_valid_module m; print_string (Llvm.string_of_llmodule m) ;; 
+   Llvm_analysis.assert_valid_module m;  
+   print_string (Llvm.string_of_llmodule m);;
+   compile()
+
+(*  
+    let sast = List.map format_sast_codegen (grail [] file) in   let m = Codegen.translate sast in
+   Llvm_analysis.assert_valid_module m; print_string 
+
+   (Llvm.string_of_llmodule m);; 
    compile(); 
+ *)
