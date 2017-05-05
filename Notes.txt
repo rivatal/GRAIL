@@ -358,3 +358,5 @@ Currently graph is commented out-- hopefully we'll have graph.nodes and graph.ed
 Introducing the empty list trec. Hope I don't damn us all.
 Nvmnid? Will have to think about that.
 Okay-- we have trouble assigning to dots because we have to go find the record name, attach it back to the field name, you know the drill.
+
+

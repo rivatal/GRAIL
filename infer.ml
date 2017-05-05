@@ -414,6 +414,7 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
       | Greater | Less | Equal | Geq | Leq | Neq -> [(et1, et2); (t, TBool)]
       | And | Or -> [(et1, TBool); (et2, TBool); (t, TBool)]
       | Fadd | Fsub | Fmult | Fdiv -> [(et1, TFloat); (et2, TFloat); (t, TFloat)]
+      | Ladd -> [(et1, TList(et2)); (t, TList(et2))]
       | In -> 
       (match et2 with |TList(x) ->     
               [(et1, x); 

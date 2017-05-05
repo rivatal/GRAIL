@@ -7,7 +7,7 @@ let string_of_op (op: op) =
   | Or -> "||" | And -> "&&" | Sub -> "-" | Div -> "/" | Fadd -> ".+"
   | Equal -> "==" | Neq -> "-" | Leq -> "<=" | Geq -> ">=" | Fsub -> ".-"
   | Fmult -> ".*" | Fdiv -> "./" | To -> "<-" | From -> "->" | Dash -> "--"
-  | In -> "in" | Gadd -> "&" | Eadd -> ".&"
+  | In -> "in" | Gadd -> "&" | Eadd -> ".&" | Ladd -> "^"
 
 let string_of_uop (uop: uop) =
   match uop with
