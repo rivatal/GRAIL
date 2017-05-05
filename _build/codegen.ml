@@ -26,8 +26,7 @@ let translate (functions) =
     | A.TVoid -> void_t
     | A.TString -> str_t 
     | A.TFloat -> float_t
-    | A.TList t -> L.struct_type context [|L.pointer_type (ltype_of_typ t); i32_t|]
-    (*| A.TList t -> L.pointer_type (ltype_of_typ t)*) in 
+    | A.TList t -> L.pointer_type (ltype_of_typ t) in 
 
 
   (* Declare printf(), which the print built-in function will call *)
@@ -50,8 +49,7 @@ let translate (functions) =
     let (the_function, _) = StringMap.find afunc.A.fname function_decls in
     let builder = L.builder_at_end context (L.entry_block the_function) in
 
-    let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in
-    let float_format_str = L.build_global_stringptr "%f\n" "fmt" builder in
+    (*let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in*)
 
     (* Construct the function's "locals": formal arguments and locally
        declared variables.  Allocate each on the stack, initialize their
@@ -100,11 +98,6 @@ let translate (functions) =
       )
     in
 
-    (*let list_ops op =
-    (mach op with
-      A.Ladd -> add_to_list
-    )*)
-
     let get_list_type t = (*quick utility function to map TList to the list's type*)
     (match t with
       A.TList x -> x
@@ -127,17 +120,15 @@ let translate (functions) =
       | A.AFloatLit(f, _) -> L.const_float float_t f
       | A.AId(s,_) -> L.build_load (lookup s local_var_map) s builder 
       | A.AList(l, t) ->  let list_typ = get_list_type t and els = List.map (aexpr builder local_var_map) l in 
-        let struct_var = L.build_alloca (ltype_of_typ t) "strct" builder in
+        (*let init = (L.const_array (ltype_of_typ list_typ) (Array.of_list els)) in 
+        let glob = (*L.define_global "lst" init the_module*) in*)
         let ar_var = L.build_array_alloca (ltype_of_typ list_typ) (L.const_int i32_t (List.length l)) "lst" builder in
-        let init_list = assign_array ar_var els 0 builder in
-        let p0 = L.build_struct_gep struct_var 0 "p0" builder and p1 = L.build_struct_gep struct_var 1 "p1" builder in
-        ignore(L.build_store init_list p0 builder); ignore(L.build_store (L.const_int i32_t (List.length l)) p1 builder); L.build_load struct_var "lst" builder
-      | A.AItem(s, e, t) -> let strct = lookup s local_var_map in let arp = L.build_struct_gep strct 0 "tmp" builder in
-                            let ar = L.build_load arp "tmpar" builder and ad = aexpr builder local_var_map e in
-                            let p = L.build_in_bounds_gep ar [|ad|] "ptr" builder in L.build_load p "item" builder
+        assign_array ar_var els 0 builder
+        (*ignore (L.build_store (L.const_array (ltype_of_typ list_typ) (Array.of_list els)) ar_var builder); *)
+        (*L.const_bitcast ar_var (L.pointer_type (ltype_of_typ list_typ))*)
+      | A.AItem(s, e, t) -> let ar = L.build_load (lookup s local_var_map) "ar" builder and ad = aexpr builder local_var_map e in
+                            let p = L.build_in_bounds_gep ar [|ad|] "ptr" builder in L.build_load p "item" builder 
       | A.ACall ("print", [e], _, _) -> L.build_call printf_func [| (aexpr builder local_var_map e) |] "printf" builder
-      | A.ACall("printint", [e], _, _) | A.ACall ("printbool", [e], _, _) -> L.build_call printf_func [| int_format_str ; (aexpr builder local_var_map e) |] "printf" builder
-      | A.ACall("printfloat", [e], _, _) -> L.build_call printf_func [| float_format_str ; (aexpr builder local_var_map e) |] "printf" builder
       | A.ACall (f, act, _, _) ->
         let (fdef, fdecl) = StringMap.find f function_decls in
         let actuals = List.rev (List.map (aexpr builder local_var_map) (List.rev act)) in
@@ -181,8 +172,7 @@ let translate (functions) =
             A.AId(name, typ) -> let local_var_map = if StringMap.mem name local_var_map then local_var_map else add_local local_var_map (t,name) in 
            let e' = aexpr builder local_var_map e in ignore (L.build_store e' (lookup name local_var_map) builder); (builder, local_var_map)
           | A.AItem(name, adr, typ) -> let e' = aexpr builder local_var_map e and 
-            arp = L.build_struct_gep (lookup name local_var_map) 0 "tmp" builder and ad = aexpr builder local_var_map adr in
-            let ar = L.build_load arp "tmpar" builder in
+            ar = L.build_load (lookup name local_var_map) "ar" builder and ad = aexpr builder local_var_map adr in
             let p = L.build_in_bounds_gep ar [|ad|] "ptr" builder in ignore(L.build_store e' p builder); (builder, local_var_map))
         | A.AIf (predicate, then_stmt, else_stmt) ->
           let bool_val = aexpr builder local_var_map predicate in
@@ -218,34 +208,6 @@ let translate (functions) =
         | A.AFor (s1, e2, s3, body) -> List.fold_left astmt (builder, local_var_map)
                                          [s1 ; A.AWhile(e2, List.rev (s3::(List.rev body)))]
                                          (* Build the code for each statement in the function *)
-
-        | A.AForin (e1, e2, body) -> 
-        let ind = (match e1 with A.AId(s, t) -> (s, t)) in let lst = L.build_alloca (ltype_of_typ (A.TList (snd ind))) "lst" builder
-        in ignore(L.build_store (aexpr builder local_var_map e2) lst builder);
-        let elvar = L.build_alloca (ltype_of_typ (snd ind)) (fst ind) builder in
-        let local_var_map = StringMap.add (fst ind) elvar local_var_map in
-        let ar = L.build_load (L.build_struct_gep lst 0 "tmp" builder) "ar" builder and endlst = L.build_load (L.build_struct_gep lst 1 "tmp" builder) "end" builder in
-        let elind = L.build_alloca i32_t "ind" builder in ignore(L.build_store (L.const_int i32_t 0) elind builder);
-        
-        let pred_bb = L.append_block context "while" the_function in
-        ignore (L.build_br pred_bb builder);
-
-        let body_bb = L.append_block context "while_body" the_function in
-        let body_builder = L.builder_at_end context body_bb in
-        let p = L.build_in_bounds_gep ar [|(L.build_load elind) "i" body_builder|] "ptr" body_builder in ignore(L.build_store (L.build_load p "tmp" body_builder) elvar body_builder);
-        let (endbody_builder, new_local_var_map) = (List.fold_left astmt ((L.builder_at_end context body_bb), local_var_map) body) in
-        ignore(L.build_store (L.build_add (L.build_load elind "tmp" endbody_builder) (L.const_int i32_t 1) "inc" endbody_builder) elind endbody_builder);
-        add_terminal (endbody_builder, new_local_var_map) (L.build_br pred_bb);
-
-        let pred_builder = L.builder_at_end context pred_bb in
-        let bool_val = L.build_icmp L.Icmp.Slt (L.build_load elind "tmp" pred_builder) endlst "comp" pred_builder in
-
-        let merge_bb = L.append_block context "merge" the_function in
-        ignore (L.build_cond_br bool_val body_bb merge_bb pred_builder);
-        (L.builder_at_end context merge_bb, local_var_map)
-
-          
-
 
     in let (builder,local_vars) = List.fold_left 
            astmt (builder,local_vars) afunc.A.body 

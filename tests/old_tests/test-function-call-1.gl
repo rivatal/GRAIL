@@ -1,4 +1,0 @@
-main(){
-	x = 3;
-	print("IN Y");
-}
