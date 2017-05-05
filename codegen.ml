@@ -131,9 +131,10 @@ let translate (functions) =
         let ar_var = L.build_array_alloca (ltype_of_typ list_typ) (L.const_int i32_t (List.length l)) "lst" builder in
         let init_list = assign_array ar_var els 0 builder in
         let p0 = L.build_struct_gep struct_var 0 "p0" builder and p1 = L.build_struct_gep struct_var 1 "p1" builder in
-        ignore(L.build_store init_list p0 builder); ignore(L.build_store (L.const_int i32_t (List.length l)) p1 builder); struct_var
-      (*| A.AItem(s, e, t) -> let ar = L.build_load (lookup s local_var_map) "ar" builder and ad = aexpr builder local_var_map e in
-                            let p = L.build_in_bounds_gep ar [|ad|] "ptr" builder in L.build_load p "item" builder *)
+        ignore(L.build_store init_list p0 builder); ignore(L.build_store (L.const_int i32_t (List.length l)) p1 builder); L.build_load struct_var "lst" builder
+      | A.AItem(s, e, t) -> let strct = lookup s local_var_map in let arp = L.build_struct_gep strct 0 "tmp" builder in
+                            let ar = L.build_load arp "tmpar" builder and ad = aexpr builder local_var_map e in
+                            let p = L.build_in_bounds_gep ar [|ad|] "ptr" builder in L.build_load p "item" builder
       | A.ACall ("print", [e], _, _) -> L.build_call printf_func [| (aexpr builder local_var_map e) |] "printf" builder
       | A.ACall("printint", [e], _, _) | A.ACall ("printbool", [e], _, _) -> L.build_call printf_func [| int_format_str ; (aexpr builder local_var_map e) |] "printf" builder
       | A.ACall("printfloat", [e], _, _) -> L.build_call printf_func [| float_format_str ; (aexpr builder local_var_map e) |] "printf" builder
@@ -179,9 +180,10 @@ let translate (functions) =
           (match s with
             A.AId(name, typ) -> let local_var_map = if StringMap.mem name local_var_map then local_var_map else add_local local_var_map (t,name) in 
            let e' = aexpr builder local_var_map e in ignore (L.build_store e' (lookup name local_var_map) builder); (builder, local_var_map)
-          (*| A.AItem(name, adr, typ) -> let e' = aexpr builder local_var_map e and 
-            ar = L.build_load (lookup name local_var_map) "ar" builder and ad = aexpr builder local_var_map adr in
-            let p = L.build_in_bounds_gep ar [|ad|] "ptr" builder in ignore(L.build_store e' p builder); (builder, local_var_map)*))
+          | A.AItem(name, adr, typ) -> let e' = aexpr builder local_var_map e and 
+            arp = L.build_struct_gep (lookup name local_var_map) 0 "tmp" builder and ad = aexpr builder local_var_map adr in
+            let ar = L.build_load arp "tmpar" builder in
+            let p = L.build_in_bounds_gep ar [|ad|] "ptr" builder in ignore(L.build_store e' p builder); (builder, local_var_map))
         | A.AIf (predicate, then_stmt, else_stmt) ->
           let bool_val = aexpr builder local_var_map predicate in
           let merge_bb = L.append_block context "merge" the_function in
