@@ -3,5 +3,3 @@ f(x) {
 		return true; 
 	}
 }
-
-f(3);
