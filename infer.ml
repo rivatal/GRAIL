@@ -72,6 +72,7 @@ let rec get_type_list (aelist: aexpr list) : primitiveType list =
   List.map type_of aelist
 
 let rec split_list (aelist: aexpr list) : (primitiveType list * primitiveType list) = 
+  ignore(print_string("split_list\n"));
   let rec helper l edgelist nodelist : (primitiveType list * primitiveType list) =
   (match l with 
   |[] -> edgelist, nodelist
@@ -181,7 +182,7 @@ let rec infer_stmt (allenv: allenv) (e: stmt): (allenv * astmt) =
     let env, genv = allenv in 
     let id = (get_id e1) in 
     let ae2 = infer_expr allenv e2 in 
-    
+    ignore(print_string("getting subtype"));
     let it = get_subtype (type_of ae2) in 
     let env = NameMap.add (map_id id) it env in 
     let allenv = env, genv in 
@@ -284,13 +285,13 @@ let env, genv = allenv in
  | Graph(elist, tedge) ->
    let atedge = annotate_expr allenv (Edge(Noexpr, Dash, Noexpr, tedge)) in
    let aelist = annotate_expr_list allenv (elist) in
-   
+   ignore(print_string("just before split\n"));
    let temptype = type_of atedge in 
    let edgelist, nodelist = split_list aelist in
    ignore(check_type_consistency (temptype :: edgelist));
    ignore(check_type_consistency (nodelist)); 
    let gtype = if(List.length nodelist = 0) then(gen_new_type()) else(List.hd nodelist) in
-   
+   print_string("checked.");
    AGraph(aelist, atedge, TGraph(gtype, temptype))
   (*a. check the list for consistency between nodes and edges. (which could be noexprs or lists themselves, or type of e.)
     b. type of e imposes a constraint on ^ and on the graph type. 
@@ -527,10 +528,11 @@ and apply_expr_list (subs: substitutions) (ae: aexpr list)  : aexpr list =
 
 (*Helper function for update map*)
 and get_lval (ae: aexpr) =
+  ignore(print_string("getting lval"));
   match ae with
   |ACall(str, _, _, _) 
   |AId(str, _) -> str 
-  |ADot(ae, str, TRec(x, _)) -> map_id_rec x str
+  |ADot(ae, str, TRec(x, _)) -> ignore(print_string("adot!!!")); map_id_rec x str
   |AItem(str, _, _) -> str
 
   (*is there a problem if this is a record??*)
