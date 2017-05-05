@@ -22,9 +22,17 @@ let stringify = function
   (* graph operator *)
   | DASH -> "DASH"            | RARROW -> "RARROW"
   | LARROW -> "LARROW"    
- (* | AT -> "AT" *)
+ (* | AT -> "AT"
+  | AMPERSAND -> "AMPERSAND"  | SIMILARITY -> "SIMILARITY" *)
   (* identifier *)
   | ID(string) -> "ID"
+  (* primary type *)
+  | INT -> "INT"          | FLOAT -> "FLOAT"
+  | STRING -> "STRING"    | BOOL -> "BOOL"
+ (* | NODE -> "NODE"        | GRAPH -> "GRAPH" *)
+  | LIST -> "LIST"      (*  | DICT -> "DICT" *)
+  | NULL -> "NULL"        | VOID -> "VOID"
+  
   (* quote 
   | QUOTE -> "QUOTE" *)
 
@@ -35,18 +43,12 @@ let stringify = function
   | LPAREN -> "LPAREN" | RPAREN -> "RPAREN"
   (* End-of-File *)
   | EOF -> "EOF"
-  (*  primary type - Literals *)
+  (* Literals *)
   | INTLIT(int) -> "INT_LITERAL"
-  | CHARLIT(char)-> "CHAR_LITERAL"
-  | DOUBLELIT(float) -> "DOUBLE_LITERAL"
+  | FLOATLIT(float) -> "FLOAT_LITERAL"
   | STRINGLIT(string) -> "STRING_LITERAL"
-   (* | NODE -> "NODE"        
-  | GRAPH -> "GRAPH" 
-  | LIST() -> "LIST"        | DICT -> "DICT" 
-  | NULL -> "NULL"     *)   
-  | VOID -> "VOID"
+  | BOOLIT(bool) -> "BOOLEAN_LITERAL"
   | RETURN -> "RETURN"
-
 
 let _ =
   let lexbuf = Lexing.from_channel stdin in
