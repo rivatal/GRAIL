@@ -30,6 +30,8 @@ rule token = parse
 | ".+="    { FPLUSEQ }
 | "&="     { ADDEQ }
 | ".&="    { EADDEQ }
+| '^'      { CARAT }
+| "^="     { CARATEQ }
 | '='      { ASSIGN }
 | ".="     { COPY }
 | "=="     { EQ }
