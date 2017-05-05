@@ -15,7 +15,6 @@ let txt_of_binop = function
   | Sub -> "Sub"
   | Mult -> "Mult"
   | Div -> "Div"
-  | Mod -> "Mod"
   (* Boolean *)
   | Or -> "Or"
   | And -> "And"
@@ -26,23 +25,19 @@ let txt_of_binop = function
   | Greater -> "Greater"
   | Geq -> "Geq"
   (* Graph *)
-  | ListNodesAt -> "Child_Nodes_At"
-  | ListEdgesAt -> "Child_Nodes&Edges_At"
-  | RootAs -> "Root_As"
 
+(*
 let txt_of_graph_op = function
   | Right_Link -> "RLink"
   | Left_Link -> "LLink"
-  | Double_Link -> "DLink"
+  | Double_Link -> "DLink" *)
 
 let txt_of_var_type = function
-  | Void_t -> "void"
-  | Null_t -> "null"
-  | Int_t -> "int"
-  | Float_t -> "float"
-  | String_t -> "string"
-  | Bool_t -> "bool"
-  | Node_t -> "node"
+  | IntLit(_) -> "int"
+  | FloatLit(_) -> "float"
+  | StrLit(_) -> "string"
+  | BoolLit(_) -> "bool"
+ (* | Node_t -> "node"
   | Graph_t -> "graph"
   | Dict_Int_t -> "dict<int>"
   | Dict_Float_t -> "dict<float>"
@@ -54,42 +49,41 @@ let txt_of_var_type = function
   | List_Bool_t -> "list<bool>"
   | List_String_t -> "list<string>"
   | List_Node_t -> "list<node>"
-  | List_Graph_t -> "list<graph>"
+  | List_Graph_t -> "list<graph>"  *)
 
+(*
 let txt_of_formal = function
 | Formal(vtype, name) -> sprintf "Formal(%s, %s)" (txt_of_var_type vtype) name
-
+*)
 
 let txt_of_formal_list formals =
   let rec aux acc = function
     | [] -> sprintf "%s" (String.concat ", " (List.rev acc))
-    | fml :: tl -> aux (txt_of_formal fml :: acc) tl
+  (*  | fml :: tl -> aux (txt_of_formal fml :: acc) tl *)
   in aux [] formals
 
-let txt_of_num = function
-  | Num_Int(x) -> string_of_int x
-  | Num_Float(x) -> string_of_float x
+let txt_of_num x = function
+  IntLit(x) -> string_of_int x
+(*  | FloatLit(x) -> string_of_float x *)
 
 (* Expressions *)
 let rec txt_of_expr = function
-  | Num_Lit(x) -> sprintf "Num_Lit(%s)" (txt_of_num x)
-  | Bool_lit(x) -> sprintf "Bool_lit(%s)" (string_of_bool x)
-  | String_Lit(x) -> sprintf "String_Lit(%s)" x
-  | Null -> sprintf "Null"
-  | EdgeAt(g, a, b) -> sprintf "%s@(%s, %s)" (txt_of_expr g) (txt_of_expr a) (txt_of_expr b) 
-  | Node(x) -> sprintf "Node(%s)" (txt_of_expr x)
-  | Unop(op, e) -> sprintf "Unop(%s, %s)" (txt_of_unop op) (txt_of_expr e)
+  | IntLit(x) -> sprintf "Int_Lit(%s)" (string_of_int x)
+  | BoolLit(x) -> sprintf "Bool_lit(%s)" (string_of_bool x) 
+  | StrLit(x) -> sprintf "String_Lit(%s)" x 
+(*  | EdgeAt(g, a, b) -> sprintf "%s@(%s, %s)" (txt_of_expr g) (txt_of_expr a) (txt_of_expr b) 
+  | Node(x) -> sprintf "Node(%s)" (txt_of_expr x) *)
+  | Unop(op, e) -> sprintf "Unop(%s, %s)" (txt_of_unop op) (txt_of_expr e) 
   | Binop(e1, op, e2) -> sprintf "Binop(%s, %s, %s)"
-      (txt_of_expr e1) (txt_of_binop op) (txt_of_expr e2)
-  | Graph_Link(e1, op1, e2, e3) -> sprintf "Graph_Link(%s, %s, %s, WithEdge, %s)"
-      (txt_of_expr e1) (txt_of_graph_op op1) (txt_of_expr e2) (txt_of_expr e3)
-  | Id(x) -> sprintf "Id(%s)" x
-  | Assign(e1, e2) -> sprintf "Assign(%s, %s)" e1 (txt_of_expr e2)
-  | Noexpr -> sprintf "Noexpression"
-  | ListP(l) -> sprintf "List(%s)" (txt_of_list l)
-  | DictP(d) -> sprintf "Dict(%s)" (txt_of_dict d)
-  | Call(f, args) -> sprintf "Call(%s, [%s])" (f) (txt_of_list args)
-  | CallDefault(e, f, args) -> sprintf "CallDefault(%s, %s, [%s])" (txt_of_expr e) f (txt_of_list args)
+      (txt_of_expr e1) (txt_of_binop op) (txt_of_expr e2) 
+(*  | Graph_Link(e1, op1, e2, e3) -> sprintf "Graph_Link(%s, %s, %s, WithEdge, %s)"
+      (txt_of_expr e1) (txt_of_graph_op op1) (txt_of_expr e2) (txt_of_expr e3)  *)
+  | Id(x) -> sprintf "Id(%s)" x 
+  | Noexpr -> sprintf "Noexpression" 
+ (* | ListP(l) -> sprintf "List(%s)" (txt_of_list l)
+  | DictP(d) -> sprintf "Dict(%s)" (txt_of_dict d) *)
+  | Call(f, args) -> sprintf "Call(%s, [%s]）" (f) (txt_of_list args)
+ (* | CallDefault(e, f, args) -> sprintf "CallDefault(%s, %s, [%s])" (txt_of_expr e) f (txt_of_list args) *)
 
 (*Variable Declaration*)
 and txt_of_var_decl = function

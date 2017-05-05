@@ -21,7 +21,7 @@ for input_file in $INPUT_FILES; do
     fi
 done
 
-cd ../compiler;
+cd ..;
 ocamlyacc -v parser.mly;
 
 exit 0
