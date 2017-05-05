@@ -1,0 +1,10 @@
+f(x) { 
+	return x; 
+} 
+
+main() { 
+	z = 3; 
+	f(z); 
+	y = "sdf"; 
+	f(y); 
+}

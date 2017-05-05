@@ -15,7 +15,6 @@ let txt_of_binop = function
   | Sub -> "Sub"
   | Mult -> "Mult"
   | Div -> "Div"
-  | Mod -> "Mod"
   (* Boolean *)
   | Or -> "Or"
   | And -> "And"
@@ -26,14 +25,12 @@ let txt_of_binop = function
   | Greater -> "Greater"
   | Geq -> "Geq"
   (* Graph *)
-  | ListNodesAt -> "Child_Nodes_At"
-  | ListEdgesAt -> "Child_Nodes&Edges_At"
-  | RootAs -> "Root_As"
 
+(*
 let txt_of_graph_op = function
-  | Right_Link -> "RLink"
-  | Left_Link -> "LLink"
-  | Double_Link -> "DLink"
+  | RARROW -> "RArrow"
+  | LARROW -> "LArrow"
+  | DASH -> "Dash"  
 
 let txt_of_var_type = function
   | Void_t -> "void"
@@ -54,8 +51,9 @@ let txt_of_var_type = function
   | List_Bool_t -> "list<bool>"
   | List_String_t -> "list<string>"
   | List_Node_t -> "list<node>"
-  | List_Graph_t -> "list<graph>"
+  | List_Graph_t -> "list<graph>" *)
 
+(*
 let txt_of_formal = function
 | Formal(vtype, name) -> sprintf "Formal(%s, %s)" (txt_of_var_type vtype) name
 
@@ -115,7 +113,7 @@ and txt_of_dict = function
 and txt_of_func_decl f =
   sprintf "%s %s (%s) {%s}"
     (txt_of_var_type f.returnType) f.name (txt_of_formal_list f.args) (txt_of_stmts f.body)
-
+*)
 (* Statements *)
 and txt_of_stmt = function
   | Expr(expr) -> sprintf "Expr(%s);" (txt_of_expr expr)
@@ -132,7 +130,7 @@ and txt_of_stmts stmts =
   let rec aux acc = function
       | [] -> sprintf "%s" (String.concat "\n" (List.rev acc))
       | stmt :: tl -> aux (txt_of_stmt stmt :: acc) tl
-  in aux [] stmts
+  in aux [] stmts 
 
 (* Program entry point *)
 let _ =

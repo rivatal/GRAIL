@@ -28,7 +28,7 @@ open Ast
 %left EQ NEQ
 %left LT GT LEQ GEQ IN
 %left ADD EADD
-%right DOT
+%left DOT
 %nonassoc NOWITH
 %nonassoc GRAPH
 %nonassoc WITH
@@ -65,7 +65,7 @@ formals_opt:
     /* nothing */ { [] }
   | formal_list   { List.rev $1 }
 
-formal_list:  /*Changed to id because they're ids*/
+formal_list:  
     ID                   { [$1] }
   | formal_list COMMA ID { $3 :: $1 }
 
@@ -80,7 +80,7 @@ stmt:
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE   { If($3, List.rev $6, List.rev $10) }
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE IF LPAREN expr RPAREN LBRACE stmt_list RBRACE  { If($3, List.rev $6, [If($11, List.rev $14, [])]) }
   | FOR LPAREN stmt expr SEMI stmt RPAREN LBRACE stmt_list RBRACE { For($3, $4, $6, List.rev $9) }
-  | FOR LPAREN expr IN expr RPAREN LBRACE stmt_list RBRACE { Forin($3, $5, List.rev $8) }
+  | FOR LPAREN ID IN expr RPAREN LBRACE stmt_list RBRACE { Forin($3, $5, List.rev $8) }
   | expr ASSIGN expr SEMI { Asn($1, $3, true) }
   | expr COPY expr SEMI { Asn($1, $3, false) }
   | expr PLUSEQ expr SEMI { Asn($1, Binop($1, Add, $3), true) }
