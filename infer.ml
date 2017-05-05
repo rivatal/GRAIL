@@ -332,6 +332,7 @@ and check_asn_type (lval: primitiveType) (asn: primitiveType) : unit  =
     match lval, asn with
     |TEdge(a), TEdge(b)-> check_asn_type a b
     |TGraph(n1, e1), TGraph(n2, e2) -> ignore(check_asn_type n1 n2); (check_asn_type e1 e2)
+    |TList(a), b -> ignore(check_asn_type a b);
     |_ -> raise(failwith("error: " ^ string_of_type asn ^ " was defined as " ^ string_of_type x))
    )
 
