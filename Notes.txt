@@ -360,3 +360,5 @@ Nvmnid? Will have to think about that.
 Okay-- we have trouble assigning to dots because we have to go find the record name, attach it back to the field name, you know the drill.
 
 
+f(x){ x ^ 3; }
+
