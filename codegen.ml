@@ -249,29 +249,14 @@ let translate (functions) =
                         in let struct_name = ("struct."^tname)
                         in let record_t = lookup_struct struct_name 
                         in 
-			            (*let ret_types = 
-		            	Array.of_list(List.map (fun (_,t) -> ltype_of_typ t) tlist) 
-                        in L.struct_set_body record_t ret_types false;
-                        
-                        in 
-			            let ret_types = 
-		            	Array.of_list(List.map (fun (_,t) -> ltype_of_typ t) tlist)
-                        *)
                         let local_var = 
                                 L.build_alloca record_t "" builder
                          
-                        in let local_var_map = 
+                        in 
+                        let local_var_map = 
                         StringMap.add name local_var local_var_map
                         in ignore (L.build_store e' (lookup name local_var_map) 
                         builder);(builder, local_var_map)
-                        (*
-                        let e' = aexpr builder local_var_map e
-                        in ignore((L.build_store e' local_var
-                            builder));(builder, local_var_map)
-                        let e' = aexpr builder local_var_map e
-                        in let local_var_map = StringMap.add name e' local_var_map in 
-                        (builder,local_var_map)
-                        *)
                         
                    |A.TEdge(_) -> 
                     let e' = aexpr builder local_var_map e 
