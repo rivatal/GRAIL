@@ -199,6 +199,8 @@ in
                                         (L.build_call printf_func [| int_format_str ; e' |] "printf" builder', builder')
       | A.ACall("printfloat", [e], _, _) -> let (e', builder') =  (aexpr builder local_var_map e) in 
                                 (L.build_call printf_func [| float_format_str ; e' |] "printf" builder', builder')
+      |A.ACall("size", [e], _, _) -> let (e', builder') = (aexpr builder local_var_map e) in 
+        (L.build_load (L.build_struct_gep e' 1 "tmp" builder') "len" builder', builder')
       | A.ACall (f, act, _, _) ->
         let (fdef, fdecl) = StringMap.find f function_decls in
         let (actuals', builder') = build_expressions (List.rev act) builder local_var_map in
