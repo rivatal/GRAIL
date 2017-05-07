@@ -1,2 +1,9 @@
-main(){x = {a:1,b:2}; y = x->x with {weight:1}; return y;}
+main(){x = {a:1,b:2,c:3}; y = x->x with {weight:1}; 
+z1= x.a;
+z2 = x.b;
+z3 = x.c;
+printint(z1);
+printint(z2);
+printint(z3);
+return y;}
 
