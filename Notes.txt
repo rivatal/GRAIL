@@ -362,8 +362,20 @@ Okay-- we have trouble assigning to dots because we have to go find the record n
 
 f(x){ x ^ 3; }
 
-return twice bug- fix
-main(){ i; return 1; i = 123; /* Code after return */
+
+
 List size function
 
-Carat lvalue error
+
+f(x){ x = []; x = x ^ 3; }
+Carat lvalue error. Fixed.
+
+
+f(x){ return size(x); }
+^Should be int not void.
+
+f(){ size([1]); }
+
+return twice bug- fix
+main(){ i; return 1; i = 123; }
+Code after return 

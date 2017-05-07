@@ -332,6 +332,7 @@ and check_asn_type (lval: primitiveType) (asn: primitiveType) : unit  =
     match lval, asn with
     |TEdge(a), TEdge(b)-> check_asn_type a b
     |TGraph(n1, e1), TGraph(n2, e2) -> ignore(check_asn_type n1 n2); (check_asn_type e1 e2)
+    |TList(a), b -> ignore(check_asn_type a b);
     |_ -> raise(failwith("error: " ^ string_of_type asn ^ " was defined as " ^ string_of_type x))
    )
 
@@ -383,13 +384,14 @@ and check_formals (aformals: (id * primitiveType) list) (allenv: allenv)  : unit
   [] -> ()
   |(id, typ) :: tail ->
    let newtype = NameMap.find (map_id id) env in
-  (match newtype with
-   |T(_) | TVoid -> ()
-   | nt -> if(nt = typ) 
+  (match newtype, typ with
+   |T(_), a | TVoid, a | a, TVoid | a, T(_) -> ()
+   |TList(_), TList(T(_)) | TList(T(_)), TList(_) -> ()
+   | nt, ot -> 
+    if(nt = ot) 
     then(helper tail env) 
-    else(match typ with
-        |T(_) | TVoid -> ()
-        | _ -> raise(failwith("Error: " ^ string_of_type nt ^ " not a valid for " ^ string_of_type typ ^ " in function."))))
+    else(raise(failwith("Error: " ^ string_of_type nt ^ " not a valid for " ^ string_of_type ot ^ " in function.")))
+  )
 in helper aformals env
 
 (*Step 2 of HM: Collect constraints*)
@@ -617,9 +619,7 @@ and get_return_type(r: astmt list) : primitiveType =
       [] -> gen_new_void()
     | [t] -> t 
     | x :: y :: tail -> 
-      if x = y
-      then find_type (y :: tail)
-      else raise (failwith "mismatched returns")
+     raise (failwith "Error: multiple returns.");
   in (find_type returns)
 
 (*Applies the inferred type of formals from function statements to the functions themselves.*)
