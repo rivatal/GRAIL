@@ -21,10 +21,14 @@ let map_id (id: string) : string =
 (* generates a new unknown type placeholder.
  * returns T(string) of the generated alphabet *)
 let type_variable = ref 1
-let gen_new_type () =
+
+let gen_new_name() : string =
   let c1 = !type_variable in
   incr type_variable; 
-  T(string_of_int c1)
+  string_of_int c1
+
+let gen_new_type () =
+  T(gen_new_name())
 
 let gen_new_void () : primitiveType =
   TVoid (*just chr escaped, no T in the TVoid*)
@@ -78,7 +82,7 @@ let rec split_list (aelist: aexpr list) : (primitiveType list * primitiveType li
   |et1 :: t ->
   (match et1 with
   |TRec(_,_) -> helper t edgelist (et1 :: nodelist)
-  |TEdge(_) -> helper t (et1 :: edgelist) nodelist
+  |TEdge(_,_,_) -> helper t (et1 :: edgelist) nodelist
   |T(_) | TVoid -> helper t edgelist nodelist
   |TList(typ) -> helper (typ :: t) edgelist nodelist
   |x -> raise(failwith(string_of_type x ^ " not a graph type."));
@@ -99,8 +103,8 @@ let rec check_type_consistency (tl: primitiveType list) : unit =
   (match x, y with
      | a, T(_) | a, TVoid -> check_type_consistency (x :: t)
      | T(_), a | TVoid, a-> check_type_consistency (y :: t)
-     | TEdge(TRec(_, _)), TEdge(T(_)) -> check_type_consistency (x :: t)
-     | TEdge(T(_)), TEdge(TRec(_, _)) -> check_type_consistency (y :: t)
+(*      | TEdge(TRec(_, _)), TEdge(T(_)) -> check_type_consistency (x :: t)
+     | TEdge(T(_)), TEdge(TRec(_, _)) -> check_type_consistency (y :: t)*)     
      | a, b -> 
      if(a = b) 
      then(check_type_consistency (y :: t))
@@ -234,12 +238,12 @@ let env, genv = allenv in
   | Unop(uop, e1) ->
     let et1 = annotate_expr allenv e1 and t = gen_new_type() in 
     AUnop(uop, et1, t)
-  | Dot(e1, entry) -> 
+  | Dot(e1, entry) -> (*Fix for edges!!!???*)
 (*     ignore(print_string "annotating dot\n"); *)
     let ae1 = annotate_expr allenv e1 in 
     let et1 = type_of ae1 in
     let sae1 = string_of_aexpr ae1 in
-    let typ = 
+    let typ =   
          (match et1 with
           |TRec(str, elist) -> 
           get_field_type elist entry
@@ -300,12 +304,12 @@ let env, genv = allenv in
     c-- what if there are no nodes? Graph should be a trec of any, and should be overwritable when the first node comes in.
    Remember, edges have nodes in them.
   *)
- | Noexpr -> ANoexpr(gen_new_type())
+ | Noexpr -> ANoexpr(gen_new_type()) (*changed from noexpr of ??*)
  | Edge(e1, op, e2, e3) -> 
    let ae1 = annotate_expr allenv e1 and
        ae2 = annotate_expr allenv e2 and
        ae3 = annotate_expr allenv e3 in 
-      AEdge(ae1, op, ae2, ae3, TEdge(type_of ae3))
+      AEdge(ae1, op, ae2, ae3, TEdge(gen_new_name(), type_of ae1, type_of ae3))
 and annotate_expr_list (allenv: allenv) (e: expr list): aexpr list =
   let rec helper e l =
     match e with
@@ -328,13 +332,14 @@ and gen_new_rec (fieldslist : (id * aexpr) list) : primitiveType =
   incr type_variable; 
   TRec(string_of_int c1, fields)
 
+
 (*ensure thing you're assigning to has that type. (No my_bool = 3; )*)
 and check_asn_type (lval: primitiveType) (asn: primitiveType) : unit  =
   match lval with
   |TVoid | T(_) -> ()
   | x -> if(x = asn) then(()) else (
     match lval, asn with
-    |TEdge(a), TEdge(b)-> check_asn_type a b
+    |TEdge(name1, n1, e1), TEdge(name2, n2, e2)-> ignore(check_asn_type n1 n2); (check_asn_type e1 e2)
     |TGraph(n1, e1), TGraph(n2, e2) -> ignore(check_asn_type n1 n2); (check_asn_type e1 e2)
     |TList(a), b -> ignore(check_asn_type a b);
 (*     |TItem() *)
@@ -427,13 +432,13 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
               (et2, TList(gen_new_type())); 
               (t, TBool)]
                       | _ -> raise(failwith("Error @330")))
-      | Gadd -> 
+      | Gadd ->  (*what about a tgraph of any and a trec??*)
       (match et1, et2 with |TGraph(n, e), TRec(_, _) -> [(et2, n); (t, TGraph(et2, e))]
                            |T(_), TRec(_,_) ->  [(et1, TGraph(et2, gen_new_type())); (t, et1)]
                            |T(_), T(_) -> [(et1, TGraph(et2, gen_new_type())); (t, et1)]
                            | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ "," ^ (string_of_type et2) ^ " not valid types for Gadd")))    
       | Eadd -> 
-      (match et1, et2 with |TGraph(n, e), TEdge(f) -> [(et2, e); (t, TGraph(n, et2))]
+      (match et1, et2 with |TGraph(n, e), TEdge(_,_,_) -> [(et2, e); (t, TGraph(n, et2))]
                            |T(_), TRec(_,_) | T(_), T(_) -> [(et1, TGraph(gen_new_type(), et2)); (t, et1)]
                            | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ "," ^ (string_of_type et2) ^ " not valid graph for Eadd"))
       )
@@ -490,7 +495,7 @@ and unify_one (t1: primitiveType) (t2: primitiveType) : substitutions =
   | T(x), z | z, T(x) -> [(x, z)]
   | TList(x), TList(y) -> unify_one x y
   | TGraph(a, b), TGraph(c, d) -> unify_one a c @ unify_one b d
-  | TEdge(u), TEdge(v) -> unify_one u v
+  | TEdge(name1, n1, e1), TEdge(name2, n2, e2) -> if (name1 = name2) then [] else raise(failwith "mismatched types")
   | TRec(a, b), TRec(c, d) -> if (c = a)
       then [] 
       else raise (failwith "mismatched types")
@@ -500,7 +505,7 @@ and unify_one (t1: primitiveType) (t2: primitiveType) : substitutions =
 and substitute (u: primitiveType) (x: id) (t: primitiveType) : primitiveType =
   (*   print_string "substituting"; *)  
   match t with
-  | TInt | TBool | TString | TFloat | TList(_) | TRec(_,_) | TChar | TEdge(_) | TGraph(_,_) | TVoid-> t 
+  | TInt | TBool | TString | TFloat | TList(_) | TRec(_,_) | TChar | TEdge(_,_,_) | TGraph(_,_) | TVoid-> t 
   | T(c)  -> if c = x then u else t 
 and apply (subs: substitutions) (t: primitiveType) : primitiveType =
   List.fold_right (fun (x, u) t -> substitute u x t) subs t
@@ -588,13 +593,15 @@ and update_mapl (allenv: allenv) (alist : astmt list): environment =
  and update_map_expr (t: primitiveType) (env: environment) : environment = 
 (*     ignore(print_string("update map derived\n")); *)
     (match t with
-    TRec(tname, elist) -> 
+    |TRec(tname, elist) -> 
       let rec helper l env = 
       (match l with
       |[] -> env
       |(field, fieldtype) :: tail -> 
-      let env = NameMap.add (map_id (map_id_rec tname field)) fieldtype env in helper tail env)
+      let env = NameMap.add (map_id (map_id_rec tname field)) fieldtype env in helper tail env
+      )
       in helper elist env   
+    |TEdge(tname, TRec(a,b), TRec(c,d)) -> let env = update_map_expr (TRec(a,b)) env in update_map_expr (TRec(c,d)) env
       |_ -> env)
 
 (*Checks that return statements are consistent and returns the type for functions.*)

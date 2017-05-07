@@ -17,7 +17,7 @@ type primitiveType =
   | TVoid
   | TList of primitiveType
   | TRec of string * ((id * primitiveType) list) (*the entire type is explicit in TRec*)
-  | TEdge of primitiveType
+  | TEdge of string * primitiveType * primitiveType
   | TGraph of primitiveType * primitiveType (*node type, edge type*)
 
 type expr =
