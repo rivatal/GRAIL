@@ -26,17 +26,27 @@ let translate (functions) =
     (incr name_var;
     ("struct."^ string_of_int(!name_var))
     )
-  in let ltype_of_typ = function
+  in 
+  let tymap = (ref TypeMap.empty) 
+  in let rec ltype_of_typ = function
       A.TInt -> i32_t
     | A.TChar -> i8_t
     | A.TBool -> i1_t
     | A.TVoid -> void_t
     | A.TString -> str_t 
     | A.TFloat -> float_t
-  in let ltype_of_struct name = function
-    | A.TRec(_,_) -> L.named_struct_type context ("struct."^name)
-    | A.TEdge(_) -> L.named_struct_type context ("struct."^name)
-    | A.TGraph(_,_) -> L.named_struct_type context ("struct."^name)
+    | A.TRec(tname,tlist) ->
+            let struct_name = ("struct."^tname) in 
+            if TypeMap.mem struct_name !tymap 
+            then 
+               TypeMap.find struct_name !tymap
+            else
+                let record_t = L.named_struct_type context struct_name in 
+			    let ret_types = 
+			    Array.of_list(List.map (fun (_,t) -> ltype_of_typ t) tlist) 
+                in L.struct_set_body record_t ret_types false;
+                tymap := TypeMap.add ("struct."^tname) record_t !tymap;
+                record_t
   in   
  (* Declare printf(), which the print built-in function will call *)
   let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
@@ -105,7 +115,6 @@ let translate (functions) =
        | _ -> raise (Failure "wrong operation applied to floats")
       )
     in
-    let tymap = (ref TypeMap.empty)in  
     let rec aexpr builder local_var_map = function
         A.AIntLit(i, _) -> L.const_int i32_t i
       | A.ABoolLit(b, _) -> L.const_int i1_t (if b then 1 else 0)
@@ -137,15 +146,8 @@ let translate (functions) =
         )
         (* Edge, Graph, Record *)
       | A.ARecord(alist,trec) ->
-		(match trec with
-        | A.TRec(tname,tlist) ->
-            let record_t = ltype_of_struct tname trec in 
-			let ret_types = 
-			Array.of_list(List.map (fun (_,t) -> ltype_of_typ t) tlist) 
-            in L.struct_set_body record_t ret_types false;
-               tymap := TypeMap.add ("struct."^tname) record_t !tymap;
             let argslist = (List.map (fun f -> aexpr builder local_var_map (snd f)) alist)
-         in let loc = L.build_alloca record_t "" builder
+         in let loc = L.build_alloca (ltype_of_typ trec) "" builder
          in let load_loc = L.build_load loc "loc" builder
 		 in let rec populate_structure fields i = 
 			match fields with 
@@ -156,7 +158,6 @@ let translate (functions) =
 			    populate_structure tl (i+1) 
               )
 		in populate_structure argslist 0
-        )
        (*     
        | A.AEdge(e1,op,e2,item,typ) ->
          let name_var = ref (0) 
@@ -227,7 +228,9 @@ let translate (functions) =
           A.AExpr(e) -> ignore (aexpr builder local_var_map e); (builder, local_var_map)
         | A.AReturn(e, t) -> ignore(match t with
               A.TVoid -> L.build_ret_void builder
-            | _ -> L.build_ret (aexpr builder local_var_map e) builder); (builder, local_var_map)
+            | _ -> L.build_ret (aexpr builder local_var_map e) builder); 
+            (builder, local_var_map)
+
         | A.AAsn(s, e, b, t) -> 
             let add_local m (t,n) =            
             let local_var = L.build_alloca (ltype_of_typ t) n builder
@@ -307,8 +310,9 @@ let translate (functions) =
     (* Add a return if the last block falls off the end *)
     add_terminal (builder, local_vars) (match afunc.A.typ with
           A.TVoid -> L.build_ret_void
-        | t -> L.build_ret (L.const_int (ltype_of_typ t) 0))
-  in
+          | t -> L.build_ret (L.const_int (ltype_of_typ t) 0) 
+        )
+    in
 
 
   List.iter build_function_body functions;
