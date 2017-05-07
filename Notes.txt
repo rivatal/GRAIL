@@ -379,3 +379,9 @@ f(){ size([1]); }
 return twice bug- fix
 main(){ i; return 1; i = 123; }
 Code after return 
+
+main(){ x = [1,2,3]; y = x; z = y[0]; }
+
+
+List order error.
+Not a list error.
