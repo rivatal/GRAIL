@@ -280,21 +280,21 @@ in
       | A.AItem(s, e, t) -> let strct = lookup s local_var_map in let arp = L.build_struct_gep strct 0 "tmp" builder in
                             let ar = L.build_load arp "tmpar" builder and (ad, builder) = aexpr builder local_var_map e in
                             let p = L.build_in_bounds_gep ar [|ad|] "ptr" builder in (L.build_load p "item" builder, builder)
-      | A.ACall ("print", [e], _, _) -> let (e', builder') =  (aexpr builder local_var_map e) in 
+      | A.ACall ("print", [e], _, _, _) -> let (e', builder') =  (aexpr builder local_var_map e) in 
                                       (L.build_call printf_func [| e' |] "printf" builder', builder')
-      | A.ACall("printint", [e], _, _) | A.ACall ("printbool", [e], _, _) -> let (e', builder') =  (aexpr builder local_var_map e) in
+      | A.ACall("printint", [e], _, _, _) | A.ACall ("printbool", [e], _, _, _) -> let (e', builder') =  (aexpr builder local_var_map e) in
                                         (L.build_call printf_func [| int_format_str ; e' |] "printf" builder', builder')
-      | A.ACall("printfloat", [e], _, _) -> let (e', builder') =  (aexpr builder local_var_map e) in 
+      | A.ACall("printfloat", [e], _, _, _) -> let (e', builder') =  (aexpr builder local_var_map e) in 
                                 (L.build_call printf_func [| float_format_str ; e' |] "printf" builder', builder')
-      |A.ACall("size", [e], _, _) -> let (e', builder') = (aexpr builder local_var_map e) in 
+      |A.ACall("size", [e], _, _, _) -> let (e', builder') = (aexpr builder local_var_map e) in 
         let strct = L.build_alloca (L.type_of e') "strct" builder' in ignore(L.build_store e' strct builder');
         (L.build_load (L.build_struct_gep strct 1 "tmp" builder') "len" builder', builder')
-      | A.ACall (f, act, _, _) ->
-        let (fdef, fdecl) = StringMap.find f function_decls in
+      | A.ACall (f, act, _, callname, _) ->
+        let (fdef, fdecl) = StringMap.find callname function_decls in
         let (actuals', builder') = build_expressions (List.rev act) builder local_var_map in
         let actuals = List.rev actuals' in
         let result = (match fdecl.A.typ with A.TVoid -> ""
-                                           | _ -> f ^ "_result") in
+                                           | _ -> callname ^ "_result") in
         (L.build_call fdef (Array.of_list actuals) result builder', builder')
       | A.AUnop(op, e, t) ->
             let (e', builder') = aexpr builder local_var_map e in
