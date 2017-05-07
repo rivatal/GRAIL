@@ -1,0 +1,21 @@
+%record_t = type { i32, i32 }
+
+@str = private unnamed_addr constant [12 x i8] c"hello world\00"
+@str1 = private unnamed_addr constant [5 x i8] c"%d\n\00"
+@p = private unnamed_addr constant [5 x i8] c"%p\n\00"
+declare i32 @printf(i8*, ...)
+
+define void @main() {
+entry:
+  %printf = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([12 x i8]* @str, i32 0, i32 0))
+ %i = alloca %record_t
+  %printf5 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([5 x i8]* @p, i32 0, i32 0), %record_t* %i )
+ %0 = load %record_t* %i
+  %1 = insertvalue %record_t %0, i32 1, 0
+  %2 = insertvalue %record_t %0, i32 2, 1
+  store %record_t %0, %record_t* %i
+
+  %j = load %record_t* %i
+  %3  = extractvalue %record_t %j, 1
+  %printf3 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([5 x i8]* @str1, i32 0, i32 0), i32 %3)
+  %printf4 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([5 x i8]* @p, i32 0, i32 0), %record_t* %i )
