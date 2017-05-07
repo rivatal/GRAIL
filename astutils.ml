@@ -148,7 +148,7 @@ and string_of_expr_list l =
 
 let string_of_func (func: sast_afunc) = 
   let header = func.fname in
-  let formals = "(" ^ String.concat ", " (List.map fst func.formals) ^ "){ : " ^ string_of_type func.typ ^ "\n"
+  let formals = "(" ^ String.concat ", " (List.map (fun (a,b) -> a ^ ": " ^ string_of_type b) func.formals) ^ "){ : " ^ string_of_type func.typ ^ "\n"
   in let body = String.concat "" (List.map string_of_astmt func.body) ^ "}\n"
   in header ^ formals ^ body
 (*   let t = "Type :" ^ string_of_type func.typ 

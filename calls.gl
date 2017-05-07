@@ -1,4 +1,4 @@
-a(){
+a(x){
  return 3;
 }
 b(){
@@ -8,6 +8,6 @@ c(){
  return 5;
 }
 main(){
- y = a();
- z = a();
+ y = a(3);
+ z = a("er");
 }
