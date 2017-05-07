@@ -3,7 +3,6 @@ open Astutils
 
 module NameMap = Map.Make(String)
 type environment = primitiveType NameMap.t
-
 type genvironment = (primitiveType * (string * primitiveType) list * stmt list) NameMap.t
 
 let parse (s) : Ast.program =
@@ -49,7 +48,7 @@ let infer_func (e: Ast.func) (genv : genvironment) : (Ast.afunc * genvironment) 
     let ids = get_ids_formals formals fname in 
     let env = List.fold_left (fun m x -> NameMap.add x (Infer.gen_new_type ()) m) NameMap.empty ids in 
     let genv = NameMap.add fname (Infer.gen_new_type (),[],[]) genv in
-    Infer.infer_func (env, genv) e
+    Infer.infer_func (env, genv, []) e
 
 let grail (ast: Ast.afunc list) (input) : Ast.afunc list =
   let rec get_sast(p: Ast.program) (genv : genvironment) (l : Ast.afunc list) : Ast.afunc list  =   
@@ -65,7 +64,7 @@ let grail (ast: Ast.afunc list) (input) : Ast.afunc list =
                   ("printbool", (TVoid, [("x", TBool)], [])); 
                   ("printchar", (TVoid, [("x", TChar)], [])); 
                   ("size", (TInt, [("x", TList(Infer.gen_new_type()))], [Return(IntLit(1))])); 
-                  ("display", (TVoid, [("x", TGraph(Infer.gen_new_type(), Infer.gen_new_type()))], []))]
+                  ("display", (TVoid, [("x", TGraph(Infer.gen_new_name(), Infer.gen_new_type(), Infer.gen_new_type()))], []))]
   in let rec addbuiltins l genv =
     match l with
     |[] -> genv 
@@ -86,18 +85,16 @@ let format_sast_codegen (ast : Ast.afunc) : Ast.sast_afunc =
 (*Interpreter for debugging purposes*)
 (* let rec interpreter (ast: Ast.sast_afunc list) : Ast.sast_afunc list =
   print_string "> ";
-  let input = read_line () in
-  if input = "exit" then ast
-  else
+  let input = Lexing.from_channel stdin in
     try
       (*do for func*)
-      let pre_ast = List.map format_sast_codegen (grail [] (Lexing.from_string input)) in interpreter (pre_ast @ ast) 
+       let ast = List.map format_sast_codegen (grail [] (input)) in ast (* in interpreter (pre_ast @ ast) *)
     with
     | Failure(msg) ->
       if msg = "lexing: empty token" then [] @ interpreter (ast)
       else (print_endline msg; [] @ interpreter(ast))
     | _ -> print_endline "Syntax Error"; [] @  interpreter (ast)
-
+ 
     let say() = 
       let str = "Welcome to Grail, the awesomest language!\n"  in 
       print_string str

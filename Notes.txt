@@ -336,7 +336,10 @@ Should work. Currently doesn't.
 
 What if y is a copy of x-- should this:
 f(x){ y = x; x = 3; }
-change its type to int?
+change its type to int? No but...
+
+f(x){ y = x; x = {a:2}; }
+
 
 f(x){ y = "ser"; for(x = 3; x < 3; x = x + 1;){ y = 3; } return y; }  
 Will have an error because for can see y.
@@ -344,8 +347,8 @@ Will have an error because for can see y.
 f(x){ for(x = 3; x < 3; x = x + 1;){ y = 3; } y = "ser";  return y; }  
 Won't have an error because scope of y is limited to this for.
 
-f(x, y){ x .& y; } main(){ z = {a: 3}; y = z; y.a = 4; edge = z -- z; g = () with z; f(g, z); }
-^Not a valid lvalue issue
+f(x, y){ x .& y; } main(){ z = {a: 3}; y = z; y.a = 4; edge = z -- z; g = () with z; f(g, edge); }
+^Not a valid lvalue issue fixed.
 
 f(x){ for(a in x){ y = 3; } } main(){ f(3); } 
 Should and does throw an error.
@@ -385,3 +388,34 @@ main(){ x = [1,2,3]; y = x; z = y[0]; }
 
 List order error.
 Not a list error.
+
+f(x, y){ x .& y; } main(){ z = {a: 3}; y = z; y.a = 4; edge = z -- z; g = () with z; f(g, edge); }
+still good.
+
+f(){ x = {school: "moriah"}; y = {school: "yavneh"}; x -- y; }
+
+is it okay if records are in wrong order?
+
+
+
+What if y is a copy of x-- should this:
+f(x){ y = x; x = 3; }
+change its type to int? No but...
+
+f(x){ y = x; x = {a:2}; }
+We need to figure out how to go back in time and make y a record...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+No self-edge assign
