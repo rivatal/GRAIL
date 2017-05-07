@@ -219,6 +219,34 @@ let translate (functions) =
                                          [s1 ; A.AWhile(e2, List.rev (s3::(List.rev body)))]
                                          (* Build the code for each statement in the function *)
 
+        | A.AForin (e1, e2, body) -> 
+        let ind = (match e1 with A.AId(s, t) -> (s, t)) in let lst = L.build_alloca (ltype_of_typ (A.TList (snd ind))) "lst" builder
+        in ignore(L.build_store (aexpr builder local_var_map e2) lst builder);
+        let elvar = L.build_alloca (ltype_of_typ (snd ind)) (fst ind) builder in
+        let local_var_map = StringMap.add (fst ind) elvar local_var_map in
+        let ar = L.build_load (L.build_struct_gep lst 0 "tmp" builder) "ar" builder and endlst = L.build_load (L.build_struct_gep lst 1 "tmp" builder) "end" builder in
+        let elind = L.build_alloca i32_t "ind" builder in ignore(L.build_store (L.const_int i32_t 0) elind builder);
+        
+        let pred_bb = L.append_block context "while" the_function in
+        ignore (L.build_br pred_bb builder);
+
+        let body_bb = L.append_block context "while_body" the_function in
+        let body_builder = L.builder_at_end context body_bb in
+        let p = L.build_in_bounds_gep ar [|(L.build_load elind) "i" body_builder|] "ptr" body_builder in ignore(L.build_store (L.build_load p "tmp" body_builder) elvar body_builder);
+        let (endbody_builder, new_local_var_map) = (List.fold_left astmt ((L.builder_at_end context body_bb), local_var_map) body) in
+        ignore(L.build_store (L.build_add (L.build_load elind "tmp" endbody_builder) (L.const_int i32_t 1) "inc" endbody_builder) elind endbody_builder);
+        add_terminal (endbody_builder, new_local_var_map) (L.build_br pred_bb);
+
+        let pred_builder = L.builder_at_end context pred_bb in
+        let bool_val = L.build_icmp L.Icmp.Slt (L.build_load elind "tmp" pred_builder) endlst "comp" pred_builder in
+
+        let merge_bb = L.append_block context "merge" the_function in
+        ignore (L.build_cond_br bool_val body_bb merge_bb pred_builder);
+        (L.builder_at_end context merge_bb, local_var_map)
+
+          
+
+
     in let (builder,local_vars) = List.fold_left 
            astmt (builder,local_vars) afunc.A.body 
     in
