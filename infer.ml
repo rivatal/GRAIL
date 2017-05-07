@@ -727,5 +727,5 @@ and infer_func (allenv: allenv) (f: func) :  (afunc list * genvironment)  =
         let aformals = infer_formals formals env in   
         let genv = NameMap.add fname (ret_type, aformals, stmts) genv in 
         (ignore(Stack.pop callstack));
-        (AFbody(AFdecl(fname, aformals, ret_type), istmts) :: funcs),genv
+        funcs,genv
       else raise (failwith "function not defined @ 412")
