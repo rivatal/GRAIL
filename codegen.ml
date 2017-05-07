@@ -310,7 +310,7 @@ in
         )
         | A.ANoexpr _ -> (L.const_int i32_t 0, builder)
       | A.ARecord(alist,trec) ->
-            let argslist = (List.map (fun f -> aexpr builder local_var_map (snd f)) alist)
+            let (argslist, builder) = build_expressions (List.map (fun f -> (snd f)) alist) builder local_var_map
          in let loc = L.build_alloca (ltype_of_typ trec) "" builder
          in let load_loc = L.build_load loc "loc" builder
 		 in let rec populate_structure fields i = 
@@ -321,7 +321,7 @@ in
 	          ( L.build_insertvalue load_loc hd i "loc" builder;
 			    populate_structure tl (i+1) 
               )
-		in populate_structure argslist 0
+		in (populate_structure argslist 0, builder)
        | A.AEdge(e1,op,e2,item,typ) ->
            let (directed,from,into) =
             match op with
@@ -337,11 +337,13 @@ in
                        
                     | _-> raise (Failure ("Not supported.Node must be declared"))
                    )
+            in let (erec, builder) = aexpr builder local_var_map item
+
             in let argslist =
             [   get_ptr e1;
                 get_ptr e2;
-                aexpr builder local_var_map (A.ABoolLit(directed,A.TBool));
-                aexpr builder local_var_map item
+                fst (aexpr builder local_var_map (A.ABoolLit(directed,A.TBool)));
+                erec
             ]
 
          in let loc = L.build_alloca (ltype_of_typ typ) "" builder
@@ -354,7 +356,7 @@ in
 	          ( L.build_insertvalue load_loc hd i "loc" builder;
 			    populate_structure tl (i+1) 
               )
-		in populate_structure argslist 0
+		in (populate_structure argslist 0, builder)
       | A.ADot(e1,entry,typ) ->
            (match e1 with
             | AId(name,trec) -> 
@@ -372,7 +374,7 @@ in
                 in let index = match_name mems entry
                 in let load_loc = lookup name local_var_map 
                 in let ext_val = L.build_struct_gep load_loc index "ext_val" builder      
-                in L.build_load ext_val "" builder
+                in (L.build_load ext_val "" builder, builder)
             | _ -> raise (Failure ("Node not declared."))
            )
             
@@ -398,12 +400,8 @@ in
             let ar = L.build_load arp "tmpar" builder' in
             let p = L.build_in_bounds_gep ar [|ad|] "ptr" builder' in ignore(L.build_store e' p builder'); (builder', local_var_map))
 
-        | A.AAsn(s, e, b, t) -> 
-            let add_local m (t,n) =            
-            let local_var = L.build_alloca (ltype_of_typ t) n builder
-            in StringMap.add n local_var m in
             (* Just for worst case debug,not required*)
-            let lookup_struct n =
+            (*let lookup_struct n =
                    try TypeMap.find n !tymap
                    with Not_found -> raise (Failure ("undeclared struct " ^ n))
           in (match s with
@@ -441,8 +439,8 @@ in
                         in ignore (L.build_store e' (lookup name local_var_map) 
                         builder);(builder, local_var_map)
                         
-                   | _ -> (builder,local_var_map) 
-                 ))
+                   | _ -> (builder,local_var_map)*) 
+                 
         | A.AIf (predicate, then_stmt, else_stmt) ->
           let (bool_val, builder) = aexpr builder local_var_map predicate in
           let merge_bb = L.append_block context "merge" the_function in
