@@ -99,7 +99,7 @@ let translate (functions) =
       ignore(L.build_store newlen (L.build_struct_gep newstruct 1 "tmp" builder) builder);
 
       let newlst = L.build_array_alloca(ltype_of_typ list_typ) newlen "lst" builder  in
-      ignore(L.build_store el (L.build_in_bounds_gep newlst [|newlen|] "ptr" builder) builder);
+      ignore(L.build_store el (L.build_in_bounds_gep newlst [|oldlen|] "ptr" builder) builder);
 
       let elind = L.build_alloca i32_t "ind" builder in ignore(L.build_store (L.const_int i32_t 0) elind builder);
 
@@ -118,7 +118,7 @@ let translate (functions) =
       add_terminal body_builder (L.build_br pred_bb);
 
       let pred_builder = L.builder_at_end context pred_bb in
-      let bool_val = L.build_icmp L.Icmp.Slt (L.build_load elind "tmp" pred_builder) newlen "comp" pred_builder in
+      let bool_val = L.build_icmp L.Icmp.Slt (L.build_load elind "tmp" pred_builder) oldlen "comp" pred_builder in
 
       let merge_bb = L.append_block context "merge" the_function in
       ignore (L.build_cond_br bool_val body_bb merge_bb pred_builder);
