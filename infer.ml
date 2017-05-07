@@ -221,10 +221,11 @@ let env, genv = allenv in
   | Item(s, e) -> 
     let et1 = annotate_expr allenv e in 
     let typ = find_in_map s env in
+(*     ignore(print_string("type of " ^ s ^ " is " ^ string_of_type typ)); *)
     (match typ with
       TVoid -> raise (failwith (s ^ " not defined @ 115."))
      |TList(t) -> AItem(s, et1, t)
-     | _ -> raise (failwith (s ^ " not a list.")))
+     | t -> raise (failwith (string_of_type (t) ^ " not a list.")))
   | Binop(e1, op, e2) ->
     let et1 = annotate_expr allenv e1
     and et2 = annotate_expr allenv e2
@@ -253,8 +254,8 @@ let env, genv = allenv in
        in 
 (*        ignore(check_list_exprs ael); *)
        ignore(check_list_consistency ael);
-       ignore(print_string("Inferred "));
-       ignore(List.iter (fun a -> print_string (string_of_aexpr a)) ael);
+(*        ignore(print_string("Inferred ")); *)
+(*        ignore(List.iter (fun a -> print_string (string_of_aexpr a)) ael); *)
        AList(ael, TList(t)))
   | Call(id, elist) ->    (*Function calls derive their type from the function declaration*)
     let aelist = List.map (fun a -> infer_expr allenv a) elist in
@@ -336,6 +337,7 @@ and check_asn_type (lval: primitiveType) (asn: primitiveType) : unit  =
     |TEdge(a), TEdge(b)-> check_asn_type a b
     |TGraph(n1, e1), TGraph(n2, e2) -> ignore(check_asn_type n1 n2); (check_asn_type e1 e2)
     |TList(a), b -> ignore(check_asn_type a b);
+(*     |TItem() *)
     |_ -> raise(failwith("error: " ^ string_of_type asn ^ " was defined as " ^ string_of_type x))
    )
 
@@ -531,13 +533,25 @@ and apply_expr_list (subs: substitutions) (ae: aexpr list)  : aexpr list =
   in helper ae []
 
 (*Helper function for update map*)
-and get_lval (ae: aexpr) =
+and asn_lval (ae: aexpr) (ae2: aexpr) (env: environment) : environment =
+(*   ignore(print_string("assigning...")); *)
+  let t = type_of ae2 in 
+  let env = 
   match ae with
-  |ACall(str, _, _, _) 
+  |ACall(str, _, _, _)
+  |AId(str, _) -> NameMap.add (map_id str) t env
+  |ADot(ae, str, TRec(x, _)) -> NameMap.add (map_id_rec x str) t env
+  |AItem(str, _, _) -> NameMap.add (map_id str) (TList(t)) env
+  (*is there a problem if this is a record??*)
+  |_ -> raise(failwith("error: " ^ string_of_aexpr ae ^ " not a valid lvalue@534."))
+in env
+
+and get_lval (ae: aexpr) : string =
+  match ae with
+  |ACall(str, _, _, _)
   |AId(str, _) -> str 
   |ADot(ae, str, TRec(x, _)) -> map_id_rec x str
-  |AItem(str, _, _) -> str
-
+  |AItem(str, _, _) ->  str 
   (*is there a problem if this is a record??*)
   |_ -> raise(failwith("error: " ^ string_of_aexpr ae ^ " not a valid lvalue@534."))
 
@@ -547,12 +561,12 @@ and update_map (allenv: allenv) (a: astmt) : environment =
   let env, genv = allenv in
   match a with
   |AAsn(ae1, ae2, _,_) ->
-    let id = map_id (get_lval ae1) in
-(*     ignore(print_string (" updating " ^ id ^ " with type " ^ (string_of_type (type_of ae2)) ^ "\n"));  *)
-    let t = type_of ae2 in
-    let env = NameMap.add id t env in
-    (* ignore(print_string(id ^ " is " ^ string_of_type (NameMap.find(id) env))); *)
-    (update_map_expr id ae2 env)
+    let env = asn_lval ae1 ae2 env in 
+    let env = (update_map_expr (type_of ae2) env)
+    in 
+   (* ignore(print_string (" updating " ^ (map_id (get_lval ae1)) ^ " with type " ^ (string_of_type (type_of ae2)) ^ "\n"));  *)
+   (* ignore(print_string(get_lval ae1 ^ " is " ^ string_of_type (NameMap.find(map_id (get_lval ae1)) env))); *)
+   env 
   |AReturn(aexpr, _) -> env
   |AExpr(aexpr) -> env
   |AIf(_, a1, a2) -> env 
@@ -571,15 +585,7 @@ and update_mapl (allenv: allenv) (alist : astmt list): environment =
   
  (*Used when an expression itself changes the environment, i.e, in records or calls 
  that are secretly records. *)
-  and update_map_expr (id: string) (aexpr: aexpr) (env: environment) : environment = 
-    match aexpr with 
-     | ARecord(et1, t) -> 
-       update_map_derived id t env
-(*      | ACall(id, _, astmts, t) -> 
-       update_map_derived id t env *)
-     | _ -> env
-
- and update_map_derived (id: string) (t: primitiveType) (env: environment) : environment = 
+ and update_map_expr (t: primitiveType) (env: environment) : environment = 
 (*     ignore(print_string("update map derived\n")); *)
     (match t with
     TRec(tname, elist) -> 
