@@ -404,8 +404,14 @@ change its type to int? No but...
 
 f(x){ y = x; x = {a:2}; }
 We need to figure out how to go back in time and make y a record...
+No we don't! x will have to type to one already!
 
+Okay-- function call new model-- any impact on like recursion?
 
+functions in records?
+
+{a: g()}
+can we just ban them? NTS ban them.
 
 
 
