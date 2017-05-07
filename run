@@ -1,7 +1,7 @@
 ; ModuleID = 'Grail'
 
 %struct.9 = type { %struct.6*, %struct.6*, i1, %struct.8 }
-%struct.6 = type { i32, i32 }
+%struct.6 = type { i32, i32, i32 }
 %struct.8 = type { i32 }
 
 @fmt = private unnamed_addr constant [4 x i8] c"%d\0A\00"
@@ -15,31 +15,32 @@ entry:
   %loc = load %struct.6* %0
   %loc1 = insertvalue %struct.6 %loc, i32 1, 0
   %loc2 = insertvalue %struct.6 %loc, i32 2, 1
+  %loc3 = insertvalue %struct.6 %loc, i32 3, 2
   store %struct.6 %loc, %struct.6* %0
   %1 = load %struct.6* %0
   %2 = alloca %struct.6
   store %struct.6 %1, %struct.6* %2
   %3 = alloca %struct.8
-  %loc3 = load %struct.8* %3
-  %loc4 = insertvalue %struct.8 %loc3, i32 1, 0
-  store %struct.8 %loc3, %struct.8* %3
+  %loc4 = load %struct.8* %3
+  %loc5 = insertvalue %struct.8 %loc4, i32 1, 0
+  store %struct.8 %loc4, %struct.8* %3
   %4 = load %struct.8* %3
   %5 = alloca %struct.9
   %6 = load %struct.9* %5
-  %loc5 = insertvalue %struct.9 %6, %struct.6* %2, 0
-  %loc6 = insertvalue %struct.9 %6, %struct.6* %2, 1
-  %loc7 = insertvalue %struct.9 %6, i1 true, 2
-  %loc8 = insertvalue %struct.9 %6, %struct.8 %4, 3
+  %loc6 = insertvalue %struct.9 %6, %struct.6* %2, 0
+  %loc7 = insertvalue %struct.9 %6, %struct.6* %2, 1
+  %loc8 = insertvalue %struct.9 %6, i1 true, 2
+  %loc9 = insertvalue %struct.9 %6, %struct.8 %4, 3
   store %struct.9 %6, %struct.9* %5
   %7 = load %struct.9* %5
   %8 = alloca %struct.9
   store %struct.9 %7, %struct.9* %8
   %z = alloca i32
-  %ext_val = getelementptr inbounds %struct.6* %2, i32 0, i32 0
+  %ext_val = getelementptr inbounds %struct.6* %2, i32 0, i32 1
   %9 = load i32* %ext_val
   store i32 %9, i32* %z
-  %z9 = load i32* %z
-  %printf = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([4 x i8]* @fmt, i32 0, i32 0), i32 %z9)
+  %z10 = load i32* %z
+  %printf = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([4 x i8]* @fmt, i32 0, i32 0), i32 %z10)
   %y = load %struct.9* %8
   ret %struct.9 %y
 }
