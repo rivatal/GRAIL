@@ -210,6 +210,27 @@ let translate (functions) =
 			    populate_structure tl (i+1) 
               )
 		in populate_structure argslist 0
+      | A.ADot(e1,entry,typ) ->
+           (match e1 with
+            | AId(name,trec) -> 
+                let rec match_name lst n = 
+                    match lst with 
+                    | [] -> raise (Failure ("Not found"))
+                    | h :: t -> if h = n then 0 else 
+                            1 + match_name t n
+                    
+                in let mems = 
+                    (match trec with
+                     A.TRec(_,tlist) ->
+			         List.map (fun (id,_)  -> id) tlist 
+                    )    
+                in let index = match_name mems entry
+                in let load_loc = lookup name local_var_map 
+                in let ext_val = L.build_struct_gep load_loc index "ext_val" builder      
+                in L.build_load ext_val "" builder
+            | _ -> raise (Failure ("Node not declared."))
+           )
+            
     (*| A.Noexpr -> L.const_int i32_t 0*)
     (* Invok:e "f builder" if the current block does not already 
        have a terminal (e.g., a branch). *)        
