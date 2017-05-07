@@ -170,6 +170,55 @@ let translate (functions) =
 
 in
 
+  let rec copy_list lst t builder = 
+    let list_typ = get_list_type t and newstruct = L.build_alloca (ltype_of_typ t) "strct" builder in
+    let oldstruct = L.build_alloca (ltype_of_typ t) "strct" builder in ignore(L.build_store lst oldstruct builder);
+
+    let len = L.build_load (L.build_struct_gep oldstruct 1 "tmp" builder) "len" builder
+    and oldlst = L.build_load (L.build_struct_gep oldstruct 0 "tmp" builder) "lst" builder in
+    ignore(L.build_store len (L.build_struct_gep newstruct 1 "tmp" builder) builder);
+
+    let newlst = L.build_array_alloca(ltype_of_typ list_typ) len "lst" builder  in
+    let elind = L.build_alloca i32_t "ind" builder in ignore(L.build_store (L.const_int i32_t 0) elind builder);
+
+
+    (*copy over old list elements by effectively using a for-in loop*) 
+    let pred_bb = L.append_block context "checklimits" the_function in
+    ignore (L.build_br pred_bb builder); 
+
+    let body_bb = L.append_block context "assignment" the_function in
+    let body_builder = L.builder_at_end context body_bb in
+    let ind = (L.build_load elind) "i" body_builder in
+    let oldp = L.build_in_bounds_gep oldlst [|ind|] "ptr" body_builder and newp = L.build_in_bounds_gep newlst [|ind|] "ptr" body_builder in
+    let oldel = (L.build_load oldp "tmp" body_builder) in let (newel, body_builder) = copy oldel list_typ body_builder in
+    ignore(L.build_store (L.build_load oldp "tmp" body_builder) newp body_builder);
+    
+    ignore(L.build_store (L.build_add (L.build_load elind "tmp" body_builder) (L.const_int i32_t 1) "inc" body_builder) elind body_builder);
+    add_terminal body_builder (L.build_br pred_bb);
+
+    let pred_builder = L.builder_at_end context pred_bb in
+    let bool_val = L.build_icmp L.Icmp.Slt (L.build_load elind "tmp" pred_builder) len "comp" pred_builder in
+
+    let merge_bb = L.append_block context "merge" the_function in
+    ignore (L.build_cond_br bool_val body_bb merge_bb pred_builder);
+
+    let end_builder = L.builder_at_end context merge_bb in
+    ignore(L.build_store newlst (L.build_struct_gep newstruct 0 "tmp" end_builder) end_builder);
+    (L.build_load newstruct "strct" end_builder, end_builder)
+
+and copy e t builder = (*returns a deep copy of e and the builder at the end of copy*)
+  (match t with
+      A.TInt -> (e, builder) (*no need to deep copy for primitive types*)
+    | A.TChar -> (e, builder)
+    | A.TBool -> (e, builder)
+    | A.TVoid -> (e, builder) 
+    | A.TString -> (e, builder)
+    | A.TFloat -> (e, builder)
+    | A.TList _ -> copy_list e t builder
+  )
+
+in
+
   let rec build_expressions l builder local_var_map = (*builds all aexprs in l, updating builder appropriately: basically combine map and fold*)
     (match l with
       [] -> ([], builder)
@@ -234,16 +283,18 @@ in
               A.TVoid -> ignore(L.build_ret_void builder); (builder, local_var_map)
             | _ -> let (e', builder') = (aexpr builder local_var_map e) in ignore(L.build_ret e' builder'); (builder', local_var_map))
         | A.AAsn(s, e, b, t) -> 
+          let (e', builder') = aexpr builder local_var_map e in
+          let (e', builder') = if b then (e', builder') else copy e' t builder' in
           let add_local m (t,n) =            
-            let local_var = L.build_alloca (ltype_of_typ t) n builder
+            let local_var = L.build_alloca (ltype_of_typ t) n builder'
             in StringMap.add n local_var m in
           (match s with
             A.AId(name, typ) -> let local_var_map = if StringMap.mem name local_var_map then local_var_map else add_local local_var_map (t,name) in 
-           let (e', builder) = aexpr builder local_var_map e in ignore (L.build_store e' (lookup name local_var_map) builder); (builder, local_var_map)
-          | A.AItem(name, adr, typ) -> let (e', builder) = aexpr builder local_var_map e in
-            let arp = L.build_struct_gep (lookup name local_var_map) 0 "tmp" builder and (ad, builder) = aexpr builder local_var_map adr in
-            let ar = L.build_load arp "tmpar" builder in
-            let p = L.build_in_bounds_gep ar [|ad|] "ptr" builder in ignore(L.build_store e' p builder); (builder, local_var_map))
+            ignore (L.build_store e' (lookup name local_var_map) builder'); (builder', local_var_map)
+          | A.AItem(name, adr, typ) ->
+            let arp = L.build_struct_gep (lookup name local_var_map) 0 "tmp" builder and (ad, builder') = aexpr builder' local_var_map adr in
+            let ar = L.build_load arp "tmpar" builder' in
+            let p = L.build_in_bounds_gep ar [|ad|] "ptr" builder' in ignore(L.build_store e' p builder'); (builder', local_var_map))
         | A.AIf (predicate, then_stmt, else_stmt) ->
           let (bool_val, builder) = aexpr builder local_var_map predicate in
           let merge_bb = L.append_block context "merge" the_function in
