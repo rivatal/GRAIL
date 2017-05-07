@@ -440,7 +440,7 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
       | Eadd -> 
       (match et1, et2 with |TGraph(n, e), TEdge(_,_,_) -> [(et2, e); (t, TGraph(n, et2))]
                            |T(_), TRec(_,_) | T(_), T(_) -> [(et1, TGraph(gen_new_type(), et2)); (t, et1)]
-                           | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ "," ^ (string_of_type et2) ^ " not valid graph for Eadd"))
+                           | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ ", " ^ (string_of_type et2) ^ " not valid graph for Eadd"))
       )
       | _ -> raise(failwith("error"))
      in
@@ -495,11 +495,13 @@ and unify_one (t1: primitiveType) (t2: primitiveType) : substitutions =
   | T(x), z | z, T(x) -> [(x, z)]
   | TList(x), TList(y) -> unify_one x y
   | TGraph(a, b), TGraph(c, d) -> unify_one a c @ unify_one b d
-  | TEdge(name1, n1, e1), TEdge(name2, n2, e2) -> if (name1 = name2) then [] else raise(failwith "mismatched types")
+  | TEdge(name1, n1, e1), TEdge(name2, n2, e2) ->
+  (* ignore(print_string("matching " ^ name1 ^ "," ^ name2)); *)
+    unify_one n1 n2 @ unify_one e1 e2
   | TRec(a, b), TRec(c, d) -> if (c = a)
       then [] 
-      else raise (failwith "mismatched types")
-  | _ -> raise (failwith "mismatched types")
+      else raise (failwith "mismatched types@501")
+  | _ -> raise (failwith "mismatched types@502")
 
 (*Are we handling lists right?*)
 and substitute (u: primitiveType) (x: id) (t: primitiveType) : primitiveType =
@@ -545,7 +547,7 @@ and asn_lval (ae: aexpr) (ae2: aexpr) (env: environment) : environment =
   match ae with
   |ACall(str, _, _, _)
   |AId(str, _) -> NameMap.add (map_id str) t env
-  |ADot(ae, str, TRec(x, _)) -> NameMap.add (map_id_rec x str) t env
+  |ADot(AId(_, TRec(recname, _)), str, _) -> NameMap.add (map_id (map_id_rec recname str)) t env
   |AItem(str, _, _) -> NameMap.add (map_id str) (TList(t)) env
   (*is there a problem if this is a record??*)
   |_ -> raise(failwith("error: " ^ string_of_aexpr ae ^ " not a valid lvalue@534."))
@@ -555,7 +557,7 @@ and get_lval (ae: aexpr) : string =
   match ae with
   |ACall(str, _, _, _)
   |AId(str, _) -> str 
-  |ADot(ae, str, TRec(x, _)) -> map_id_rec x str
+  |ADot(AId(_, TRec(recname, _)), str, _) -> map_id_rec recname str
   |AItem(str, _, _) ->  str 
   (*is there a problem if this is a record??*)
   |_ -> raise(failwith("error: " ^ string_of_aexpr ae ^ " not a valid lvalue@534."))

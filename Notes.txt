@@ -344,8 +344,8 @@ Will have an error because for can see y.
 f(x){ for(x = 3; x < 3; x = x + 1;){ y = 3; } y = "ser";  return y; }  
 Won't have an error because scope of y is limited to this for.
 
-f(x, y){ x .& y; } main(){ z = {a: 3}; y = z; y.a = 4; edge = z -- z; g = () with z; f(g, z); }
-^Not a valid lvalue issue
+f(x, y){ x .& y; } main(){ z = {a: 3}; y = z; y.a = 4; edge = z -- z; g = () with z; f(g, edge); }
+^Not a valid lvalue issue fixed.
 
 f(x){ for(a in x){ y = 3; } } main(){ f(3); } 
 Should and does throw an error.
