@@ -10,8 +10,8 @@ open Ast
 %token TIMES LBRACKET RBRACKET DASH RARROW LARROW
 %token ACCIO CHAR DOUBLE EDGE EMPTY 
 %token TO FROM IN RECORD TYPE WITH FREE
-%token FPLUS FMINUS FTIMES FDIVIDE ADD EADD
-%token PLUSEQ FPLUSEQ ADDEQ EADDEQ COPY
+%token FPLUS FMINUS FTIMES FDIVIDE ADD EADD CARAT
+%token PLUSEQ FPLUSEQ ADDEQ EADDEQ COPY CARATEQ
 %token <int> INTLIT
 %token <char> CHARLIT
 %token <float> DOUBLELIT
@@ -21,14 +21,14 @@ open Ast
 
 %nonassoc NOELSE
 %nonassoc ELSE
-%right ASSIGN COPY PLUSEQ FPLUSEQ ADDEQ EADDEQ
+%right ASSIGN COPY PLUSEQ FPLUSEQ ADDEQ EADDEQ CARATEQ
 %nonassoc COLON 
 %left OR
 %left AND
 %left EQ NEQ
 %left LT GT LEQ GEQ IN
-%left ADD EADD
-%right DOT
+%left ADD EADD CARAT
+%left DOT
 %nonassoc NOWITH
 %nonassoc GRAPH
 %nonassoc WITH
@@ -65,7 +65,7 @@ formals_opt:
     /* nothing */ { [] }
   | formal_list   { List.rev $1 }
 
-formal_list:  /*Changed to id because they're ids*/
+formal_list:  
     ID                   { [$1] }
   | formal_list COMMA ID { $3 :: $1 }
 
@@ -76,18 +76,19 @@ stmt_list:
 stmt:
    expr SEMI  { Expr($1) }    
   | RETURN expr SEMI { Return($2) }
-  | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE { If($3, $6, []) }
-  | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE   { If($3, $6, List.rev $10) }
+  | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE { If($3, List.rev $6, []) }
+  | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE   { If($3, List.rev $6, List.rev $10) }
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE IF LPAREN expr RPAREN LBRACE stmt_list RBRACE  { If($3, List.rev $6, [If($11, List.rev $14, [])]) }
-  | FOR LPAREN stmt expr SEMI stmt RPAREN LBRACE stmt_list RBRACE
-     { For($3, $4, $6, List.rev $9) }
+  | FOR LPAREN stmt expr SEMI stmt RPAREN LBRACE stmt_list RBRACE { For($3, $4, $6, List.rev $9) }
+  | FOR LPAREN expr IN expr RPAREN LBRACE stmt_list RBRACE { Forin($3, $5, List.rev $8) }
   | expr ASSIGN expr SEMI { Asn($1, $3, true) }
   | expr COPY expr SEMI { Asn($1, $3, false) }
   | expr PLUSEQ expr SEMI { Asn($1, Binop($1, Add, $3), true) }
   | expr FPLUSEQ expr SEMI { Asn($1, Binop($1, Fadd, $3), true) }
   | expr ADDEQ expr SEMI { Asn($1, Binop($1, Gadd, $3), true) }
   | expr EADDEQ expr SEMI { Asn($1, Binop($1, Eadd, $3), true) }
-  | WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE { While($3, $6) }
+  | expr CARATEQ expr SEMI { Asn($1, Binop($1, Ladd, $3), true)}
+  | WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE { While($3, List.rev $6) }
 
   expr:
     INTLIT           { IntLit($1) }
@@ -120,7 +121,8 @@ stmt:
   | expr OR     expr { Binop($1, Or,    $3) }
   | expr IN     expr { Binop($1, In,    $3) }
   | expr ADD    expr { Binop($1, Gadd, $3) }
-  | expr EADD   expr { Binop($1, Eadd, $3) }  
+  | expr EADD   expr { Binop($1, Eadd, $3) }
+  | expr CARAT  expr { Binop($1, Ladd, $3)}  
   | MINUS expr %prec NEG { Unop(Neg, $2) }
   | NOT expr         { Unop(Not, $2) }
   | expr LARROW expr with_opt { Edge($1, To, $3, $4) }

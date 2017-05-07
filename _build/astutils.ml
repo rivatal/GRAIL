@@ -1,8 +1,5 @@
 open Ast
 
-module CharMap = Map.Make(String)
-type genericMap = int CharMap.t
-
 (*Let the strings begin *)
 let string_of_op (op: op) =
   match op with
@@ -10,7 +7,7 @@ let string_of_op (op: op) =
   | Or -> "||" | And -> "&&" | Sub -> "-" | Div -> "/" | Fadd -> ".+"
   | Equal -> "==" | Neq -> "-" | Leq -> "<=" | Geq -> ">=" | Fsub -> ".-"
   | Fmult -> ".*" | Fdiv -> "./" | To -> "<-" | From -> "->" | Dash -> "--"
-  | In -> "in" | Gadd -> "&" | Eadd -> ".&"
+  | In -> "in" | Gadd -> "&" | Eadd -> ".&" | Ladd -> "^"
 
 let string_of_uop (uop: uop) =
   match uop with
@@ -19,17 +16,17 @@ let string_of_uop (uop: uop) =
 
 let rec string_of_type (t: primitiveType) =
   match t with
-  | TRec(s, l) -> ("record "  ^ s)
+  | TRec(s, l) -> (Printf.sprintf "record %s" s)
   | TInt -> "int"
   | TBool -> "bool"
   | TFloat -> "float"
   | TString -> "str"
   | TChar -> "char"
   | TVoid -> "void"
-  | TEdge(x) -> "edge of " ^ (string_of_type x)
-  | TGraph(a, b) -> "graph of " ^ (string_of_type a) ^ " with " ^ (string_of_type b)
+  | TEdge(name, _, _) -> Printf.sprintf "edge %s " name
+  | TGraph(name, _, _) -> Printf.sprintf "graph %s " name (* ^ " with " ^ (string_of_type b) *)
   | TList(x) -> "list of " ^ (string_of_type x)
-  | T(x) -> Printf.sprintf "'%s" x
+  | T(x) -> Printf.sprintf "%s" x
 
 let string_of_tuple (t: id * primitiveType) =
   match t with
@@ -68,7 +65,7 @@ let rec string_of_aexpr (ae: aexpr): string =
          [] -> str
        |(id, aexpr) :: t -> helper t (id ^ " " ^ string_of_aexpr aexpr ^ str))
     in 
-    ignore(print_string ("list is length " ^ string_of_int (List.length aexprs)));
+(*     ignore(print_string ("list is length " ^ string_of_int (List.length aexprs))); *)
     ((string_of_type t) ^ "{" ^ (helper aexprs "") ^ "}")
   | AEdge(e1, op, e2, e3, t) -> Printf.sprintf "%s %s %s %s : %s" (string_of_aexpr e1) (string_of_op op) (string_of_aexpr e2) (string_of_aexpr e3) (string_of_type t)
   | AList(elist, t) -> Printf.sprintf "(%s : %s)" (string_of_aexpr_list elist) (string_of_type t)
@@ -90,14 +87,14 @@ and string_of_astmt (l: astmt) =
     let b =  (match s2 with
           [] -> ""
         |rest -> string_of_astmt_list rest) in (a ^ b)
-  |AFor(as1, ae1, as2, astmts) ->
+  | AFor(as1, ae1, as2, astmts) ->
     "for (" ^ string_of_astmt as1  ^ string_of_aexpr ae1 ^ " ; " ^ string_of_astmt as2 
     ^ string_of_astmt_list astmts
-  |AWhile(ae1, astmts) -> "while (" ^ string_of_aexpr ae1 ^ ") {" ^ string_of_astmt_list astmts ^ "}"
+  | AWhile(ae1, astmts) -> "while (" ^ string_of_aexpr ae1 ^ ") {" ^ string_of_astmt_list astmts ^ "}"
+  | AForin(id, aexpr, astmts) -> "for (" ^ string_of_aexpr id ^ " in " ^ string_of_aexpr aexpr ^ "){" ^ string_of_astmt_list astmts
 
 and string_of_astmt_list (stmts : astmt list) : string =
   let s1 = List.map(fun a -> (string_of_astmt (a))) stmts in let l = String.concat "" s1 in l
-
 
 and string_of_stmt (l: stmt)= 
   match l with 
@@ -113,6 +110,8 @@ and string_of_stmt (l: stmt)=
   | For(s1, e1, s2, astmts) -> "for (" ^ string_of_stmt s1 ^ string_of_expr e1 ^ string_of_stmt s2 ^" ) {\n" ^
                                string_of_stmt_list astmts ^ "}" 
   | While(e1, stmts) -> "while (" ^ string_of_expr e1 ^ "){\n" ^ string_of_stmt_list stmts ^ "}"
+  | Forin(s, e, stmts) -> "for (" ^ string_of_expr s ^ " in " ^ string_of_expr e ^ "){" ^ string_of_stmt_list stmts
+
 and string_of_stmt_list (stmts : stmt list) : string =
   let s1 = List.map(fun a -> (string_of_stmt (a))) stmts in let l = String.concat "" s1 in l
 
@@ -145,7 +144,7 @@ and string_of_expr (e: expr): string =
   | Edge(e1, op, e2, e3) -> Printf.sprintf "%s %s %s %s" (string_of_expr e1) (string_of_op op) (string_of_expr e2) (string_of_expr e3)
   | List(elist) -> Printf.sprintf "(%s)" (string_of_expr_list elist)
   | Item(l, e) -> Printf.sprintf "%s[%s]" l (string_of_expr e)
-  | Graph(elist, e) -> Printf.sprintf "(%s) with {%s}" (string_of_expr_list elist) (string_of_expr e)
+  | Graph(elist, e) -> Printf.sprintf "(%s) with %s" (string_of_expr_list elist) (string_of_expr e)
   | Noexpr -> ""
 
 and string_of_expr_list l =
@@ -167,3 +166,7 @@ let string_of_func (func: sast_afunc) =
        String.concat "" (List.map string_of_astmt func.body) ^ "}\n"
      in t ^ name ^ formals ^body
 *)
+(*Maps a variable to its name in the environment*)
+let map_id_with (fname: string )(id: string) : string =
+(*    ignore(print_string("map_id_with " ^ fname ^ "#" ^ id ^ "\n"));  *)
+  (fname ^ "#" ^ id)
