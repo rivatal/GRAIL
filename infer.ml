@@ -121,7 +121,7 @@ let rec get_field_type (elist: (id * primitiveType) list) (id: id) =
 (* A function is a list of statements. Each statement's expressions are inferred here.
 The result is annotated and passed into the sast. *)
 let rec infer_stmt (allenv: allenv) (e: stmt): (allenv * astmt) =
-(*   ignore(print_string (" inferring " ^ (string_of_stmt e) ^ "\n"));   *)
+(*   ignore(print_string (" inferring " ^ (string_of_stmt e) ^ "\n"));   *) 
   let env, genv = allenv in 
   match e with
   | Asn(e1, e2, switch) -> 
@@ -253,6 +253,8 @@ let env, genv = allenv in
        in 
 (*        ignore(check_list_exprs ael); *)
        ignore(check_list_consistency ael);
+       ignore(print_string("Inferred "));
+       ignore(List.iter (fun a -> print_string (string_of_aexpr a)) ael);
        AList(ael, TList(t)))
   | Call(id, elist) ->    (*Function calls derive their type from the function declaration*)
     let aelist = List.map (fun a -> infer_expr allenv a) elist in
@@ -304,11 +306,12 @@ let env, genv = allenv in
        ae3 = annotate_expr allenv e3 in 
       AEdge(ae1, op, ae2, ae3, TEdge(type_of ae3))
 and annotate_expr_list (allenv: allenv) (e: expr list): aexpr list =
-  let helper e =
+  let rec helper e l =
     match e with
-    [] -> []
+    [] -> List.rev l
     |h :: t ->
-      annotate_expr allenv h :: annotate_expr_list allenv t in helper (List.rev e)
+      helper t (annotate_expr allenv h :: l) 
+    in helper e []
 
 
 (*Generate unique record type based on fields*)
