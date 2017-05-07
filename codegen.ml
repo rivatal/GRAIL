@@ -377,6 +377,13 @@ in
                 in (L.build_load ext_val "" builder, builder)
             | _ -> raise (Failure ("Node not declared."))
            )
+        (*| A.AGraph(lst, rel, t) -> 
+          let rec split_lists lst = 
+            match lst with
+              [] -> ([], [])
+              h::t -> let oldlists = split_lists tl in 
+                      (match h with
+                      A.)*)
             
     (* Build the code for the given statement; return the builder for
        the statement's successor *)
@@ -392,6 +399,7 @@ in
           let add_local m (t,n) =            
             let local_var = L.build_alloca (ltype_of_typ t) n builder'
             in StringMap.add n local_var m in
+
           (match s with
             A.AId(name, typ) -> let local_var_map = if StringMap.mem name local_var_map then local_var_map else add_local local_var_map (t,name) in 
             ignore (L.build_store e' (lookup name local_var_map) builder'); (builder', local_var_map)
@@ -400,25 +408,25 @@ in
             let ar = L.build_load arp "tmpar" builder' in
             let p = L.build_in_bounds_gep ar [|ad|] "ptr" builder' in ignore(L.build_store e' p builder'); (builder', local_var_map))
 
-            (* Just for worst case debug,not required*)
-            (*let lookup_struct n =
+           (* (* Just for worst case debug,not required*)
+            let lookup_struct n =
                    try TypeMap.find n !tymap
                    with Not_found -> raise (Failure ("undeclared struct " ^ n))
           in (match s with
-                A.AItem(name, adr, typ) -> let e' = aexpr builder local_var_map e and 
+               (* A.AItem(name, adr, typ) -> let e' = aexpr builder local_var_map e and 
             arp = L.build_struct_gep (lookup name local_var_map) 0 "tmp" builder and ad = aexpr builder local_var_map adr in
             let ar = L.build_load arp "tmpar" builder in
-            let p = L.build_in_bounds_gep ar [|ad|] "ptr" builder in ignore(L.build_store e' p builder); (builder, local_var_map)
+            let p = L.build_in_bounds_gep ar [|ad|] "ptr" builder in ignore(L.build_store e' p builder); (builder, local_var_map)*)
                 | A.AId(name, typ) -> 
                    (match typ with 
                    | A.TInt| A.TBool| A.TString -> 
                         let local_var_map = add_local local_var_map (t,name)                        in 
-                        let e' = aexpr builder local_var_map e
+                        let (e', builder) = aexpr builder local_var_map e
                     in ignore (L.build_store e' (lookup name local_var_map) 
                         builder);(builder, local_var_map)
                    
                    | A.TRec(tname,tlist) ->
-                        let e' = aexpr builder local_var_map e
+                        let (e', builder) = aexpr builder local_var_map e
                         in let struct_name = ("struct."^tname)
                         in let record_t = lookup_struct struct_name 
                         in let local_var = 
@@ -429,7 +437,7 @@ in
                         builder);(builder, local_var_map)
                         
                    |A.TEdge(tname,e1,e2) -> 
-                        let e' = aexpr builder local_var_map e
+                        let (e', builder) = aexpr builder local_var_map e
                         in let struct_name = ("struct."^tname)
                         in let edge_t = lookup_struct struct_name 
                         in let local_var = 
@@ -439,7 +447,7 @@ in
                         in ignore (L.build_store e' (lookup name local_var_map) 
                         builder);(builder, local_var_map)
                         
-                   | _ -> (builder,local_var_map)*) 
+                   | _ -> (builder,local_var_map)))*)
                  
         | A.AIf (predicate, then_stmt, else_stmt) ->
           let (bool_val, builder) = aexpr builder local_var_map predicate in
