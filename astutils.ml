@@ -50,15 +50,8 @@ let rec string_of_aexpr (ae: aexpr): string =
   | AUnop(op, e1, t) ->
     let s1 = string_of_aexpr e1 in let sop = string_of_uop op in let st = string_of_type t in
     Printf.sprintf "(%s%s: %s)" sop s1 st
-  | ACall(id, _, astmts, t) ->
-    let allaexprs = 
-      let rec matchlist m= 
-        match m with
-          [] -> []
-        | hd :: tl ->
-          string_of_astmt hd ::  matchlist tl
-      in String.concat "" (matchlist astmts)  
-    in Printf.sprintf "%s (%s): %s" id allaexprs (string_of_type t)
+  | ACall(id, _, _,_, t) ->
+    Printf.sprintf "%s (...): %s" id (string_of_type t)
   | ARecord(aexprs, t) ->
     let rec helper l str : string =
       (match l with
@@ -170,3 +163,8 @@ let string_of_func (func: sast_afunc) =
 let map_id_with (fname: string )(id: string) : string =
 (*    ignore(print_string("map_id_with " ^ fname ^ "#" ^ id ^ "\n"));  *)
   (fname ^ "#" ^ id)
+
+
+let map_func_id (fname: string) (calln: string): string =
+(*    ignore(print_string("map_id_with " ^ fname ^ "#" ^ id ^ "\n"));  *)
+  (fname ^ "!" ^ calln)
