@@ -3,7 +3,6 @@ open Astutils
 
 module NameMap = Map.Make(String)
 type environment = primitiveType NameMap.t
-
 type genvironment = (primitiveType * (string * primitiveType) list * stmt list) NameMap.t
 
 let parse (s) : Ast.program =
@@ -49,7 +48,7 @@ let infer_func (e: Ast.func) (genv : genvironment) : (Ast.afunc * genvironment) 
     let ids = get_ids_formals formals fname in 
     let env = List.fold_left (fun m x -> NameMap.add x (Infer.gen_new_type ()) m) NameMap.empty ids in 
     let genv = NameMap.add fname (Infer.gen_new_type (),[],[]) genv in
-    Infer.infer_func (env, genv) e
+    Infer.infer_func (env, genv, []) e
 
 let grail (ast: Ast.afunc list) (input) : Ast.afunc list =
   let rec get_sast(p: Ast.program) (genv : genvironment) (l : Ast.afunc list) : Ast.afunc list  =   
@@ -64,7 +63,8 @@ let grail (ast: Ast.afunc list) (input) : Ast.afunc list =
                   ("printfloat", (TVoid, [("x", TFloat)], [])); 
                   ("printbool", (TVoid, [("x", TBool)], [])); 
                   ("printchar", (TVoid, [("x", TChar)], [])); 
-                  ("display", (TVoid, [("x", TGraph(Infer.gen_new_type(), Infer.gen_new_type()))], []))]
+                  ("size", (TInt, [("x", TList(Infer.gen_new_type()))], [Return(IntLit(1))])); 
+                  ("display", (TVoid, [("x", TGraph(Infer.gen_new_name(), Infer.gen_new_type(), Infer.gen_new_type()))], []))]
   in let rec addbuiltins l genv =
     match l with
     |[] -> genv 

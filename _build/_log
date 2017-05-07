@@ -36,7 +36,7 @@ ocamlfind ocamlc -c -w +a-4 -package llvm.analysis -package llvm -o codegen.cmo 
 File "codegen.ml", line 22, characters 25-259:
 Warning 8: this pattern-matching is not exhaustive.
 Here is an example of a value that is not matched:
-(T _|TRec (_, _)|TEdge _|TGraph (_, _))
+(T _|TRec (_, _)|TEdge (_, _, _)|TGraph (_, _, _))
 File "codegen.ml", line 155, characters 20-21:
 Warning 28: wildcard pattern given as argument to a constant constructor
 File "codegen.ml", line 122, characters 42-2833:
@@ -72,78 +72,95 @@ Warning 27: unused variable typ.
 # Target: infer.cmo, tags: { byte, compile, extension:cmo, extension:ml, file:infer.cmo, file:infer.ml, implem, ocaml, package(llvm), package(llvm.analysis), quiet }
 ocamlfind ocamlc -c -w +a-4 -package llvm.analysis -package llvm -o infer.cmo infer.ml
 + ocamlfind ocamlc -c -w +a-4 -package llvm.analysis -package llvm -o infer.cmo infer.ml
-File "infer.ml", line 65, characters 8-19:
+File "infer.ml", line 69, characters 8-19:
 Warning 39: unused rec flag.
-File "infer.ml", line 71, characters 8-21:
+File "infer.ml", line 75, characters 8-21:
 Warning 39: unused rec flag.
-File "infer.ml", line 74, characters 8-18:
+File "infer.ml", line 78, characters 8-18:
 Warning 39: unused rec flag.
-File "infer.ml", line 111, characters 8-30:
+File "infer.ml", line 113, characters 8-30:
 Warning 39: unused rec flag.
-File "infer.ml", line 211, characters 2-3952:
+File "infer.ml", line 123, characters 8-19:
+Warning 39: unused rec flag.
+File "infer.ml", line 216, characters 2-4283:
 Warning 8: this pattern-matching is not exhaustive.
 Here is an example of a value that is not matched:
 Subset (_, _, _)
-File "infer.ml", line 100, characters 7-8:
+File "infer.ml", line 340, characters 2-165:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a value that is not matched:
+(TInt|TBool|TString|TFloat|TChar|T _|TVoid|TList _|TEdge (_, _, _)|
+TGraph (_, _, _))::_
+File "infer.ml", line 406, characters 10-16:
+Warning 39: unused rec flag.
+File "infer.ml", line 648, characters 10-19:
+Warning 39: unused rec flag.
+File "infer.ml", line 101, characters 10-11:
 Warning 27: unused variable a.
-File "infer.ml", line 101, characters 13-14:
-Warning 27: unused variable a.
-File "infer.ml", line 130, characters 13-16:
+File "infer.ml", line 136, characters 13-16:
 Warning 27: unused variable env.
-File "infer.ml", line 243, characters 16-19:
+File "infer.ml", line 199, characters 14-18:
+Warning 27: unused variable recs.
+File "infer.ml", line 249, characters 16-19:
 Warning 27: unused variable str.
-File "infer.ml", line 246, characters 11-12:
+File "infer.ml", line 252, characters 11-12:
 Warning 27: unused variable x.
-File "infer.ml", line 260, characters 9-16:
+File "infer.ml", line 268, characters 9-16:
 Warning 27: unused variable oldtype.
-File "infer.ml", line 365, characters 88-90:
+File "infer.ml", line 356, characters 11-16:
+Warning 27: unused variable name1.
+File "infer.ml", line 356, characters 33-38:
+Warning 27: unused variable name2.
+File "infer.ml", line 357, characters 12-17:
+Warning 27: unused variable name1.
+File "infer.ml", line 357, characters 35-40:
+Warning 27: unused variable name2.
+File "infer.ml", line 390, characters 88-90:
 Warning 27: unused variable id.
-File "infer.ml", line 436, characters 29-30:
+File "infer.ml", line 409, characters 16-20:
+Warning 27: unused variable tail.
+File "infer.ml", line 455, characters 29-30:
 Warning 27: unused variable t.
-File "infer.ml", line 450, characters 10-11:
+File "infer.ml", line 469, characters 10-11:
 Warning 27: unused variable s.
-File "infer.ml", line 450, characters 18-19:
+File "infer.ml", line 469, characters 18-19:
 Warning 27: unused variable t.
-File "infer.ml", line 456, characters 10-12:
+File "infer.ml", line 475, characters 10-12:
 Warning 27: unused variable id.
-File "infer.ml", line 456, characters 17-23:
+File "infer.ml", line 475, characters 17-23:
 Warning 27: unused variable astmts.
-File "infer.ml", line 456, characters 25-26:
+File "infer.ml", line 475, characters 25-26:
 Warning 27: unused variable t.
-File "infer.ml", line 458, characters 15-16:
+File "infer.ml", line 477, characters 15-16:
 Warning 27: unused variable t.
-File "infer.ml", line 429, characters 47-50:
-Warning 27: unused variable f.
-File "infer.ml", line 487, characters 12-13:
-Warning 27: unused variable b.
-File "infer.ml", line 487, characters 24-25:
-Warning 27: unused variable d.
-File "infer.ml", line 533, characters 8-10:
-Warning 27: unused variable ae.
-File "infer.ml", line 542, characters 11-15:
-Warning 27: unused variable genv.
-File "infer.ml", line 551, characters 11-16:
-Warning 27: unused variable aexpr.
-File "infer.ml", line 552, characters 8-15:
-Warning 27: unused variable aexpr.
-File "infer.ml", line 553, characters 10-12:
-Warning 27: unused variable a1.
-File "infer.ml", line 553, characters 14-16:
-Warning 27: unused variable a2.
-File "infer.ml", line 571, characters 15-18:
-Warning 27: unused variable et1.
-File "infer.ml", line 577, characters 25-27:
-Warning 27: unused variable id.
-File "infer.ml", line 647, characters 11-15:
+File "infer.ml", line 504, characters 11-16:
+Warning 27: unused variable name1.
+File "infer.ml", line 504, characters 32-37:
+Warning 27: unused variable name2.
+File "infer.ml", line 505, characters 10-15:
+Warning 27: unused variable name1.
+File "infer.ml", line 505, characters 32-37:
+Warning 27: unused variable name2.
+File "infer.ml", line 617, characters 11-16:
+Warning 27: unused variable tname.
+File "infer.ml", line 652, characters 6-7:
+Warning 27: unused variable x.
+File "infer.ml", line 652, characters 11-12:
+Warning 27: unused variable y.
+File "infer.ml", line 652, characters 16-20:
+Warning 27: unused variable tail.
+File "infer.ml", line 678, characters 17-21:
+Warning 27: unused variable recs.
+File "infer.ml", line 678, characters 11-15:
 Warning 27: unused variable genv.
 # Target: scanner.cmo, tags: { byte, compile, extension:cmo, extension:ml, file:scanner.cmo, file:scanner.ml, implem, ocaml, package(llvm), package(llvm.analysis), quiet }
 ocamlfind ocamlc -c -w +a-4 -package llvm.analysis -package llvm -o scanner.cmo scanner.ml
 # Target: grail.cmo, tags: { byte, compile, extension:cmo, extension:ml, file:grail.cmo, file:grail.ml, implem, ocaml, package(llvm), package(llvm.analysis), quiet }
 ocamlfind ocamlc -c -w +a-4 -package llvm.analysis -package llvm -o grail.cmo grail.ml
 + ocamlfind ocamlc -c -w +a-4 -package llvm.analysis -package llvm -o grail.cmo grail.ml
-File "grail.ml", line 48, characters 32-37:
+File "grail.ml", line 47, characters 32-37:
 Warning 27: unused variable stmts.
-File "grail.ml", line 54, characters 11-14:
+File "grail.ml", line 53, characters 11-14:
 Warning 27: unused variable ast.
 # Target: ast.cmx, tags: { compile, extension:cmx, extension:ml, file:ast.cmx, file:ast.ml, implem, native, ocaml, package(llvm), package(llvm.analysis), quiet }
 ocamlfind ocamlopt -c -w +a-4 -package llvm.analysis -package llvm -o ast.cmx ast.ml
@@ -166,7 +183,7 @@ ocamlfind ocamlopt -c -w +a-4 -package llvm.analysis -package llvm -o codegen.cm
 File "codegen.ml", line 22, characters 25-259:
 Warning 8: this pattern-matching is not exhaustive.
 Here is an example of a value that is not matched:
-(T _|TRec (_, _)|TEdge _|TGraph (_, _))
+(T _|TRec (_, _)|TEdge (_, _, _)|TGraph (_, _, _))
 File "codegen.ml", line 155, characters 20-21:
 Warning 28: wildcard pattern given as argument to a constant constructor
 File "codegen.ml", line 122, characters 42-2833:
@@ -202,78 +219,95 @@ Warning 27: unused variable typ.
 # Target: infer.cmx, tags: { compile, extension:cmx, extension:ml, file:infer.cmx, file:infer.ml, implem, native, ocaml, package(llvm), package(llvm.analysis), quiet }
 ocamlfind ocamlopt -c -w +a-4 -package llvm.analysis -package llvm -o infer.cmx infer.ml
 + ocamlfind ocamlopt -c -w +a-4 -package llvm.analysis -package llvm -o infer.cmx infer.ml
-File "infer.ml", line 65, characters 8-19:
+File "infer.ml", line 69, characters 8-19:
 Warning 39: unused rec flag.
-File "infer.ml", line 71, characters 8-21:
+File "infer.ml", line 75, characters 8-21:
 Warning 39: unused rec flag.
-File "infer.ml", line 74, characters 8-18:
+File "infer.ml", line 78, characters 8-18:
 Warning 39: unused rec flag.
-File "infer.ml", line 111, characters 8-30:
+File "infer.ml", line 113, characters 8-30:
 Warning 39: unused rec flag.
-File "infer.ml", line 211, characters 2-3952:
+File "infer.ml", line 123, characters 8-19:
+Warning 39: unused rec flag.
+File "infer.ml", line 216, characters 2-4283:
 Warning 8: this pattern-matching is not exhaustive.
 Here is an example of a value that is not matched:
 Subset (_, _, _)
-File "infer.ml", line 100, characters 7-8:
+File "infer.ml", line 340, characters 2-165:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a value that is not matched:
+(TInt|TBool|TString|TFloat|TChar|T _|TVoid|TList _|TEdge (_, _, _)|
+TGraph (_, _, _))::_
+File "infer.ml", line 406, characters 10-16:
+Warning 39: unused rec flag.
+File "infer.ml", line 648, characters 10-19:
+Warning 39: unused rec flag.
+File "infer.ml", line 101, characters 10-11:
 Warning 27: unused variable a.
-File "infer.ml", line 101, characters 13-14:
-Warning 27: unused variable a.
-File "infer.ml", line 130, characters 13-16:
+File "infer.ml", line 136, characters 13-16:
 Warning 27: unused variable env.
-File "infer.ml", line 243, characters 16-19:
+File "infer.ml", line 199, characters 14-18:
+Warning 27: unused variable recs.
+File "infer.ml", line 249, characters 16-19:
 Warning 27: unused variable str.
-File "infer.ml", line 246, characters 11-12:
+File "infer.ml", line 252, characters 11-12:
 Warning 27: unused variable x.
-File "infer.ml", line 260, characters 9-16:
+File "infer.ml", line 268, characters 9-16:
 Warning 27: unused variable oldtype.
-File "infer.ml", line 365, characters 88-90:
+File "infer.ml", line 356, characters 11-16:
+Warning 27: unused variable name1.
+File "infer.ml", line 356, characters 33-38:
+Warning 27: unused variable name2.
+File "infer.ml", line 357, characters 12-17:
+Warning 27: unused variable name1.
+File "infer.ml", line 357, characters 35-40:
+Warning 27: unused variable name2.
+File "infer.ml", line 390, characters 88-90:
 Warning 27: unused variable id.
-File "infer.ml", line 436, characters 29-30:
+File "infer.ml", line 409, characters 16-20:
+Warning 27: unused variable tail.
+File "infer.ml", line 455, characters 29-30:
 Warning 27: unused variable t.
-File "infer.ml", line 450, characters 10-11:
+File "infer.ml", line 469, characters 10-11:
 Warning 27: unused variable s.
-File "infer.ml", line 450, characters 18-19:
+File "infer.ml", line 469, characters 18-19:
 Warning 27: unused variable t.
-File "infer.ml", line 456, characters 10-12:
+File "infer.ml", line 475, characters 10-12:
 Warning 27: unused variable id.
-File "infer.ml", line 456, characters 17-23:
+File "infer.ml", line 475, characters 17-23:
 Warning 27: unused variable astmts.
-File "infer.ml", line 456, characters 25-26:
+File "infer.ml", line 475, characters 25-26:
 Warning 27: unused variable t.
-File "infer.ml", line 458, characters 15-16:
+File "infer.ml", line 477, characters 15-16:
 Warning 27: unused variable t.
-File "infer.ml", line 429, characters 47-50:
-Warning 27: unused variable f.
-File "infer.ml", line 487, characters 12-13:
-Warning 27: unused variable b.
-File "infer.ml", line 487, characters 24-25:
-Warning 27: unused variable d.
-File "infer.ml", line 533, characters 8-10:
-Warning 27: unused variable ae.
-File "infer.ml", line 542, characters 11-15:
-Warning 27: unused variable genv.
-File "infer.ml", line 551, characters 11-16:
-Warning 27: unused variable aexpr.
-File "infer.ml", line 552, characters 8-15:
-Warning 27: unused variable aexpr.
-File "infer.ml", line 553, characters 10-12:
-Warning 27: unused variable a1.
-File "infer.ml", line 553, characters 14-16:
-Warning 27: unused variable a2.
-File "infer.ml", line 571, characters 15-18:
-Warning 27: unused variable et1.
-File "infer.ml", line 577, characters 25-27:
-Warning 27: unused variable id.
-File "infer.ml", line 647, characters 11-15:
+File "infer.ml", line 504, characters 11-16:
+Warning 27: unused variable name1.
+File "infer.ml", line 504, characters 32-37:
+Warning 27: unused variable name2.
+File "infer.ml", line 505, characters 10-15:
+Warning 27: unused variable name1.
+File "infer.ml", line 505, characters 32-37:
+Warning 27: unused variable name2.
+File "infer.ml", line 617, characters 11-16:
+Warning 27: unused variable tname.
+File "infer.ml", line 652, characters 6-7:
+Warning 27: unused variable x.
+File "infer.ml", line 652, characters 11-12:
+Warning 27: unused variable y.
+File "infer.ml", line 652, characters 16-20:
+Warning 27: unused variable tail.
+File "infer.ml", line 678, characters 17-21:
+Warning 27: unused variable recs.
+File "infer.ml", line 678, characters 11-15:
 Warning 27: unused variable genv.
 # Target: scanner.cmx, tags: { compile, extension:cmx, extension:ml, file:scanner.cmx, file:scanner.ml, implem, native, ocaml, package(llvm), package(llvm.analysis), quiet }
 ocamlfind ocamlopt -c -w +a-4 -package llvm.analysis -package llvm -o scanner.cmx scanner.ml
 # Target: grail.cmx, tags: { compile, extension:cmx, extension:ml, file:grail.cmx, file:grail.ml, implem, native, ocaml, package(llvm), package(llvm.analysis), quiet }
 ocamlfind ocamlopt -c -w +a-4 -package llvm.analysis -package llvm -o grail.cmx grail.ml
 + ocamlfind ocamlopt -c -w +a-4 -package llvm.analysis -package llvm -o grail.cmx grail.ml
-File "grail.ml", line 48, characters 32-37:
+File "grail.ml", line 47, characters 32-37:
 Warning 27: unused variable stmts.
-File "grail.ml", line 54, characters 11-14:
+File "grail.ml", line 53, characters 11-14:
 Warning 27: unused variable ast.
 # Target: grail.native, tags: { dont_link_with, extension:native, file:grail.native, link, native, ocaml, package(llvm), package(llvm.analysis), program, quiet }
 ocamlfind ocamlopt -linkpkg -package llvm.analysis -package llvm ast.cmx astutils.cmx codegen.cmx infer.cmx parser.cmx scanner.cmx grail.cmx -o grail.native

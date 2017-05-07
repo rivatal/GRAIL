@@ -385,3 +385,29 @@ main(){ x = [1,2,3]; y = x; z = y[0]; }
 
 List order error.
 Not a list error.
+
+f(x, y){ x .& y; } main(){ z = {a: 3}; y = z; y.a = 4; edge = z -- z; g = () with z; f(g, edge); }
+still good.
+
+f(){ x = {school: "moriah"}; y = {school: "yavneh"}; x -- y; }
+
+is it okay if records are in wrong order?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+No self-edge assign
