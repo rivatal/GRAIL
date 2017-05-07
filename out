@@ -1,29 +1,36 @@
 ; ModuleID = 'Grail'
 
-%struct.k = type { i32, i32 }
-%struct.l = type { i32, i32, i32 }
-
-@str = private unnamed_addr constant [12 x i8] c"hello world\00"
+%struct.8 = type { %struct.5*, %struct.5*, i1, %struct.7 }
+%struct.5 = type { i32, i32 }
+%struct.7 = type { i32 }
 
 declare i32 @printf(i8*, ...)
 
-define void @main() {
+define %struct.8 @main() {
 entry:
-  %printf = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([12 x i8]* @str, i32 0, i32 0))
-  %k = alloca %struct.k
-  %0 = load %struct.k* %k
-  %loc = insertvalue %struct.k %0, i32 1, 0
-  %loc1 = insertvalue %struct.k %0, i32 2, 1
-  store %struct.k %0, %struct.k* %k
-  %x = alloca i32
-  store i32 2, i32* %x
-  %node = load %struct.k* %k
-  %l = alloca %struct.l
-  %1 = load %struct.l* %l
-  %loc2 = insertvalue %struct.l %1, i32 1, 0
-  %loc3 = insertvalue %struct.l %1, i32 2, 1
-  %loc4 = insertvalue %struct.l %1, i32 3, 2
-  store %struct.l %1, %struct.l* %l
-  %k5 = load %struct.l* %l
-  ret void
+  %0 = alloca %struct.5
+  %loc = load %struct.5* %0
+  %loc1 = insertvalue %struct.5 %loc, i32 1, 0
+  %loc2 = insertvalue %struct.5 %loc, i32 2, 1
+  store %struct.5 %loc, %struct.5* %0
+  %1 = load %struct.5* %0
+  %2 = alloca %struct.5
+  store %struct.5 %1, %struct.5* %2
+  %3 = alloca %struct.7
+  %loc3 = load %struct.7* %3
+  %loc4 = insertvalue %struct.7 %loc3, i32 1, 0
+  store %struct.7 %loc3, %struct.7* %3
+  %4 = load %struct.7* %3
+  %5 = alloca %struct.8
+  %6 = load %struct.8* %5
+  %loc5 = insertvalue %struct.8 %6, %struct.5* %2, 0
+  %loc6 = insertvalue %struct.8 %6, %struct.5* %2, 1
+  %loc7 = insertvalue %struct.8 %6, i1 true, 2
+  %loc8 = insertvalue %struct.8 %6, %struct.7 %4, 3
+  store %struct.8 %6, %struct.8* %5
+  %7 = load %struct.8* %5
+  %8 = alloca %struct.8
+  store %struct.8 %7, %struct.8* %8
+  %y = load %struct.8* %8
+  ret %struct.8 %y
 }

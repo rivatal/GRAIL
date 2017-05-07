@@ -47,6 +47,25 @@ let translate (functions) =
                 in L.struct_set_body record_t ret_types false;
                 tymap := TypeMap.add ("struct."^tname) record_t !tymap;
                 record_t
+    |A.TEdge(tname,trec1,trec2) ->
+           let struct_name = ("struct."^tname) in 
+           if TypeMap.mem struct_name !tymap 
+           then 
+               TypeMap.find struct_name !tymap
+           else
+           let struct_name = ("struct."^tname) in 
+           let edge_t = L.named_struct_type context struct_name in 
+           let ret_types = 
+                          [  pointer_t (ltype_of_typ trec1);
+                             pointer_t (ltype_of_typ trec1);
+                             ltype_of_typ A.TBool;
+                             ltype_of_typ trec2;
+                           ] 
+           in let all_ret_types = Array.of_list(ret_types)
+           in L.struct_set_body edge_t all_ret_types false;
+           tymap := TypeMap.add ("struct."^tname) edge_t !tymap;
+           edge_t
+            
   in   
  (* Declare printf(), which the print built-in function will call *)
   let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
@@ -158,61 +177,39 @@ let translate (functions) =
 			    populate_structure tl (i+1) 
               )
 		in populate_structure argslist 0
-       (*     
        | A.AEdge(e1,op,e2,item,typ) ->
-         let name_var = ref (0) 
-            in let gen_new_name() =
-                let c1 = !name_var 
-                in incr name_var; 
-                string_of_int(!name_var) 
-                in let struct_name = gen_new_name() in 
-                let edge_t = ltype_of_struct struct_name typ in  
-                let node_name,node =
-                (match e1 with 
-                    |A.ARecord(_,trec) -> 
-                        (match trec with 
-                            |A.TRec(name,_) -> name,trec
-                            | _ -> "error",A.TVoid
-                        )
-                    | _ -> "error",A.TVoid
-                )in let item_name,trec = 
-                (match item with
-                    |A.ARecord(_,trec) -> 
-                        (match trec with 
-                            |A.TRec(name,_) -> name,trec
-                            | _ -> "error",A.TVoid
-                        )
-                    | _ -> "error",A.TVoid
-                )in let ret_types = 
-                           [ (*ltype_of_struct node_name node;
-                             ltype_of_struct node_name node;*)
-                             L.named_struct_type context "struct.node1";
-                             L.named_struct_type context "struct.node1";
-                             ltype_of_typ A.TBool;
-                             ltype_of_struct item_name trec;
-                           ] 
-           in let all_ret_types = Array.of_list(ret_types)
-           in L.struct_set_body edge_t all_ret_types false;
-           let (directed,from,into) = 
+           let (directed,from,into) =
             match op with
              | Dash -> (false,e1,e2)
              | To -> (true,e1,e2)
              | From -> (true,e2,e1)
-            in let argslist = 
-            (List.map (aexpr builder local_var_map) 
-            [from;into;A.ABoolLit(directed,A.TBool);item])
+             in let get_ptr e = 
+                  (match e with 
+                    A.AId(n,_) -> 
+                        try StringMap.find n local_var_map
+                        with Not_found -> 
+                        raise (Failure ("undeclared variable " ^ n))
+                       
+                    | _-> raise (Failure ("Not supported.Node must be declared"))
+                   )
+            in let argslist =
+            [   get_ptr e1;
+                get_ptr e2;
+                aexpr builder local_var_map (A.ABoolLit(directed,A.TBool));
+                aexpr builder local_var_map item
+            ]
 
-         in let loc = L.build_alloca edge_t "" builder
+         in let loc = L.build_alloca (ltype_of_typ typ) "" builder
          in let load_loc = L.build_load loc "" builder
 		 in let rec populate_structure fields i = 
 			match fields with 
-			| [] -> L.build_store load_loc loc builder;loc
+			| [] -> L.build_store load_loc loc builder;
+                    L.build_load loc "" builder
 			| hd :: tl ->
 	          ( L.build_insertvalue load_loc hd i "loc" builder;
 			    populate_structure tl (i+1) 
               )
 		in populate_structure argslist 0
-    *)
     (*| A.Noexpr -> L.const_int i32_t 0*)
     (* Invok:e "f builder" if the current block does not already 
        have a terminal (e.g., a branch). *)        
@@ -235,6 +232,7 @@ let translate (functions) =
             let add_local m (t,n) =            
             let local_var = L.build_alloca (ltype_of_typ t) n builder
             in StringMap.add n local_var m  
+            (* Just for worst case debug,not required*)
             in let lookup_struct n =
                    try TypeMap.find n !tymap
                    with Not_found -> raise (Failure ("undeclared struct " ^ n))
@@ -251,24 +249,26 @@ let translate (functions) =
                         let e' = aexpr builder local_var_map e
                         in let struct_name = ("struct."^tname)
                         in let record_t = lookup_struct struct_name 
-                        in 
-                        let local_var = 
+                        in let local_var = 
                                 L.build_alloca record_t "" builder
-                         
-                        in 
-                        let local_var_map = 
+                        in let local_var_map = 
                         StringMap.add name local_var local_var_map
                         in ignore (L.build_store e' (lookup name local_var_map) 
                         builder);(builder, local_var_map)
                         
-                   |A.TEdge(_) -> 
-                    let e' = aexpr builder local_var_map e 
-                    in 
-                    let local_var_map = StringMap.add name e' local_var_map
-                    in (builder,local_var_map) 
-                   )
+                   |A.TEdge(tname,e1,e2) -> 
+                        let e' = aexpr builder local_var_map e
+                        in let struct_name = ("struct."^tname)
+                        in let edge_t = lookup_struct struct_name 
+                        in let local_var = 
+                                L.build_alloca edge_t "" builder
+                        in let local_var_map = 
+                        StringMap.add name local_var local_var_map
+                        in ignore (L.build_store e' (lookup name local_var_map) 
+                        builder);(builder, local_var_map)
+                        
                    | _ -> (builder,local_var_map) 
-                 )
+                 ))
         | A.AIf (predicate, then_stmt, else_stmt) ->
           let bool_val = aexpr builder local_var_map predicate in
           let merge_bb = L.append_block context "merge" the_function in

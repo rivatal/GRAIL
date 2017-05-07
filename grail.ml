@@ -5,141 +5,66 @@ module NameMap = Map.Make(String)
 type environment = primitiveType NameMap.t
 
 type genvironment = (primitiveType * (string * primitiveType) list * stmt list) NameMap.t
-let callstack = Stack.create()
 
-let parse (s: string) : Ast.program =
-  Parser.program Scanner.token (Lexing.from_string s)
-
-(*Extra checking functions*)
-let checknooverload (e: Ast.func) (genv : genvironment) : unit =
-  match e with
-    Fbody(Fdecl(name, _), _) ->
-    if(NameMap.mem name genv) 
-    then (raise (failwith ("function " ^ name ^ " already defined.")))
-    else ()
+let parse (s) : Ast.program =
+  Parser.program Scanner.token (s)
 
 (*https://www.rosettacode.org/wiki/Sort_using_a_custom_comparator#OCaml*)
-let mycmp s1 s2 =
-  if String.length s1 <> String.length s2 then
-    compare (String.length s2) (String.length s1)
+let mycmp l1 l2 =
+  (if String.length l1 <> String.length l2 then
+    compare (String.length l2) (String.length l1)
   else
-    String.compare (String.lowercase s1) (String.lowercase s2)
+    String.compare (String.lowercase l1) (String.lowercase l2))
+(*   |_ -> raise(failwith("formal not a string")) *)
 
-let rec checkformals (s: string list) : unit =
-  let helper l = 
+(*Extra checking functions*)
+let check_overload (e: Ast.func) (genv : genvironment) : unit =
+  match e with
+    Fbody(Fdecl(fname, _), _) ->
+    if(NameMap.mem fname genv) 
+    then (raise (failwith ("function " ^ fname ^ " already defined.")))
+    else ()
+
+(*checks for shared formals*)
+let check_formals (s: string list) : unit =
+  let rec helper l = 
     match l with 
-    |[_] | [] -> ()
-    | x :: y :: xs ->  if x = y then raise (failwith ("Error: Shared formal " ^ x)) else checkformals (y :: xs)
+    | x :: y :: xs ->  
+    if (x = y) then (raise (failwith ("Error: Shared formal.")))
+    else (helper (y :: xs))
+    |_ -> ()
   in helper (List.sort mycmp s)
 
-(*Prints an annotated function*)
-let print_afunc (afunc: Ast.afunc): unit =
-  match afunc with
-    AFbody(AFdecl(name, aformals, t), astmts) -> 
-    print_endline ("Function " ^ name ^ " " ^ string_of_type t);
-    List.iter (fun a -> (print_endline (string_of_tuple (a)))) aformals
-(*     List.iter (fun a -> (print_endline (string_of_type (Infer.type_of_stmt a)))) astmts
-*)
-let rec print_afunc_list (ast: Ast.afunc list): unit =
-  match ast with
-    [] -> ()
-  |hd :: tl ->
-    print_afunc hd; 
-    print_afunc_list tl
-
-(*Prints the name of an unannotated function*)
-let print_func (func: Ast.func): unit =
-  match func with
-    Fbody(Fdecl(name, formals), astmts) -> 
-    print_endline ("Function " ^ name);
-    List.iter (fun a -> (print_endline a)) formals;
-    List.iter (fun a -> (print_endline (string_of_stmt a))) astmts
-
-let mapid (id: string) : string =
-  let fname = Stack.top callstack in
-  (fname ^ "#" ^ id)
-
-let rec mapformals (fname: string) (aformals: ((string * primitiveType) list)) : string list =
-  match aformals with
-    [] -> []
-  |h :: t ->
-    match h with
-      (id, _) ->
-      [(mapid id)] @ mapformals fname t
-
-let rec get_ids_formals(e: string list) =
-  checkformals e;
+let rec get_ids_formals(e: string list)(f: string) =
+  check_formals e;
   match e with 
-    [] -> []
-  |h :: t -> (mapid h) :: get_ids_formals t
+  [] -> []
+  |h :: t ->  
+  (map_id_with f h) :: get_ids_formals t f
 
-let get_func_if_def (id: string) (genv: genvironment)  =
-  let f = 
-    if (NameMap.mem id genv)
-    then (NameMap.find id genv)
-    else (raise (failwith ("function " ^ id ^ " not defined (grail.ml, get_ids_expr)")))
-  in match f with
-    (_, aformals, _) -> aformals
-
-(*Add in the formals for called functions, but mapped to the function names so they can only be used in that call.*)
-let rec get_ids_expr (e: expr) (genv: genvironment): string list =
-  match e with
-  | IntLit(_) | BoolLit(_) | StrLit(_) | FloatLit(_) | Item(_,_) | List(_) | Record(_) |  CharLit(_) | Graph(_) -> []
-  | Id(x) -> [mapid x]
-  | Dot(e, _)  -> (get_ids_expr e genv)
-  | Noexpr -> []
-  | Binop(e1, _, e2) -> [] | Edge(_,_,_,_) -> []
-  | Unop(_,_) -> []
-  | Call(id, elist) ->  
-    Stack.push id callstack;
-    let aformals = get_func_if_def id genv in
-    let newformals = mapformals id aformals in
-    ignore(Stack.pop callstack);
-    newformals
-
-let rec get_all_ids_stmts (e: stmt list) (g: genvironment): string list =
+let infer_func (e: Ast.func) (genv : genvironment) : (Ast.afunc * genvironment) =
+  check_overload e genv; 
   match e with 
-  | [] -> []
-  | hd :: tl ->
-    match hd with
-    | Asn(x, _, _) -> (get_ids_expr x g) @ get_all_ids_stmts tl g
-    | While(_,y) -> (get_all_ids_stmts y g)  @ get_all_ids_stmts tl g
-    | Return(x) -> (get_ids_expr x g) @ get_all_ids_stmts tl g
-    | Expr(x) -> (get_ids_expr x g) @ get_all_ids_stmts tl g
-    | If(x, y, z) -> (get_all_ids_stmts y g) @ (get_all_ids_stmts z g) @ get_all_ids_stmts tl g
-    | For(x, _, _, y) -> (get_all_ids_stmts [x] g) @ (get_all_ids_stmts y g) @ get_all_ids_stmts tl g
+  |Fbody(Fdecl(fname, formals), stmts) ->
+    let ids = get_ids_formals formals fname in 
+    let env = List.fold_left (fun m x -> NameMap.add x (Infer.gen_new_type ()) m) NameMap.empty ids in 
+    let genv = NameMap.add fname (Infer.gen_new_type (),[],[]) genv in
+    Infer.infer_func (env, genv) e
 
-let rec dedup = function
-  | [] -> []
-  | x :: y :: xs when x = y -> y :: dedup xs
-  | x :: xs -> x :: dedup xs
-
-let infer (e: Ast.func) (genv : genvironment) : (Ast.afunc * genvironment) =
-(*   ignore(print_string("first!")); *)
-  checknooverload e genv; 
-  match e with 
-  |Fbody(Fdecl(name, formals), stmts) ->
-    Stack.push name callstack;
-    let ids1 = get_all_ids_stmts stmts genv
-    in let env = List.fold_left (fun m x -> NameMap.add x (Infer.gen_new_type ()) m) NameMap.empty ids1
-    in let ids2 = get_ids_formals formals
-    in let env = List.fold_left (fun m x -> NameMap.add x (Infer.gen_new_type ()) m) env ids2 
-    in ignore(Stack.pop callstack);
-    let genv = NameMap.add name (Infer.gen_new_type (),[],[]) genv in
-    Infer.infer_func (env, genv, []) e
-
-let infer_func (e: Ast.func) (genv :  genvironment): (genvironment * Ast.afunc) = 
-  let (afunc,genv) = infer e genv in (genv, afunc)
-
-let grail (ast: Ast.afunc list) (input: string) : Ast.afunc list =
-  let rec do_program(p: Ast.program) (genv : genvironment) (l : Ast.afunc list) : Ast.afunc list  =   
+let grail (ast: Ast.afunc list) (input) : Ast.afunc list =
+  let rec get_sast(p: Ast.program) (genv : genvironment) (l : Ast.afunc list) : Ast.afunc list  =   
     match p with
     [] -> List.rev l
-    |hd :: tl -> let (genv, afunc) =
+    |hd :: tl -> let (afunc, genv) =
                    infer_func hd genv 
-    in do_program tl genv (afunc :: l) 
+    in get_sast tl genv (afunc :: l) 
   in 
   let builtins = [("print", (TVoid, [("x", TString)], [])); 
+                  ("printint", (TVoid, [("x", TInt)], [])); 
+                  ("printfloat", (TVoid, [("x", TFloat)], [])); 
+                  ("printbool", (TVoid, [("x", TBool)], [])); 
+                  ("printchar", (TVoid, [("x", TChar)], [])); 
+                  ("size", (TInt, [("x", TList(Infer.gen_new_type()))], [Return(IntLit(1))])); 
                   ("display", (TVoid, [("x", TGraph(Infer.gen_new_type(), Infer.gen_new_type()))], []))]
   in let rec addbuiltins l genv =
     match l with
@@ -147,7 +72,7 @@ let grail (ast: Ast.afunc list) (input: string) : Ast.afunc list =
     |(a, b) :: t -> let genv = NameMap.add a b genv in addbuiltins t genv
   in let genv = addbuiltins builtins NameMap.empty 
   in 
-  do_program (parse input) genv []
+  get_sast (parse (input)) genv []
 
 let format_sast_codegen (ast : Ast.afunc) : Ast.sast_afunc = 
   match ast with 
@@ -159,22 +84,21 @@ let format_sast_codegen (ast : Ast.afunc) : Ast.sast_afunc =
     }
 
 (*Interpreter for debugging purposes*)
-let rec interpreter (ast: Ast.sast_afunc list) : Ast.sast_afunc list =
+(* let rec interpreter (ast: Ast.sast_afunc list) : Ast.sast_afunc list =
   print_string "> ";
   let input = read_line () in
   if input = "exit" then ast
   else
     try
       (*do for func*)
-      let pre_ast = List.map format_sast_codegen (grail [] input) in interpreter (pre_ast @ ast) 
+      let pre_ast = List.map format_sast_codegen (grail [] (Lexing.from_string input)) in interpreter (pre_ast @ ast) 
     with
     | Failure(msg) ->
       if msg = "lexing: empty token" then [] @ interpreter (ast)
       else (print_endline msg; [] @ interpreter(ast))
     | _ -> print_endline "Syntax Error"; [] @  interpreter (ast)
 
-
-(*     let say() = 
+    let say() = 
       let str = "Welcome to Grail, the awesomest language!\n"  in 
       print_string str
 
@@ -187,7 +111,26 @@ let rec interpreter (ast: Ast.sast_afunc list) : Ast.sast_afunc list =
 
       say();
       let l = interpreter([]) in display l *)
-      let compile() = let sast = List.map format_sast_codegen (grail [] "main() { print(\"hello world\");node={a:1,b:2};x=2;y=node;k={c:1,d:2,e:3};p=k;}") in
-    let m = Codegen.translate sast in
-    Llvm_analysis.assert_valid_module m; print_string (Llvm.string_of_llmodule m) ;;
-    compile(); 
+      
+   let compile() = 
+   let file = 
+   try
+   Lexing.from_channel stdin 
+    with
+    |_ -> raise(failwith("Syntax Error"))
+    in 
+   let sast = 
+   List.map format_sast_codegen (grail [] file)
+   in 
+   let m = Codegen.translate sast in
+   Llvm_analysis.assert_valid_module m;  
+   print_string (Llvm.string_of_llmodule m);;
+   compile()
+
+(*  
+    let sast = List.map format_sast_codegen (grail [] file) in   let m = Codegen.translate sast in
+   Llvm_analysis.assert_valid_module m; print_string 
+
+   (Llvm.string_of_llmodule m);; 
+   compile(); 
+ *)
