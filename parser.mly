@@ -1,4 +1,4 @@
-/*Parser for GRAIL*/
+
 %{
 open Ast
 %}
@@ -48,7 +48,7 @@ program:
   decls EOF { $1 }
 
 decls:
-   /* nothing */ { [] }
+   { [] }
  | decls_list { List.rev $1 }
 
  decls_list:
@@ -62,7 +62,7 @@ func_dec:
 	ID LPAREN formals_opt RPAREN { Fdecl($1, $3) }
 
 formals_opt:
-    /* nothing */ { [] }
+    { [] }
   | formal_list   { List.rev $1 }
 
 formal_list:  
@@ -70,7 +70,7 @@ formal_list:
   | formal_list COMMA ID { $3 :: $1 }
 
 stmt_list:
-    /* nothing */  { [] }
+     { [] }
   | stmt_list stmt { $2 :: $1 }
 
 stmt:
@@ -136,11 +136,11 @@ stmt:
 
 
 with_opt:
-  /* nothing */ %prec NOWITH { Noexpr }
+   %prec NOWITH { Noexpr }
   | WITH expr { $2 }
 
 actuals_opt:
-    /* nothing */ { [] }
+     { [] }
   | actuals_list  { List.rev $1 }
 
 actuals_list:
@@ -154,7 +154,7 @@ graph_list:
 
 
 rec_opt:
-    /* nothing */ { [] }
+     { [] }
   | rec_list  { List.rev $1 }
 
 rec_list:
