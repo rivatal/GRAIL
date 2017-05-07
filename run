@@ -35,12 +35,24 @@ entry:
   %7 = load %struct.9* %5
   %8 = alloca %struct.9
   store %struct.9 %7, %struct.9* %8
-  %z = alloca i32
-  %ext_val = getelementptr inbounds %struct.6* %2, i32 0, i32 1
+  %z1 = alloca i32
+  %ext_val = getelementptr inbounds %struct.6* %2, i32 0, i32 0
   %9 = load i32* %ext_val
-  store i32 %9, i32* %z
-  %z10 = load i32* %z
-  %printf = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([4 x i8]* @fmt, i32 0, i32 0), i32 %z10)
+  store i32 %9, i32* %z1
+  %z2 = alloca i32
+  %ext_val10 = getelementptr inbounds %struct.6* %2, i32 0, i32 1
+  %10 = load i32* %ext_val10
+  store i32 %10, i32* %z2
+  %z3 = alloca i32
+  %ext_val11 = getelementptr inbounds %struct.6* %2, i32 0, i32 2
+  %11 = load i32* %ext_val11
+  store i32 %11, i32* %z3
+  %z112 = load i32* %z1
+  %printf = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([4 x i8]* @fmt, i32 0, i32 0), i32 %z112)
+  %z213 = load i32* %z2
+  %printf14 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([4 x i8]* @fmt, i32 0, i32 0), i32 %z213)
+  %z315 = load i32* %z3
+  %printf16 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([4 x i8]* @fmt, i32 0, i32 0), i32 %z315)
   %y = load %struct.9* %8
   ret %struct.9 %y
 }

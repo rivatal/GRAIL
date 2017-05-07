@@ -1,36 +1,58 @@
 ; ModuleID = 'Grail'
 
-%struct.8 = type { %struct.5*, %struct.5*, i1, %struct.7 }
-%struct.5 = type { i32, i32 }
-%struct.7 = type { i32 }
+%struct.9 = type { %struct.6*, %struct.6*, i1, %struct.8 }
+%struct.6 = type { i32, i32, i32 }
+%struct.8 = type { i32 }
+
+@fmt = private unnamed_addr constant [4 x i8] c"%d\0A\00"
+@fmt1 = private unnamed_addr constant [4 x i8] c"%f\0A\00"
 
 declare i32 @printf(i8*, ...)
 
-define %struct.8 @main() {
+define %struct.9 @main() {
 entry:
-  %0 = alloca %struct.5
-  %loc = load %struct.5* %0
-  %loc1 = insertvalue %struct.5 %loc, i32 1, 0
-  %loc2 = insertvalue %struct.5 %loc, i32 2, 1
-  store %struct.5 %loc, %struct.5* %0
-  %1 = load %struct.5* %0
-  %2 = alloca %struct.5
-  store %struct.5 %1, %struct.5* %2
-  %3 = alloca %struct.7
-  %loc3 = load %struct.7* %3
-  %loc4 = insertvalue %struct.7 %loc3, i32 1, 0
-  store %struct.7 %loc3, %struct.7* %3
-  %4 = load %struct.7* %3
-  %5 = alloca %struct.8
-  %6 = load %struct.8* %5
-  %loc5 = insertvalue %struct.8 %6, %struct.5* %2, 0
-  %loc6 = insertvalue %struct.8 %6, %struct.5* %2, 1
-  %loc7 = insertvalue %struct.8 %6, i1 true, 2
-  %loc8 = insertvalue %struct.8 %6, %struct.7 %4, 3
-  store %struct.8 %6, %struct.8* %5
-  %7 = load %struct.8* %5
-  %8 = alloca %struct.8
-  store %struct.8 %7, %struct.8* %8
-  %y = load %struct.8* %8
-  ret %struct.8 %y
+  %0 = alloca %struct.6
+  %loc = load %struct.6* %0
+  %loc1 = insertvalue %struct.6 %loc, i32 1, 0
+  %loc2 = insertvalue %struct.6 %loc, i32 2, 1
+  %loc3 = insertvalue %struct.6 %loc, i32 3, 2
+  store %struct.6 %loc, %struct.6* %0
+  %1 = load %struct.6* %0
+  %2 = alloca %struct.6
+  store %struct.6 %1, %struct.6* %2
+  %3 = alloca %struct.8
+  %loc4 = load %struct.8* %3
+  %loc5 = insertvalue %struct.8 %loc4, i32 1, 0
+  store %struct.8 %loc4, %struct.8* %3
+  %4 = load %struct.8* %3
+  %5 = alloca %struct.9
+  %6 = load %struct.9* %5
+  %loc6 = insertvalue %struct.9 %6, %struct.6* %2, 0
+  %loc7 = insertvalue %struct.9 %6, %struct.6* %2, 1
+  %loc8 = insertvalue %struct.9 %6, i1 true, 2
+  %loc9 = insertvalue %struct.9 %6, %struct.8 %4, 3
+  store %struct.9 %6, %struct.9* %5
+  %7 = load %struct.9* %5
+  %8 = alloca %struct.9
+  store %struct.9 %7, %struct.9* %8
+  %z1 = alloca i32
+  %ext_val = getelementptr inbounds %struct.6* %2, i32 0, i32 0
+  %9 = load i32* %ext_val
+  store i32 %9, i32* %z1
+  %z2 = alloca i32
+  %ext_val10 = getelementptr inbounds %struct.6* %2, i32 0, i32 1
+  %10 = load i32* %ext_val10
+  store i32 %10, i32* %z2
+  %z3 = alloca i32
+  %ext_val11 = getelementptr inbounds %struct.6* %2, i32 0, i32 2
+  %11 = load i32* %ext_val11
+  store i32 %11, i32* %z3
+  %z112 = load i32* %z1
+  %printf = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([4 x i8]* @fmt, i32 0, i32 0), i32 %z112)
+  %z213 = load i32* %z2
+  %printf14 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([4 x i8]* @fmt, i32 0, i32 0), i32 %z213)
+  %z315 = load i32* %z3
+  %printf16 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([4 x i8]* @fmt, i32 0, i32 0), i32 %z315)
+  %y = load %struct.9* %8
+  ret %struct.9 %y
 }
