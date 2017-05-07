@@ -1,0 +1,48 @@
+### Starting build.
+# Target: grail.ml.depends, tags: { extension:ml, file:grail.ml, ocaml, ocamldep, package(llvm), package(llvm.analysis), quiet }
+ocamlfind ocamldep -package llvm.analysis -package llvm -modules grail.ml > grail.ml.depends # cached
+# Target: ast.ml.depends, tags: { extension:ml, file:ast.ml, ocaml, ocamldep, package(llvm), package(llvm.analysis), quiet }
+ocamlfind ocamldep -package llvm.analysis -package llvm -modules ast.ml > ast.ml.depends # cached
+# Target: ast.cmo, tags: { byte, compile, extension:cmo, extension:ml, file:ast.cmo, file:ast.ml, implem, ocaml, package(llvm), package(llvm.analysis), quiet }
+ocamlfind ocamlc -c -w +a-4 -package llvm.analysis -package llvm -o ast.cmo ast.ml # cached
+# Target: astutils.ml.depends, tags: { extension:ml, file:astutils.ml, ocaml, ocamldep, package(llvm), package(llvm.analysis), quiet }
+ocamlfind ocamldep -package llvm.analysis -package llvm -modules astutils.ml > astutils.ml.depends # cached
+# Target: astutils.cmo, tags: { byte, compile, extension:cmo, extension:ml, file:astutils.cmo, file:astutils.ml, implem, ocaml, package(llvm), package(llvm.analysis), quiet }
+ocamlfind ocamlc -c -w +a-4 -package llvm.analysis -package llvm -o astutils.cmo astutils.ml # cached
+# Target: codegen.ml.depends, tags: { extension:ml, file:codegen.ml, ocaml, ocamldep, package(llvm), package(llvm.analysis), quiet }
+ocamlfind ocamldep -package llvm.analysis -package llvm -modules codegen.ml > codegen.ml.depends # cached
+# Target: infer.ml.depends, tags: { extension:ml, file:infer.ml, ocaml, ocamldep, package(llvm), package(llvm.analysis), quiet }
+ocamlfind ocamldep -package llvm.analysis -package llvm -modules infer.ml > infer.ml.depends # cached
+# Target: parser.mly, tags: { extension:mly, file:parser.mly, ocaml, ocamlyacc, package(llvm), package(llvm.analysis), parser, quiet }
+/usr/bin/ocamlyacc parser.mly # cached
+# Target: parser.mli.depends, tags: { extension:mli, file:parser.mli, ocaml, ocamldep, package(llvm), package(llvm.analysis), quiet }
+ocamlfind ocamldep -package llvm.analysis -package llvm -modules parser.mli > parser.mli.depends # cached
+# Target: parser.cmi, tags: { byte, compile, extension:mli, file:parser.mli, interf, ocaml, package(llvm), package(llvm.analysis), quiet }
+ocamlfind ocamlc -c -w +a-4 -package llvm.analysis -package llvm -o parser.cmi parser.mli # cached
+# Target: scanner.mll, tags: { extension:mll, file:scanner.mll, lexer, ocaml, ocamllex, package(llvm), package(llvm.analysis), quiet }
+/usr/bin/ocamllex -q scanner.mll # cached
+# Target: scanner.ml.depends, tags: { extension:ml, file:scanner.ml, ocaml, ocamldep, package(llvm), package(llvm.analysis), quiet }
+ocamlfind ocamldep -package llvm.analysis -package llvm -modules scanner.ml > scanner.ml.depends # cached
+# Target: codegen.cmo, tags: { byte, compile, extension:cmo, extension:ml, file:codegen.cmo, file:codegen.ml, implem, ocaml, package(llvm), package(llvm.analysis), quiet }
+ocamlfind ocamlc -c -w +a-4 -package llvm.analysis -package llvm -o codegen.cmo codegen.ml
++ ocamlfind ocamlc -c -w +a-4 -package llvm.analysis -package llvm -o codegen.cmo codegen.ml
+File "codegen.ml", line 24, characters 21-171:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a value that is not matched:
+(T _|TList _|TRec (_, _)|TEdge _|TGraph (_, _))
+File "codegen.ml", line 123, characters 20-21:
+Warning 28: wildcard pattern given as argument to a constant constructor
+File "codegen.ml", line 128, characters 2-182:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a value that is not matched:
+(TInt|TBool|TString|TFloat|TChar|T _|TVoid|TList _|TEdge _|TGraph (_, _))
+File "codegen.ml", line 99, characters 42-1871:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a value that is not matched:
+(ACharLit (_, _)|AUnop (_, _, _)|AList (_, _)|AItem (_, _, _)|ADot (_, _, _)|
+AEdge (_, _, _, _, _)|AGraph (_, _, _)|ANoexpr _)
+File "codegen.ml", line 155, characters 57-58:
+Error: This expression has type A.aexpr = Ast.aexpr
+       but an expression was expected of type StringMap.key = string
+Command exited with code 2.
+# Compilation unsuccessful.

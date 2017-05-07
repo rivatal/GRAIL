@@ -1,0 +1,2 @@
+main(){x = {a:1,b:2}; y = x->x with {weight:1}; return y;}
+
