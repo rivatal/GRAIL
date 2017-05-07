@@ -1,0 +1,13 @@
+a(){
+ return 3;
+}
+b(){
+ return 4;
+}
+c(){
+ return 5;
+}
+main(){
+ y = a();
+ z = a();
+}

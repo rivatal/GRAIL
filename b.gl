@@ -1,0 +1,9 @@
+iterate(list){
+ for(i = 0; i < size(list); i+=1;){
+       printint(list[i]);
+ }
+}
+main(){
+y = [1,2,3];
+iterate(y);
+}

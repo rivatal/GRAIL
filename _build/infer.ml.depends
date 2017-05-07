@@ -1,1 +1,1 @@
-infer.ml: Ast Astutils Char List Map Stack String
+infer.ml: Ast Astutils List Map Stack String

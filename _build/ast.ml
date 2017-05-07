@@ -2,7 +2,7 @@ type id = string
 
 (* type eop =   make all op *)
 
-type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq |
+type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | Ladd |
           And | Or | In | Fadd | Fsub | Fmult | Fdiv | Gadd | Eadd | To | From | Dash
 
 type uop = Neg | Not 
@@ -16,10 +16,9 @@ type primitiveType =
   | T of string
   | TVoid
   | TList of primitiveType
-  (*   | TAssoc of primitiveType *)
   | TRec of string * ((id * primitiveType) list) (*the entire type is explicit in TRec*)
-  | TEdge of primitiveType
-  | TGraph of primitiveType * primitiveType
+  | TEdge of string * primitiveType * primitiveType (*name of type, node type, edge type*)
+  | TGraph of string * primitiveType * primitiveType 
 
 type expr =
     IntLit of int
@@ -66,12 +65,15 @@ and astmt =
   | AWhile of aexpr * astmt list
   | AReturn of aexpr * primitiveType
   | AExpr of aexpr
+  | AForin of aexpr * aexpr * astmt list
+
 
 and stmt =
   | Asn of expr * expr * bool
   | If of expr * stmt list * stmt list
   | While of expr * stmt list
   | For of stmt * expr * stmt * stmt list
+  | Forin of expr * expr * stmt list
   | Return of expr
   | Expr of expr
 
