@@ -336,7 +336,10 @@ Should work. Currently doesn't.
 
 What if y is a copy of x-- should this:
 f(x){ y = x; x = 3; }
-change its type to int?
+change its type to int? No but...
+
+f(x){ y = x; x = {a:2}; }
+
 
 f(x){ y = "ser"; for(x = 3; x < 3; x = x + 1;){ y = 3; } return y; }  
 Will have an error because for can see y.
@@ -395,7 +398,12 @@ is it okay if records are in wrong order?
 
 
 
+What if y is a copy of x-- should this:
+f(x){ y = x; x = 3; }
+change its type to int? No but...
 
+f(x){ y = x; x = {a:2}; }
+We need to figure out how to go back in time and make y a record...
 
 
 

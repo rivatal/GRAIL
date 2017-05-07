@@ -343,6 +343,7 @@ and get_rec (recs: primitiveType list) (fieldslist: (id * aexpr) list) : primiti
   if(fl = curr) 
   then(TRec(name, fl)) 
   else(helper t curr rl)
+  |_ -> raise(failwith("error"))
 in helper recs (get_namestypes fieldslist) recs
 
 
