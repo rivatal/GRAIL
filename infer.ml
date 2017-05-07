@@ -230,6 +230,7 @@ let env, genv, recs = allenv in
     (match typ with
       TVoid -> raise (failwith (s ^ " not defined @ 115."))
      |TList(t) -> AItem(s, et1, t)
+     |T(a) -> AItem(s, et1, gen_new_type())
      | t -> raise (failwith (string_of_type (t) ^ " not a list.")))
   | Binop(e1, op, e2) ->
     let et1 = annotate_expr allenv e1
@@ -395,6 +396,7 @@ and assign_formals (stufflist: ((id * primitiveType) * aexpr) list) (env: enviro
     |h :: t ->     (*_ is the old "bad" type*)
       match h with
         ((x, _), e) -> 
+        (* ignore(print_string("updating formal " ^ map_id x ^ " with " ^ (string_of_type (type_of e)))); *)
         let env = NameMap.add (map_id x) (type_of e) env in 
         helper env t (*Really should make x's type the original formal types...?*)
   in helper env stufflist

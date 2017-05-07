@@ -85,18 +85,16 @@ let format_sast_codegen (ast : Ast.afunc) : Ast.sast_afunc =
 (*Interpreter for debugging purposes*)
 (* let rec interpreter (ast: Ast.sast_afunc list) : Ast.sast_afunc list =
   print_string "> ";
-  let input = read_line () in
-  if input = "exit" then ast
-  else
+  let input = Lexing.from_channel stdin in
     try
       (*do for func*)
-      let pre_ast = List.map format_sast_codegen (grail [] (Lexing.from_string input)) in interpreter (pre_ast @ ast) 
+       let ast = List.map format_sast_codegen (grail [] (input)) in ast (* in interpreter (pre_ast @ ast) *)
     with
     | Failure(msg) ->
       if msg = "lexing: empty token" then [] @ interpreter (ast)
       else (print_endline msg; [] @ interpreter(ast))
     | _ -> print_endline "Syntax Error"; [] @  interpreter (ast)
-
+ 
     let say() = 
       let str = "Welcome to Grail, the awesomest language!\n"  in 
       print_string str
