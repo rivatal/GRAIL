@@ -1,0 +1,9 @@
+main()
+{
+  a = 5;
+  for ( a = 5; a >= 0; a = a - 1;) {
+    printbool(true);
+  }
+  print("Complete");
+  return 0;
+}
