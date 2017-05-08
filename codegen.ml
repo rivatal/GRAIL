@@ -72,6 +72,9 @@ let translate (functions) =
   let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
   let printf_func = L.declare_function "printf" printf_t the_module in
 
+ (* Declare sample_display(),for displaying a sample graph *)
+  let display_t = L.function_type i32_t [| i32_t |] in
+  let display_func = L.declare_function "sample_display" display_t the_module in
 
   (* Define each function (arguments and return type) so we can call it *) (** Fix the type thing here **)
   let function_decls =
@@ -304,6 +307,12 @@ in
                             let p = L.build_in_bounds_gep ar [|ad|] "ptr" builder in (L.build_load p "item" builder, builder)
       | A.ACall ("print", [e], _, _, _) -> let (e', builder') =  (aexpr builder local_var_map e) in 
                                       (L.build_call printf_func [| e' |] "printf" builder', builder')
+      | A.ACall ("sample_display", [e], _, _, _) -> let (e', builder') =  (aexpr builder local_var_map e) in 
+                                      (L.build_call display_func [| e' |] "sample_display" builder', builder')
+      | A.ACall("printint", [e], _, _, _) | A.ACall ("printbool", [e], _, _, _) -> let (e', builder') =  (aexpr builder local_var_map e) in
+                                        (L.build_call printf_func [| int_format_str ; e' |] "printf" builder', builder')
+
+
       | A.ACall("printint", [e], _, _, _) | A.ACall ("printbool", [e], _, _, _) -> let (e', builder') =  (aexpr builder local_var_map e) in
                                         (L.build_call printf_func [| int_format_str ; e' |] "printf" builder', builder')
       | A.ACall("printfloat", [e], _, _, _) -> let (e', builder') =  (aexpr builder local_var_map e) in 
@@ -438,9 +447,12 @@ in
             in StringMap.add n local_var m in
 
           (match s with
-            A.AId(name, typ) -> let local_var_map = if StringMap.mem name local_var_map then local_var_map else add_local local_var_map (t,name) in 
+            A.AId(name, typ) -> 
+            let local_var_map = if StringMap.mem name local_var_map 
+            then local_var_map 
+            else add_local local_var_map (t,name) in 
             ignore (L.build_store e' (lookup name local_var_map) builder'); (builder', local_var_map)
-          | A.AItem(name, adr, typ) ->
+            | A.AItem(name, adr, typ) ->
             let arp = L.build_struct_gep (lookup name local_var_map) 0 "tmp" builder and (ad, builder') = aexpr builder' local_var_map adr in
             let ar = L.build_load arp "tmpar" builder' in
             let p = L.build_in_bounds_gep ar [|ad|] "ptr" builder' in ignore(L.build_store e' p builder'); (builder', local_var_map)
@@ -464,6 +476,7 @@ in
             let recval = (lookup name local_var_map) in
             let ptr = L.build_struct_gep recval index "ptr" builder' in
             ignore(L.build_store e' ptr builder'); (builder', local_var_map))
+
 
 
            (* (* Just for worst case debug,not required*)

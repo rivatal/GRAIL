@@ -105,11 +105,22 @@ let check_asn (a: stmt) : unit =
     Asn(_,_,_) -> ()
   |_ -> raise(failwith ((string_of_stmt a) ^ " not an assignment statement."))
 
-let check_compatible_types (t: primitiveType * primitiveType) : unit =
+(*Searches a list of record fields for a particular id and gets its type*)
+let rec get_field_type (elist: (id * primitiveType) list) (id: id) =
+  match elist with
+  [] -> raise (failwith (id ^ "  not defined @ 133"))
+  |(field, typ) :: tail -> if(field = id) then(typ) else(get_field_type tail id)
+
+let rec check_field (fields: ((id * primitiveType) * (id * primitiveType))) : unit =
+  match fields with
+  |(id1, t1), (id2, t2) -> if(id1 = id2) then(check_compatible_types (t1,t2)) else(raise(failwith("mismatched fields " ^ id1 ^ " & " ^ id2)))
+
+and check_compatible_types (t: primitiveType * primitiveType) : unit =
   (* ignore(print_string("checking compatible types.")); *)
   match t with 
    |T(_), a | TVoid, a | a, TVoid | a, T(_) -> ()
    |TList(_), TList(T(_)) | TList(T(_)), TList(_) -> ()
+   |TRec(a, b), TRec(c, d) -> ignore(let fieldslists = List.combine b d in List.map (fun a -> check_field a) fieldslists); ()
    |a, b -> if(a = b) then () else raise(failwith("type mismatch: " ^ (string_of_type a) ^ ","  ^(string_of_type b)))
 
 (*Ensures all members of a list share the same type.*)
@@ -122,17 +133,6 @@ let rec check_type_consistency (tl: primitiveType list) : unit =
 
 let rec check_list_consistency (e: aexpr list) : unit =
   check_type_consistency (get_type_list e)
-
-
-(*Searches a list of record fields for a particular id and gets its type*)
-let rec get_field_type (elist: (id * primitiveType) list) (id: id) =
-  match elist with
-  [] -> raise (failwith (id ^ "  not defined @ 133"))
-  |(field, typ) :: tail -> if(field = id) then(typ) else(get_field_type tail id)
-
-let rec check_field (fields: ((id * primitiveType) * (id * primitiveType))) : unit =
-  match fields with
-  |(id1, t1), (id2, t2) -> if(id1 = id2) then(check_compatible_types (t1,t2)) else(raise(failwith("mismatched fields " ^ id1 ^ " & " ^ id2)))
 
 (* A function is a list of statements. Each statement's expressions are inferred here.
 The result is annotated and passed into the sast. *)
