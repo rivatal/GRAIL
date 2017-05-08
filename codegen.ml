@@ -261,7 +261,8 @@ in
     (match l with
       [] -> ([], builder)
     | e::tl -> let (exp, newbuilder) = aexpr builder local_var_map e in 
-            let (other_exps, endbuilder) = build_expressions tl newbuilder local_var_map in (exp::other_exps, newbuilder))
+            let (other_exps, endbuilder) = 
+            build_expressions tl newbuilder local_var_map in (exp::other_exps, newbuilder))
 
   and aexpr builder local_var_map = function
         A.AIntLit(i, _) -> (L.const_int i32_t i, builder)
@@ -312,13 +313,12 @@ in
       | A.ARecord(alist,trec) ->
             let (argslist, builder) = build_expressions (List.map (fun f -> (snd f)) alist) builder local_var_map
          in let loc = L.build_alloca (ltype_of_typ trec) "" builder
-         in let load_loc = L.build_load loc "loc" builder
 		 in let rec populate_structure fields i = 
 			match fields with 
-			| [] -> L.build_store load_loc loc builder;
-                    L.build_load loc "" builder
+			| [] -> L.build_load loc "" builder
 			| hd :: tl ->
-	          ( L.build_insertvalue load_loc hd i "loc" builder;
+	          ( let eptr = L.build_struct_gep loc i "ptr" builder
+                in L.build_store hd eptr builder;
 			    populate_structure tl (i+1) 
               )
 		in (populate_structure argslist 0, builder)
@@ -347,26 +347,24 @@ in
             ]
 
          in let loc = L.build_alloca (ltype_of_typ typ) "" builder
-         in let load_loc = L.build_load loc "" builder
 		 in let rec populate_structure fields i = 
 			match fields with 
-			| [] -> L.build_store load_loc loc builder;
-                    L.build_load loc "" builder
+			| [] -> L.build_load loc "" builder
 			| hd :: tl ->
-	          ( L.build_insertvalue load_loc hd i "loc" builder;
+	          ( let eptr = L.build_struct_gep loc i "ptr" builder
+                in L.build_store hd eptr builder;
 			    populate_structure tl (i+1) 
               )
 		in (populate_structure argslist 0, builder)
       | A.ADot(e1,entry,typ) ->
-           (match e1 with
-            | AId(name,trec) -> 
-                let rec match_name lst n = 
-                    match lst with 
-                    | [] -> raise (Failure ("Not found"))
-                    | h :: t -> if h = n then 0 else 
+           let rec match_name lst n = 
+             match lst with 
+                | [] -> raise (Failure ("Not found"))
+                | h :: t -> if h = n then 0 else 
                             1 + match_name t n
-                    
-                in let mems = 
+           in (match e1 with
+            | AId(name,trec) -> 
+                let mems = 
                     (match trec with
                      A.TRec(_,tlist) ->
 			         List.map (fun (id,_)  -> id) tlist 
@@ -374,6 +372,18 @@ in
                 in let index = match_name mems entry
                 in let load_loc = lookup name local_var_map 
                 in let ext_val = L.build_struct_gep load_loc index "ext_val" builder      
+                in (L.build_load ext_val "" builder, builder)
+            |ARecord(alist,trec) ->
+                let (e',builder) = aexpr builder local_var_map e1
+                in 
+                let loc = L.build_alloca (L.type_of e') "e" builder in
+                let _ = L.build_store e' loc builder
+                in 
+                let mems = 
+			         List.map (fun (id,_)  -> id) alist 
+                       
+                in let index = match_name mems entry
+                in let ext_val = L.build_struct_gep loc index "ext_val" builder      
                 in (L.build_load ext_val "" builder, builder)
             | _ -> raise (Failure ("Node not declared."))
            )
