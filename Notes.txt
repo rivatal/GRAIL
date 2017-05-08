@@ -416,12 +416,7 @@ can we just ban them? NTS ban them.
 
 
 
-
-
-
-
-
-
-
-
 No self-edge assign
+Remove lists from the graph constructor.
+No node literals in edge constructors?
+

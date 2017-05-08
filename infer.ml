@@ -105,12 +105,6 @@ let check_asn (a: stmt) : unit =
     Asn(_,_,_) -> ()
   |_ -> raise(failwith ((string_of_stmt a) ^ " not an assignment statement."))
 
-(*Searches a list of record fields for a particular id and gets its type*)
-let rec get_field_type (elist: (id * primitiveType) list) (id: id) =
-  match elist with
-  [] -> raise (failwith (id ^ "  not defined @ 133"))
-  |(field, typ) :: tail -> if(field = id) then(typ) else(get_field_type tail id)
-
 let rec check_field (fields: ((id * primitiveType) * (id * primitiveType))) : unit =
   match fields with
   |(id1, t1), (id2, t2) -> if(id1 = id2) then(check_compatible_types (t1,t2)) else(raise(failwith("mismatched fields " ^ id1 ^ " & " ^ id2)))
@@ -355,6 +349,15 @@ and get_rec (recs: recs) (fieldslist: (id * aexpr) list) : primitiveType =
   |_ -> raise(failwith("error"))
 in helper recs (get_namestypes fieldslist) recs
 
+(*Searches a list of record fields for a particular id and gets its type*)
+and get_field_type (elist: (id * primitiveType) list) (id: id) :primitiveType =
+  if(List.mem id ["from"; "to"; "rel"])
+  then(gen_new_rec([]))
+  else(
+  match elist with
+  [] -> raise (failwith (id ^ "  not defined @ 133"))
+  |(field, typ) :: tail -> if(field = id) then(typ) else(get_field_type tail id))
+
 
 
 (*ensure thing you're assigning to has that type. (No my_bool = 3; )*)
@@ -561,7 +564,8 @@ and asn_lval (ae: aexpr) (ae2: aexpr) (env: environment) : environment =
   let t = type_of ae2 in 
   let env = 
   match ae with
-  |ACall(str, _, _, _, _  )
+  (* 
+    |ACall(str, _, _, _, _  ) *)
   |AId(str, _) -> NameMap.add (map_id str) t env
   |ADot(AId(_, TRec(recname, _)), str, _) -> NameMap.add (map_id (map_id_rec recname str)) t env
   |AItem(str, _, _) -> NameMap.add (map_id str) (TList(t)) env
