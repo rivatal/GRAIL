@@ -392,28 +392,39 @@ in
                 | [] -> raise (Failure ("Not found"))
                 | h :: t -> if h = n then 0 else 
                             1 + match_name t n
-          in
-          let trec = get_expr_type e1 in
-          let alist = match trec with TRec(s, l) -> l in
-          let mems = List.map fst alist in
-          (match e1 with
-            | AId(name,trec) ->  
+          in (match e1 with 
+             AId(name,t) ->
+               (match t with 
+                A.TRec(_,tlist) ->
+                let mems = List.map fst tlist in
                 let index = match_name mems entry
                 in let load_loc = lookup name local_var_map 
                 in let ext_val = L.build_struct_gep load_loc index "ext_val" builder      
                 in (L.build_load ext_val "" builder, builder)
-            |_ ->
+                
+                |A.TEdge(tname,e1,_) ->
+                    let load_loc = lookup name local_var_map 
+                    in let ext_val = 
+                    if entry = "from" then
+                        L.build_struct_gep load_loc 0 "ext_val" builder 
+                    else
+                        L.build_struct_gep load_loc 1 "ext_val" builder 
+                    
+                    in (L.build_load ext_val "" builder, builder)
+                
+                | _ -> raise (Failure ("Not a valid operation."))
+                )            
+
+            |ARecord(alist,_) ->
                 let (e',builder) = aexpr builder local_var_map e1
-                in 
-                let loc = L.build_alloca (L.type_of e') "e" builder in
+                in let loc = L.build_alloca (L.type_of e') "e" builder in
                 let _ = L.build_store e' loc builder
                 in 
-                let mems = 
-			         List.map (fun (id,_)  -> id) alist 
-                       
+                let mems = List.map fst alist 
                 in let index = match_name mems entry
                 in let ext_val = L.build_struct_gep loc index "ext_val" builder      
-                in (L.build_load ext_val "" builder, builder))
+                in (L.build_load ext_val "" builder, builder)
+              )
            
         (*| A.AGraph(lst, rel, t) -> 
           let rec split_lists lst = 
