@@ -257,6 +257,27 @@ and copy e t builder = (*returns a deep copy of e and the builder at the end of 
 
 in
 
+let get_expr_type e = 
+  (match e with
+    A.AIntLit(_, t) -> t
+  | A.ACharLit(_, t) -> t
+  | A.ABoolLit(_, t) -> t
+  | A.AStrLit(_, t) -> t
+  | A.AFloatLit(_, t) -> t
+  | A.AId(_, t) -> t
+  | A.ABinop(_, _, _, t) -> t 
+  | A.AUnop(_, _, t) -> t
+  | A.ACall(_, _, _, _, t) -> t
+  | A.AList(_, t) -> t
+  | A.AItem(_, _, t) -> t
+  | A.ARecord(_, t) -> t
+  | A.ADot(_, _, t) -> t
+  | A.AEdge(_, _, _, _, t) -> t
+  | A.AGraph(_, _, t) -> t
+  | ANoexpr(t) -> t)
+
+in
+
   let rec build_expressions l builder local_var_map = (*builds all aexprs in l, updating builder appropriately: basically combine map and fold*)
     (match l with
       [] -> ([], builder)
@@ -362,18 +383,17 @@ in
                 | [] -> raise (Failure ("Not found"))
                 | h :: t -> if h = n then 0 else 
                             1 + match_name t n
-           in (match e1 with
-            | AId(name,trec) -> 
-                let mems = 
-                    (match trec with
-                     A.TRec(_,tlist) ->
-			         List.map (fun (id,_)  -> id) tlist 
-                    )    
-                in let index = match_name mems entry
+          in
+          let trec = get_expr_type e1 in
+          let alist = match trec with TRec(s, l) -> l in
+          let mems = List.map fst alist in
+          (match e1 with
+            | AId(name,trec) ->  
+                let index = match_name mems entry
                 in let load_loc = lookup name local_var_map 
                 in let ext_val = L.build_struct_gep load_loc index "ext_val" builder      
                 in (L.build_load ext_val "" builder, builder)
-            |ARecord(alist,trec) ->
+            |_ ->
                 let (e',builder) = aexpr builder local_var_map e1
                 in 
                 let loc = L.build_alloca (L.type_of e') "e" builder in
@@ -384,9 +404,8 @@ in
                        
                 in let index = match_name mems entry
                 in let ext_val = L.build_struct_gep loc index "ext_val" builder      
-                in (L.build_load ext_val "" builder, builder)
-            | _ -> raise (Failure ("Node not declared."))
-           )
+                in (L.build_load ext_val "" builder, builder))
+           
         (*| A.AGraph(lst, rel, t) -> 
           let rec split_lists lst = 
             match lst with
@@ -416,7 +435,28 @@ in
           | A.AItem(name, adr, typ) ->
             let arp = L.build_struct_gep (lookup name local_var_map) 0 "tmp" builder and (ad, builder') = aexpr builder' local_var_map adr in
             let ar = L.build_load arp "tmpar" builder' in
-            let p = L.build_in_bounds_gep ar [|ad|] "ptr" builder' in ignore(L.build_store e' p builder'); (builder', local_var_map))
+            let p = L.build_in_bounds_gep ar [|ad|] "ptr" builder' in ignore(L.build_store e' p builder'); (builder', local_var_map)
+          | A.ADot(r, entry, typ) ->
+            let rec match_name lst n = 
+              (match lst with 
+                [] -> raise (Failure ("Not found"))
+                | h :: t -> if h = n then 0 else 
+                            1 + match_name t n)
+            in
+            let name = 
+              (match r with 
+                A.AId(s, _) -> s
+              | _ -> raise(Failure("invalid lvalue"))
+              )
+            in
+            let rtype = get_expr_type r in
+            let alist = match rtype with TRec(s, l) -> l in
+            let mems = List.map fst alist in
+            let index = match_name mems entry in
+            let recval = (lookup name local_var_map) in
+            let ptr = L.build_struct_gep recval index "ptr" builder' in
+            ignore(L.build_store e' ptr builder'); (builder', local_var_map))
+
 
            (* (* Just for worst case debug,not required*)
             let lookup_struct n =
