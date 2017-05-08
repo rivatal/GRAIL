@@ -47,12 +47,16 @@ rule token = parse
 | "->"    { RARROW }
 | "<-"     { LARROW }
 | ':'      { COLON }
-| "accio"  { ACCIO }
 | "else"   { ELSE }
 | "false"  { FALSE }
 | "for"    { FOR }
 | "free"   { FREE }
 | "from"   { FROM }
+| "to"	   { TO }
+| "rel"    { REL }
+| "directed" { DIRECTED }
+| "edges"	{ EDGES }
+| "nodes"	{ NODES }
 | "if"     { IF }
 | "in"     { IN }
 | "return" { RETURN }

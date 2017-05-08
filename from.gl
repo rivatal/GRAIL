@@ -1,0 +1,7 @@
+f(){
+ x = {school:"h"};
+ return x.from;
+}
+main(){
+ y = f();
+}
