@@ -66,8 +66,19 @@ let translate (functions) =
            in L.struct_set_body edge_t all_ret_types false;
            tymap := TypeMap.add ("struct."^tname) edge_t !tymap;
            edge_t
-            
-  in   
+    | A.TGraph(tname, nt, et) -> let struct_name = 
+           let struct_name = ("struct."^tname) in 
+           if TypeMap.mem struct_name !tymap 
+           then 
+               TypeMap.find struct_name !tymap
+           else
+           let struct_name = ("struct."^tname) in 
+           let graph_t = L.named_struct_type context struct_name in 
+           let ret_types = [| (ltype_of_typ (A.TList nt)); (ltype_of_typ (A.TList et)); (ltype_of_typ et)|] 
+           in L.struct_set_body graph_t ret_types false;
+           tymap := TypeMap.add ("struct."^tname) graph_t !tymap;
+           graph_t
+    in   
  (* Declare printf(), which the print built-in function will call *)
   let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
   let printf_func = L.declare_function "printf" printf_t the_module in
@@ -122,6 +133,8 @@ let translate (functions) =
       A.TList x -> x
     |  _ -> raise(Failure "problem typing lists"))
   in
+
+  let get_graph_types t = (*maps TGraph to the node and  types*)
 
   let rec assign_array ar els n builder = (*stores elements, starting with element n in ar, returns ar*)
     match els with
@@ -415,19 +428,51 @@ in
                 in let ext_val = L.build_struct_gep loc index "ext_val" builder      
                 in (L.build_load ext_val "" builder, builder))
            
-        (*| A.AGraph(lst, rel, t) -> 
+        | A.AGraph(lst, rel, t) -> 
           let rec split_lists lst = 
-            match lst with
+            (match lst with
               [] -> ([], [], [])
-              h::t -> let (nodes, edges, ids) = split_lists lst in
+              | h::t -> let (nodes, edges, nodelists, edgelists, ids) = split_lists lst in
               let typ = get_expr_type h in 
-              match typ with
+              (match typ with
                 A.TRec(_, _) -> (match h with
-                                A.Id(name, t) -> if List.mem name ids then (nodes, edges, ids) else (name:: )
-              | A.TEdge(_, _, _, _, _) -> ((fst splt), h::(snd splt))
+                                A.Id(name, t) -> if List.mem name ids then (nodes, edges, ids) 
+                                                else (h::nodes, edges, name::ids)
+                                |            _ -> (h::nodes, edges, ids))
+              | A.TEdge(_, _, _) -> (match h with
+                                    A.AEdge(node1, node2, o, r, ty) ->
+                                      let (newnodes, newids) =
+                                        (match node1 with
+                                          A.Id(name, _) -> if List.mem name ids then (nodes, ids) else (node1::nodes, name::ids)
+                                        | _ -> (nodes, ids)
+                                        )
+                                      in let (newnodes, newids) = 
+                                        (match node2 with
+                                          A.Id(name, _) -> if List.mem name newids then (newnodes, newids) else (node1::newnodes, name::newids)
+                                        | _ -> (newnodes, newids)
+                                        ) 
+                                      in let newe =
+                                        (match r with
+                                          A.NoExpr _ -> A.AEdge(node1, node2, o, rel, ty)
+                                        | _ -> h)
+                                      in (newnodes, newe::edges, newids)               
+
+                                    | _ -> (nodes, h::edges, ids))
+                            ))
           in
 
-          let (nodes, edges) = split_lists lst in *)
+          let (nodes, edges, ids) = split_lists lst in 
+          (*let (nodevals, builder) = build_expressions nodes builder local_var_map in
+          let (edgevals, builder) = build_expressions edges builder local_var_map in*)
+          let (grel, builder) = aexpr builder local_var_map rel in
+          let graph = L.build_alloca (ltype_of_typ t) "g" builder in
+          ignore(L.build_store rel (L.build_struct_gep graph 2 "ptr" builder));
+          let (ntyp, etyp) = get_graph_types t in
+          let (nlist, builder) = aexpr builder A.AList(nodes, (A.TList ntyp)) in
+          let (elist, builder) = aexpr builder A.AList(edges, (A.TList etyp)) in
+          ignore(L.build_store nlist (L.build_struct_gep graph 0 "ptr" builder));
+          ignore(L.build_store elist (L.build_struct_gep graph 1 "ptr" builder));
+          (graph, builder)
 
 
             
@@ -478,47 +523,6 @@ in
             ignore(L.build_store e' ptr builder'); (builder', local_var_map))
 
 
-
-           (* (* Just for worst case debug,not required*)
-            let lookup_struct n =
-                   try TypeMap.find n !tymap
-                   with Not_found -> raise (Failure ("undeclared struct " ^ n))
-          in (match s with
-               (* A.AItem(name, adr, typ) -> let e' = aexpr builder local_var_map e and 
-            arp = L.build_struct_gep (lookup name local_var_map) 0 "tmp" builder and ad = aexpr builder local_var_map adr in
-            let ar = L.build_load arp "tmpar" builder in
-            let p = L.build_in_bounds_gep ar [|ad|] "ptr" builder in ignore(L.build_store e' p builder); (builder, local_var_map)*)
-                | A.AId(name, typ) -> 
-                   (match typ with 
-                   | A.TInt| A.TBool| A.TString -> 
-                        let local_var_map = add_local local_var_map (t,name)                        in 
-                        let (e', builder) = aexpr builder local_var_map e
-                    in ignore (L.build_store e' (lookup name local_var_map) 
-                        builder);(builder, local_var_map)
-                   
-                   | A.TRec(tname,tlist) ->
-                        let (e', builder) = aexpr builder local_var_map e
-                        in let struct_name = ("struct."^tname)
-                        in let record_t = lookup_struct struct_name 
-                        in let local_var = 
-                                L.build_alloca record_t "" builder
-                        in let local_var_map = 
-                        StringMap.add name local_var local_var_map
-                        in ignore (L.build_store e' (lookup name local_var_map) 
-                        builder);(builder, local_var_map)
-                        
-                   |A.TEdge(tname,e1,e2) -> 
-                        let (e', builder) = aexpr builder local_var_map e
-                        in let struct_name = ("struct."^tname)
-                        in let edge_t = lookup_struct struct_name 
-                        in let local_var = 
-                                L.build_alloca edge_t "" builder
-                        in let local_var_map = 
-                        StringMap.add name local_var local_var_map
-                        in ignore (L.build_store e' (lookup name local_var_map) 
-                        builder);(builder, local_var_map)
-                        
-                   | _ -> (builder,local_var_map)))*)
                  
         | A.AIf (predicate, then_stmt, else_stmt) ->
           let (bool_val, builder) = aexpr builder local_var_map predicate in
