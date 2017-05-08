@@ -1,0 +1,5 @@
+1c1
+< Fatal error: exception Match_failure("codegen.ml", 22, 25)
+---
+> Fatal error: 
+\ No newline at end of file
