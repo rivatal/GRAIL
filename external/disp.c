@@ -39,10 +39,11 @@ int display_graph(Node_info* info)
 
     fclose(fp);
     fclose(fe);
+    system("gnuplot gnuplot.sh -persist");
     return 0 ;
 }
 
-int main(int argc, char* argv[]) 
+int sample_display(int x) 
 {
     Node_info n1;
     n1.num_nodes = 4;
@@ -55,9 +56,6 @@ int main(int argc, char* argv[])
     memcpy(n1.to,arr3,sizeof(arr3));
     int arr4[] = {20,50,30};
     memcpy(n1.weights,arr4,sizeof(arr4));
-    display_graph(&n1);
-    system("gnuplot gnuplot.sh -persist");
+    return display_graph(&n1);
     
-
-
 }
