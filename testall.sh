@@ -6,6 +6,16 @@ LLI="/usr/local/opt/llvm/bin/lli"
 LLL="/usr/local/opt/llvm/bin/llvm-link"
 
 
+# coloring notes
+# success = green
+# warning or err = red
+# help or neutral things = yellow
+NC='\033[0m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+
+
 # Path to the grail compiler.  Usually "./grail.native"
 # Try "_build/grail.native" if ocamlbuild was unable to create a symbolic link.
 GRAIL="./grail.native"
