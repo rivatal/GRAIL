@@ -166,6 +166,7 @@ LLIFail() {
 
 which "$LLI" >> $globallog || LLIFail
 
+mkdir test_output
 
 if [ $# -ge 1 ]
 then
