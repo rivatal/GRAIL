@@ -312,13 +312,12 @@ in
       | A.ARecord(alist,trec) ->
             let (argslist, builder) = build_expressions (List.map (fun f -> (snd f)) alist) builder local_var_map
          in let loc = L.build_alloca (ltype_of_typ trec) "" builder
-         in let load_loc = L.build_load loc "loc" builder
 		 in let rec populate_structure fields i = 
 			match fields with 
-			| [] -> L.build_store load_loc loc builder;
-                    L.build_load loc "" builder
+			| [] -> L.build_load loc "" builder
 			| hd :: tl ->
-	          ( L.build_insertvalue load_loc hd i "loc" builder;
+	          ( let eptr = L.build_struct_gep loc i "ptr" builder
+                in L.build_store hd eptr builder;
 			    populate_structure tl (i+1) 
               )
 		in (populate_structure argslist 0, builder)
@@ -347,13 +346,12 @@ in
             ]
 
          in let loc = L.build_alloca (ltype_of_typ typ) "" builder
-         in let load_loc = L.build_load loc "" builder
 		 in let rec populate_structure fields i = 
 			match fields with 
-			| [] -> L.build_store load_loc loc builder;
-                    L.build_load loc "" builder
+			| [] -> L.build_load loc "" builder
 			| hd :: tl ->
-	          ( L.build_insertvalue load_loc hd i "loc" builder;
+	          ( let eptr = L.build_struct_gep loc i "ptr" builder
+                in L.build_store hd eptr builder;
 			    populate_structure tl (i+1) 
               )
 		in (populate_structure argslist 0, builder)
