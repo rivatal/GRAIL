@@ -409,10 +409,18 @@ in
         (*| A.AGraph(lst, rel, t) -> 
           let rec split_lists lst = 
             match lst with
-              [] -> ([], [])
-              h::t -> let oldlists = split_lists tl in 
-                      (match h with
-                      A.)*)
+              [] -> ([], [], [])
+              h::t -> let (nodes, edges, ids) = split_lists lst in
+              let typ = get_expr_type h in 
+              match typ with
+                A.TRec(_, _) -> (match h with
+                                A.Id(name, t) -> if List.mem name ids then (nodes, edges, ids) else (name:: )
+              | A.TEdge(_, _, _, _, _) -> ((fst splt), h::(snd splt))
+          in
+
+          let (nodes, edges) = split_lists lst in *)
+
+
             
     (* Build the code for the given statement; return the builder for
        the statement's successor *)
