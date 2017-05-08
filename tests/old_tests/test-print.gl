@@ -1,0 +1,6 @@
+main() {
+	print("String");
+/*	printbool(true);
+	printbool(false); 
+	printint(1); */
+}
