@@ -5,5 +5,5 @@ f(a) {
 
 main() {
 	x = f(3);
-	print(x);
+	printint(x);
 }

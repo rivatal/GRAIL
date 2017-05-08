@@ -1,5 +1,6 @@
-f(x) { 
-	if (x > 0) { 
-		return true; 
+main() { 
+	a = 5;
+	if (a > 0) { 
+		print("Bigger"); 
 	}
 }

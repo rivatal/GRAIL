@@ -1,7 +1,0 @@
-g(){
-	return "AT THE TOP!";
-}
-
-main(){
-	return g();	
-}

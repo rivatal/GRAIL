@@ -1,6 +1,9 @@
 #!/bin/sh
 #Run testcases under dir /tests
-make
+
+#make clean
+#make
+
 # Path to the LLVM interpreter
 LLI="/usr/local/opt/llvm/bin/lli"
 LLL="/usr/local/opt/llvm/bin/llvm-link"
