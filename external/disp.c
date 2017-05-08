@@ -24,12 +24,12 @@ int display_graph(Node_info* info)
     int count = 5; 
     for(int i = 0; i < info->num_nodes; i++) 
     {
-        
-       if(count % 2)
+      if(count % 2)
             fprintf(fp,"%d\t%d\t%d\n",i,count,count+5);
        else     
             fprintf(fp,"%d\t%d\t%d\n",i,count + 5,count);
-      count += 5;
+      
+       count += 5;
     }
     for(int i = 0; i < info->num_edges; i++) 
     {
