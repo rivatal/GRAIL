@@ -9,7 +9,7 @@ open Ast
 %token RETURN IF ELSE FOR WHILE INT BOOLEAN VOID
 %token TIMES LBRACKET RBRACKET DASH RARROW LARROW
 %token ACCIO CHAR DOUBLE EDGE EMPTY 
-%token TO FROM IN RECORD TYPE WITH FREE
+%token TO FROM IN RECORD TYPE WITH FREE DIRECTED EDGES NODES REL
 %token FPLUS FMINUS FTIMES FDIVIDE ADD EADD CARAT
 %token PLUSEQ FPLUSEQ ADDEQ EADDEQ COPY CARATEQ
 %token <int> INTLIT
@@ -103,6 +103,12 @@ stmt:
   | ID LBRACKET expr RBRACKET { Item($1, $3) }
   | ID LBRACKET ID COLON expr RBRACKET { Subset($1, $3, $5) }
   | expr DOT ID { Dot($1, $3) }
+  | expr DOT FROM { Dot($1, "from") }
+  | expr DOT TO { Dot($1, "to") }
+  | expr DOT REL { Dot($1, "rel") }
+  | expr DOT DIRECTED { Dot($1, "directed") }
+  | expr DOT EDGES { Dot($1, "edges") }
+  | expr DOT NODES { Dot($1, "nodes") }
   | expr PLUS   expr { Binop($1, Add,   $3) }
   | expr MINUS  expr { Binop($1, Sub,   $3) }
   | expr TIMES  expr { Binop($1, Mult,  $3) }

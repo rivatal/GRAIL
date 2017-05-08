@@ -1,5 +1,5 @@
 1c1
-< Fatal error: exception Match_failure("codegen.ml", 22, 25)
+< Assertion failed: (isa<X>(Val) && "cast<Ty>() argument of incompatible type!"), function cast, file /private/tmp/llvm@3.7-20170130-95292-rmy5z9/llvm-3.7.1.src/include/llvm/Support/Casting.h, line 237.
 ---
 > Fatal error: 
 \ No newline at end of file

@@ -1,0 +1,4 @@
+1c1
+< Fatal error: exception Failure("mismatched types@502")
+---
+> Fatal error: exception Failure("mismatched types")
