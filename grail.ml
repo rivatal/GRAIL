@@ -58,7 +58,8 @@ let grail (ast: Ast.afunc list) (input) : Ast.afunc list =
                    infer_func hd genv 
     in get_sast tl genv (afuncs @ l) 
   in 
-  let builtins = [("print", (TVoid, [("x", TString)], [])); 
+  let builtins = [("print", (TVoid, [("x", TString)], []));
+                  ("sample_display",(TInt, [("x",TInt)],[Return(IntLit(0))]));
                   ("printint", (TVoid, [("x", TInt)], [])); 
                   ("printfloat", (TVoid, [("x", TFloat)], [])); 
                   ("printbool", (TVoid, [("x", TBool)], [])); 
