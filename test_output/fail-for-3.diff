@@ -1,0 +1,5 @@
+1c1
+< ./testall.sh: 1: eval: ./grail.native: not found
+---
+> Fatal error: exception Failure("(i: int) not a boolean.")
+\ No newline at end of file

@@ -5,8 +5,8 @@
 #make
 
 # Path to the LLVM interpreter
-LLI="/usr/local/opt/llvm/bin/lli"
-LLL="/usr/local/opt/llvm/bin/llvm-link"
+LLI="/usr/bin/lli"
+LLL="/usr/bin/llvm-link"
 
 # coloring notes
 # success = green

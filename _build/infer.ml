@@ -67,6 +67,13 @@ let change_type (ae: aexpr) (nt: primitiveType): aexpr =
   | AUnop(a,b,t) -> AUnop(a,b,nt)
   | ANoexpr(t) -> ANoexpr(nt)
   | AGraph(a,b,t) ->  AGraph(a,b,nt)
+  | ABoolLit(a,t) -> ABoolLit(a,nt) 
+  | ACharLit(a,t) -> ACharLit(a,nt) 
+  | AIntLit(a,t) -> AIntLit(a,nt) 
+  | AStrLit(a,t) -> AStrLit(a,nt) 
+  | AFloatLit(a,t) -> AFloatLit(a,nt) 
+
+
 (*Comparator used in annotating records.*)
 let comp (x: id * expr) (y: id * expr) : int = 
   match x, y with
@@ -86,7 +93,7 @@ let map_id_rec (rname: string) (id: string) : string =
 
 (*finds the variable in the map*)
 let rec find_in_map(id: string) (env: environment): primitiveType =
-  let mapped = map_id id in
+  let mapped = map_id id in       (*in astutils*)
    if (NameMap.mem mapped env)  
    then (NameMap.find mapped env)
    else (raise(failwith(mapped ^ " not found@79")))
@@ -182,7 +189,7 @@ let rec infer_stmt (allenv: allenv) (e: stmt): (allenv * astmt) =
             ignore(check_asn_type otype typ); env
           )
           else (NameMap.add id (gen_new_type()) env) in
-          AId(a, typ), env 
+          AId(a, typ), env   
           |Item(a,_)|Dot(Id(a),_) -> 
           let id = map_id a in
           if(NameMap.mem id env) 
@@ -259,6 +266,8 @@ and update_map_funcs (astmts: astmt list) (funcs: funcs) (genv: genvironment) : 
 (*Step 1 of HM: annotate expressions with what can be gathered of their types.*)
 and annotate_expr (allenv: allenv) (e: expr) : aexpr =
 let env, genv, recs,funcs = allenv in
+(*   print_string("annotating " ^ string_of_expr e); *)
+  let annotated = 
   match e with
   | IntLit(n) -> AIntLit(n, TInt)
   | BoolLit(b) -> ABoolLit(b, TBool)
@@ -371,6 +380,7 @@ let env, genv, recs,funcs = allenv in
        ae2 = annotate_expr allenv e2 and
        ae3 = annotate_expr allenv e3 in 
       AEdge(ae1, op, ae2, ae3, TEdge(gen_new_type(), type_of ae1, type_of ae3))
+  in (* print_string("Annotated" ^ string_of_aexpr annotated); *) annotated
 
 and annotate_expr_list (allenv: allenv) (e: expr list): aexpr list =
   let thelist = List.map (fun a -> annotate_expr allenv a) e in (* in 
@@ -429,7 +439,7 @@ and check_asn_type (lval: primitiveType) (asn: primitiveType) : unit  =
  *)
 (*Ensures an expression is a conditional (e.g. for predicate statements)*)
 and check_bool (e: aexpr) : unit =
-  (*   print_string "Checking bool"; *)
+(*     print_string "Checking bool"; *)
   if(type_of e != TBool)
   then(raise(failwith ((string_of_aexpr e) ^ " not a boolean.")))
   else ()
@@ -491,11 +501,12 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
   in (collect_expr ae1) @ opc
   | ABinop(ae1, op, ae2, t) ->
     let et1 = type_of ae1 and et2 = type_of ae2 in
+    print_string("Collecting binop " ^ string_of_type et1 ^ " op " ^ string_of_type et2);
     (* impose constraints based on binary operator *)
     let opc = match op with
       | Add | Mult | Sub | Div -> [(et1, TInt); (et2, TInt); (t, TInt)]
       (* we return et1, et2 since these are generic operators *)
-      | Greater | Less | Equal | Geq | Leq | Neq -> [(et1, et2); (t, TBool)]
+      | Greater | Less | Equal | Geq | Leq | Neq -> check_compatible_types(et1, et2); [(t, TBool)]
       | And | Or -> [(et1, TBool); (et2, TBool); (t, TBool)]
       | Fadd | Fsub | Fmult | Fdiv -> [(et1, TFloat); (et2, TFloat); (t, TFloat)]
       | Ladd -> [(et1, TList(et2)); (t, TList(et2))]

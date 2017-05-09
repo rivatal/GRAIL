@@ -11,9 +11,14 @@ g(z){
 h(x){
   return x;
 }
+n(x){
+  return x.school;
+}
 main(){
   x = f(1,2);
   y = x + g(3);
   hi = h("hi");
   z = h(3);
+  a = {school: 3};
+  n(a);
 }
