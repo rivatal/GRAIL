@@ -1,0 +1,16 @@
+f(){
+a = {name:"Sarah"};
+b .= a;
+b.name = "Aiden";
+c = {name: "Mike"};
+d = {name: "Sarah"}; 
+
+y = 5;
+if(a <= d){
+     y = 3;
+}
+
+e = a -- c with {weight: 1};
+
+
+}

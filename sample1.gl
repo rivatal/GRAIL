@@ -1,0 +1,8 @@
+main(){
+	c = {station: "49th St Station", line: "1", lat:39.9436, lon:75.2167, capacity:1500, service: [0,1,1,1,1,1,1]};
+	d = {station: "116th St Station", line: "1", lat:39.56, lon:75.456, capacity:750, service: [0,1,1,1,1,1,0]};
+  	g = (c -- d) with {distance: 1};
+	c.station = "168th"; 
+	size(c.service);
+	
+}
