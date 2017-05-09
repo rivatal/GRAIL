@@ -511,16 +511,17 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
               (et2, TList(gen_new_type())); 
               (t, TBool)]
                       | _ -> raise(failwith("Error @330")))
-      | Gadd ->  (*what about a tgraph of any and a trec??*)
-      (match et1, et2 with |TGraph(name, n, e), TRec(_, _) -> [(et2, n); (t, TGraph(name, et2, e))]
+      | Gadd ->  [(t, et1)](*what about a tgraph of any and a trec??*)
+(*       (match et1, et2 with  
+                           |TGraph(name, n, e), TRec(_, _) -> [(et2, n); (t, TGraph(name, et2, e))]
                            |T(_), TRec(_,_) ->  [(t, et1); (et1, TGraph(gen_new_type(), et2, gen_new_type()))]
                            |T(_), T(_) -> [(t, et1); (et1, TGraph(gen_new_type(), et2, gen_new_type()))]
-                           | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ "," ^ (string_of_type et2) ^ " not valid types for Gadd")))    
-      | Eadd -> 
-      (match et1, et2 with |TGraph(name, n, e), TEdge(_,_,_) -> [(et2, e); (t, TGraph(name, n, et2))]
+                           | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ "," ^ (string_of_type et2) ^ " not valid types for Gadd")))   
+ *)      | Eadd -> [(t, et1)]
+(*       (match et1, et2 with |TGraph(name, n, e), TEdge(_,_,_) -> [(et2, e); (t, TGraph(name, n, et2))]
                            |T(_), TEdge(_,_,_) | T(_), T(_) ->  [(t, et1); (et1, TGraph(gen_new_type(), gen_new_type(), et2))]
                            | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ ", " ^ (string_of_type et2) ^ " not valid graph for Eadd"))
-      )
+      )      *)
       | _ -> raise(failwith("error"))
      in
     (collect_expr ae1) @ (collect_expr ae2) @ opc (*opc appended at the rightmost since we apply substitutions right to left *)
@@ -529,7 +530,7 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
     let opc = match op with
           | To | From | Dash ->
           (match et1, et2 with
-          |TRec(_,_), TRec(_,_) -> [(et1, et2)]
+          |TRec(_,_), TRec(_,_) -> ignore(check_compatible_types (et1,et2)); []
           | _ -> raise(failwith("error: " ^ string_of_aexpr ae1 ^ " and " ^ string_of_aexpr ae2 ^ " must be nodes.")))
           | _ -> raise(failwith((string_of_op op) ^ " not an edge operator."))
      in 
