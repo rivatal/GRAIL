@@ -190,6 +190,7 @@ in
       and len2 = L.build_load (L.build_struct_gep struct2 1 "tmp" builder) "len" builder in
      
       let comp_val = L.build_icmp L.Icmp.Eq len1 len2 "tmp" builder in
+      let comp_loc = L.build_alloca i1_t "loc" builder in ignore(L.build_store comp_val comp_loc builder);
       let merge_bb = L.append_block context "merge" the_function in
 
       let then_bb = L.append_block context "compare" the_function in 
@@ -209,9 +210,10 @@ in
       let body_builder = L.builder_at_end context body_bb in
       let ind = L.build_load elind "i" body_builder in
       let p1 = L.build_in_bounds_gep lstvals1 [|ind|] "ptr" body_builder and p2 = L.build_in_bounds_gep lstvals2 [|ind|] "ptr" body_builder in
-      let el1 = (L.build_load p1 "tmp" body_builder) and el2 = (L.build_load p1 "tmp" body_builder) in 
+      let el1 = (L.build_load p1 "tmp" body_builder) and el2 = (L.build_load p2 "tmp" body_builder) in 
       let (elcomp, body_builder) = compare el1 el2 list_typ body_builder in
-      let comp_val = L.build_mul comp_val elcomp "tmp" body_builder in
+      let comp_val = L.build_mul (L.build_load comp_loc "tmp" body_builder) elcomp "tmp" body_builder in
+      ignore(L.build_store comp_val comp_loc body_builder);
       
       ignore(L.build_store (L.build_add (L.build_load elind "tmp" body_builder) (L.const_int i32_t 1) "inc" body_builder) elind body_builder);
       add_terminal body_builder (L.build_br pred_bb);
@@ -222,7 +224,7 @@ in
       ignore (L.build_cond_br bool_val body_bb merge_bb pred_builder);
 
       let end_builder = L.builder_at_end context merge_bb in
-      (comp_val, end_builder)
+      (L.build_load comp_loc "tmp" end_builder, end_builder)
   in
   let rec assign_array ar els n builder = (*stores elements, starting with element n in ar, returns ar*)
     match els with
