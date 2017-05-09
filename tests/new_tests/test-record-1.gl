@@ -1,0 +1,7 @@
+main() 
+{
+ 	myrec = {a: 1, b: 2};
+  	printint(myrec.a);
+  	return 0;
+}
+/* init & access */

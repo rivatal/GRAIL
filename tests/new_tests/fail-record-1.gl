@@ -1,0 +1,10 @@
+/* changing values for different types in record */
+
+main(){
+  myrec = {a: 1, b: 2};
+  printint(myrec.a);
+  y .= myrec;
+  y.a = "yeah";
+  print(myrec.a);
+  return 0;
+}

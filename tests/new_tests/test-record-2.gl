@@ -1,0 +1,8 @@
+main() 
+{
+  myrec = {a: "yeah", b: 2};
+  print(myrec.a);
+  printint(myrec.b);
+  return 0;
+}
+/* init & access in record that has more than one types */

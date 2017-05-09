@@ -1,0 +1,6 @@
+main() 
+{
+	/* SHOULD NOT PRINT THIS */
+	// SHOULD NOT PRINT THIS EITHER
+	return 0;
+}

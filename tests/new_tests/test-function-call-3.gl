@@ -1,0 +1,9 @@
+f(a) {
+	a = a + 1;
+	return a;
+}
+
+main() {
+	x = f(3);
+	printint(x);
+}

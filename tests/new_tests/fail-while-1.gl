@@ -1,0 +1,12 @@
+main()
+{
+  i = 6;
+  while (true) {
+    i = i + 1;
+  }
+
+  while (true) {
+    foo(); /* foo undefined */
+  }
+
+}

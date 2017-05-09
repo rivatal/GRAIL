@@ -1,0 +1,11 @@
+foo(c, d)    
+{
+  b = true;
+  a = 6;
+  c = b + a; /* Error: bool + int */
+}
+
+main()
+{
+  return 0;
+}

@@ -416,12 +416,13 @@ can we just ban them? NTS ban them.
 
 
 
-
-
-
-
-
-
-
-
 No self-edge assign
+Remove lists from the graph constructor.
+No node literals in edge constructors?
+
+
+Only allow noexprs as nodes in a constructor of a graph or add to.
+
+g .&= e <- f;
+
+

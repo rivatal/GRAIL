@@ -1,0 +1,25 @@
+main(){
+        if (12 == 12) {
+                print("EQ works");
+        }
+        if (12==22) {
+                print("EQ 2 does not works");
+        }
+        else {
+                print("EQ 2 works");
+        }
+        if (12 < 13) {
+                print("LT works");
+        }
+        if (22 > 12) {
+                print("GT works");
+        }
+        if (12 <= 12) {
+                print("LEQ works");
+        }
+        if (12 >= 12) {
+                print("GEQ works");
+        }
+
+        return 0;
+}

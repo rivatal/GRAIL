@@ -1,0 +1,6 @@
+main() 
+{
+	a = [1, 2, 3, 4, 5];
+	printint(a[4]);
+	return 0;	
+}
