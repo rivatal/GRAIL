@@ -1,0 +1,19 @@
+f(x, y){
+   return x + y;
+}
+g(z){
+  y = 0;
+  if(z == "hello"){
+       y = 5;
+  }
+  return y;
+}
+h(x){
+  return x;
+}
+main(){
+  x = f(1,2);
+  y = x + g(3);
+  hi = h("hi");
+  z = h(3);
+}
