@@ -88,7 +88,7 @@ let rec split_list (aelist: aexpr list) : (primitiveType list * primitiveType li
   |et1 :: t ->
   (match et1 with
   |TRec(_,_) -> helper t edgelist (et1 :: nodelist)
-  |TEdge(_,_,_) -> helper t (et1 :: edgelist) nodelist
+  |TEdge(_,n,_) -> helper t (et1 :: edgelist) (n :: nodelist)
   |T(_) | TVoid -> helper t edgelist nodelist
   |TList(typ) -> helper (typ :: t) edgelist nodelist
   |x -> raise(failwith(string_of_type x ^ " not a graph type."));
