@@ -36,10 +36,10 @@ let translate (functions) =
             then 
                TypeMap.find struct_name !tymap
             else
-                let record_t = L.named_struct_type context struct_name in 
-			    let ret_types = 
-			    Array.of_list(List.map (fun (_,t) -> ltype_of_typ t) tlist) 
-                in L.struct_set_body record_t ret_types false;
+                
+			         let ret_types = Array.of_list(List.map (fun (_,t) -> ltype_of_typ t) tlist) in
+                let record_t = L.struct_type context ret_types in 
+                (*in L.struct_set_body record_t ret_types false;*)
                 tymap := TypeMap.add ("struct."^tname) record_t !tymap;
                 record_t
     |A.TEdge(tany,trec1,trec2) ->
@@ -50,15 +50,17 @@ let translate (functions) =
                TypeMap.find struct_name !tymap
            else
            let struct_name = ("struct."^tname) in 
-           let edge_t = L.named_struct_type context struct_name in 
+           (*let edge_t = L.named_struct_type context struct_name in *)
            let ret_types = 
                           [  pointer_t (ltype_of_typ trec1);
                              pointer_t (ltype_of_typ trec1);
                              ltype_of_typ A.TBool;
                              ltype_of_typ trec2;
                            ] 
-           in let all_ret_types = Array.of_list(ret_types)
-           in L.struct_set_body edge_t all_ret_types false;
+           in 
+           let all_ret_types = Array.of_list(ret_types) in
+           let edge_t = L.struct_type context all_ret_types in
+           (*in L.struct_set_body edge_t all_ret_types false;*)
            tymap := TypeMap.add ("struct."^tname) edge_t !tymap;
            edge_t
     | A.TGraph(tany, nt, et) -> 
@@ -69,10 +71,10 @@ let translate (functions) =
                TypeMap.find struct_name !tymap
            else
            let struct_name = ("struct."^tname) in 
-           let graph_t = L.named_struct_type context struct_name in 
+           (*let graph_t = L.named_struct_type context struct_name in *)
            let ereltyp = (match et with A.TEdge(_, _, rel) -> rel | _ -> raise(Failure "wrong edge type")) in
            let ret_types = [| (ltype_of_typ (A.TList nt)); (ltype_of_typ (A.TList et)); (ltype_of_typ ereltyp)|] 
-           in L.struct_set_body graph_t ret_types false;
+           in let graph_t = L.struct_type context ret_types in
            tymap := TypeMap.add ("struct."^tname) graph_t !tymap;
            graph_t
     | _ -> raise(Failure "provided a bad type")
