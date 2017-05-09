@@ -1,5 +1,5 @@
 1c1
-< ./testall.sh: line 75: ./grail.native: No such file or directory
+< Fatal error: exception Failure("error: ((y: 6).a : int) not a valid lvalue@534.")
 ---
 > Fatal error: exception Failure("type mismatch: int,str")
 \ No newline at end of file

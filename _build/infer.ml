@@ -297,11 +297,6 @@ let env, genv, recs,funcs = allenv in
          (match et1 with
           |TRec(str, elist) -> 
           get_field_type elist entry
-          |TGraph(_,n,e) ->
-          if(entry="nodes") then(TList(n))
-        else(
-          if(entry="edges") then(TList(e))
-          else(raise(failwith(entry ^ " not a field."))))
           |T(x) -> T(x)
           |x -> raise(failwith (sae1 ^ " not a record.")))    
     in ADot(ae1, entry, typ)
@@ -367,7 +362,7 @@ let env, genv, recs,funcs = allenv in
  *)(*    let template = ARecord(fieldslist, templatetype) in  *)
    let aelist = enforce_consistency aelist (gtype) in
 (*   in ignore(print_string("type of template: " ^ string_of_type templatetype)); *)
-   AGraph(aelist, annotatedtemplate, TGraph(gen_new_type(), nodetype, gtype))
+   AGraph(aelist, annotatedtemplate, gtype)
   (*a. check the list for consistency between nodes and edges. (which could be noexprs or lists themselves, or type of e.)
     b. type of e imposes a constraint on ^ and on the graph type. 
     c-- what if there are no nodes? Graph should be a trec of any, and should be overwritable when the first node comes in.
@@ -420,18 +415,17 @@ and get_field_type (elist: (id * primitiveType) list) (id: id) :primitiveType =
 
 (*ensure thing you're assigning to has that type. (No my_bool = 3; )*)
 and check_asn_type (lval: primitiveType) (asn: primitiveType) : unit  =
-  check_compatible_types (lval, asn)
-
-(*   |TVoid | T(_) -> ()
+  match lval with
+  |TVoid | T(_) -> ()
   | x -> if(x = asn) then(()) else (
     match lval, asn with
     |TEdge(name1, n1, e1), TEdge(name2, n2, e2)-> ignore(check_asn_type n1 n2); (check_asn_type e1 e2)
     |TGraph(name1, n1, e1), TGraph(name2, n2, e2) -> ignore(check_asn_type n1 n2); (check_asn_type e1 e2)
     |TList(a), b -> ignore(check_asn_type a b);
 (*     |TItem() *)
-    |_ -> raise(failwith("error: " ^ string_of_type asn ^ " was defined as " ^ string_of_type lval ^ "@431"))
+    |_ -> raise(failwith("error: " ^ string_of_type asn ^ " was defined as " ^ string_of_type x))
    )
- *)
+
 (*Ensures an expression is a conditional (e.g. for predicate statements)*)
 and check_bool (e: aexpr) : unit =
   (*   print_string "Checking bool"; *)
@@ -517,7 +511,7 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
                            | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ "," ^ (string_of_type et2) ^ " not valid types for Gadd")))    
       | Eadd -> 
       (match et1, et2 with |TGraph(name, n, e), TEdge(_,_,_) -> [(et2, e); (t, TGraph(name, n, et2))]
-                           |T(_), TEdge(_,_,_) | T(_), T(_) ->  [(t, et1); (et1, TGraph(gen_new_type(), gen_new_type(), et2))]
+                           |T(_), TRec(_,_) | T(_), T(_) -> [(t, et1); (et1, TGraph(gen_new_type(), gen_new_type(), et2))]
                            | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ ", " ^ (string_of_type et2) ^ " not valid graph for Eadd"))
       )
       | _ -> raise(failwith("error"))

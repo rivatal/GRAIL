@@ -1,0 +1,10 @@
+foo(a)
+{
+  printint(a + 3);
+}
+
+main()
+{
+  foo(40);
+  return 0;
+}

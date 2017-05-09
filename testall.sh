@@ -197,7 +197,7 @@ do
     esac
 done
 
-# cat testall.log
+ #cat testall.log
 
 exit $globalerror
 
