@@ -6,4 +6,5 @@ f(a) {
 main() {
 	x = f(3);
 	printint(x);
+	return 0;
 }
