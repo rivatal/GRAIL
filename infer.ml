@@ -115,7 +115,9 @@ and check_compatible_types (t: primitiveType * primitiveType) : unit =
    |T(_), a | TVoid, a | a, TVoid | a, T(_) -> ()
    |TList(_), TList(T(_)) | TList(T(_)), TList(_) -> ()
    |TRec(a, b), TRec(c, d) -> ignore(let fieldslists = List.combine b d in List.map (fun a -> check_field a) fieldslists); ()
-   |a, b -> if(a = b) then () else raise(failwith("type mismatch: " ^ (string_of_type a) ^ ","  ^(string_of_type b)))
+   |TEdge(_, b, c), TEdge(_,e,f) -> ignore(check_compatible_types (b,e)); check_compatible_types (c,f)
+   |TGraph(a, b, c), TGraph(_, e, f) -> ignore(check_compatible_types (b,e)); check_compatible_types (c,f)
+   |a, b -> if(a = b) then () else raise(failwith("type mismatch: " ^ (string_of_type a) ^ ","  ^(string_of_type b) ^ "@118"))
 
 (*Ensures all members of a list share the same type.*)
 let rec check_type_consistency (tl: primitiveType list) : unit =
@@ -308,15 +310,15 @@ let env, genv, recs,funcs = allenv in
    (* type records = (primitiveType * ((id * primitiveType) list)) list *)
  | Graph(elist, tedge) ->
    let testtedge = annotate_expr allenv (Edge(Noexpr, Dash, Noexpr, tedge)) in
-   let atedge = annotate_expr allenv tedge in 
-   let aelist = annotate_expr_list allenv (elist) in
+   let atedge = infer_expr allenv tedge in 
+   let aelist = infer_expr_list allenv (elist) in
    let temptype = type_of testtedge in 
    let edgelist, nodelist = split_list aelist in
    ignore(check_type_consistency (temptype :: edgelist));
    ignore(check_type_consistency (nodelist)); 
-   let gtype = if(List.length nodelist = 0) then(gen_new_type()) else(List.hd nodelist) in
-   
-   AGraph(aelist, atedge, TGraph(gen_new_name(), gtype, temptype))
+   let gtype = if(List.length nodelist = 0
+   ) then(gen_new_rec([])) else(List.hd nodelist) in
+   AGraph(aelist, atedge, TGraph(gen_new_name(), gtype, (type_of atedge)))
   (*a. check the list for consistency between nodes and edges. (which could be noexprs or lists themselves, or type of e.)
     b. type of e imposes a constraint on ^ and on the graph type. 
     c-- what if there are no nodes? Graph should be a trec of any, and should be overwritable when the first node comes in.
@@ -729,6 +731,9 @@ and infer_expr (allenv: allenv) (e: expr): (aexpr)  =
   let constraints = collect_expr annotated_expr in 
   let subs = unify constraints in
   let ret = apply_expr subs annotated_expr in ret
+
+and infer_expr_list (allenv: allenv) (e: expr list ) : (aexpr list) =
+  List.map (fun a -> infer_expr allenv a) e 
 
 (*The calling method for this file. Infers all types for a func (statements, formals), and
 outputs an annotated func. *)
