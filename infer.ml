@@ -511,16 +511,18 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
               (et2, TList(gen_new_type())); 
               (t, TBool)]
                       | _ -> raise(failwith("Error @330")))
-      | Gadd ->  (*what about a tgraph of any and a trec??*)
-      (match et1, et2 with |TGraph(name, n, e), TRec(_, _) -> [(et2, n); (t, TGraph(name, et2, e))]
+      | Gadd ->  [(t, et1)](*what about a tgraph of any and a trec??*)
+(*       (match et1, et2 with  
+                           |TGraph(name, n, e), TRec(_, _) -> [(et2, n); (t, TGraph(name, et2, e))]
                            |T(_), TRec(_,_) ->  [(t, et1); (et1, TGraph(gen_new_type(), et2, gen_new_type()))]
                            |T(_), T(_) -> [(t, et1); (et1, TGraph(gen_new_type(), et2, gen_new_type()))]
-                           | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ "," ^ (string_of_type et2) ^ " not valid types for Gadd")))    
-      | Eadd -> 
-      (match et1, et2 with |TGraph(name, n, e), TEdge(_,_,_) -> [(et2, e); (t, TGraph(name, n, et2))]
-                           |T(_), TEdge(_,_,_) | T(_), T(_) ->  [(t, et1); (et1, TGraph(gen_new_type(), gen_new_type(), et2))]
-                           | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ ", " ^ (string_of_type et2) ^ " not valid graph for Eadd"))
-      )
+                           | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ "," ^ (string_of_type et2) ^ " not valid types for Gadd")))   
+ *)      | Eadd -> 
+       (match et1, et2 with |TGraph(name, n, e), TEdge(_,_,_) -> ignore(print_string(string_of_type et2 ^ ", " ^ string_of_type e)); [(t, et1); (et2, e)] (* (t, TGraph(name, n, et2))] *)
+                            | _ -> [(t, et1)] 
+(*                            |T(_), TEdge(_,_,_) | T(_), T(_) ->  [(t, et1); (et1, TGraph(gen_new_type(), gen_new_type(), et2))]
+                           | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ ", " ^ (string_of_type et2) ^ " not valid graph for Eadd")) *)
+      )      
       | _ -> raise(failwith("error"))
      in
     (collect_expr ae1) @ (collect_expr ae2) @ opc (*opc appended at the rightmost since we apply substitutions right to left *)
@@ -529,7 +531,7 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
     let opc = match op with
           | To | From | Dash ->
           (match et1, et2 with
-          |TRec(_,_), TRec(_,_) -> [(et1, et2)]
+          |TRec(_,_), TRec(_,_) -> ignore(check_compatible_types (et1,et2)); []
           | _ -> raise(failwith("error: " ^ string_of_aexpr ae1 ^ " and " ^ string_of_aexpr ae2 ^ " must be nodes.")))
           | _ -> raise(failwith((string_of_op op) ^ " not an edge operator."))
      in 
@@ -576,7 +578,7 @@ and unify_one (t1: primitiveType) (t2: primitiveType) : substitutions =
   | TGraph(name1, a, b), TGraph(name2, c, d) -> unify_one a c @ unify_one b d 
   | TEdge(name1, n1, e1), TEdge(name2, n2, e2) ->
   (* ignore(print_string("matching " ^ (string_of_type name1) ^ "," ^ (string_of_type name2))); *)
-    unify_one n1 n2 @ unify_one e1 e2
+    unify_one name1 name2
   | TRec(a, b), TRec(c, d) -> 
     ignore(let fieldslists = List.combine b d in List.map (fun x -> check_field x) fieldslists);
     unify_one a c (*right??*)
