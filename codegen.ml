@@ -566,30 +566,45 @@ in
                 | h :: t -> if h = n then 0 else 
                             1 + match_name t n
           in
-          let trec = get_expr_type e1 in
-          let alist = (match trec with 
-            A.TRec(_, l) -> l
-          | _ -> raise(Failure ("dot applied to wrong type"))) in
-
-          let mems = List.map fst alist in
-          (match e1 with
-            | A.AId(name,_) ->  
-                let index = match_name mems entry
-                in let load_loc = lookup name local_var_map 
-                in let ext_val = L.build_struct_gep load_loc index "ext_val" builder      
-                in (L.build_load ext_val "" builder, builder)
-            |_ ->
-                let (e',builder) = aexpr builder local_var_map e1
-                in 
-                let loc = L.build_alloca (L.type_of e') "e" builder in
-                let _ = L.build_store e' loc builder
-                in 
-                let mems = 
-			         List.map (fun (id,_)  -> id) alist 
-                       
-                in let index = match_name mems entry
-                in let ext_val = L.build_struct_gep loc index "ext_val" builder      
-                in (L.build_load ext_val "" builder, builder))
+          let t = get_expr_type e1 in
+          (match t with 
+            A.TRec(_, alist) -> let mems = List.map fst alist in
+            (match e1 with
+              | A.AId(name,_) ->  
+                  let index = match_name mems entry
+                  in let load_loc = lookup name local_var_map 
+                  in let ext_val = L.build_struct_gep load_loc index "ext_val" builder      
+                  in (L.build_load ext_val "" builder, builder)
+              |_ ->
+                  let (e',builder) = aexpr builder local_var_map e1
+                  in 
+                  let loc = L.build_alloca (L.type_of e') "e" builder in
+                  let _ = L.build_store e' loc builder
+                  in 
+                  let mems = 
+    		         List.map (fun (id,_)  -> id) alist 
+                         
+                  in let index = match_name mems entry
+                  in let ext_val = L.build_struct_gep loc index "ext_val" builder      
+                  in (L.build_load ext_val "" builder, builder))
+            | A.TEdge(_, _, _) ->  let (e', builder) = aexpr builder local_var_map e1 in
+              let loc = L.build_alloca (L.type_of e') "e" builder in ignore(L.build_store e' loc builder);
+              (match entry with
+                "from" -> (L.build_load (L.build_struct_gep loc 0 "ptr" builder) "from" builder, builder)
+              | "to" -> (L.build_load (L.build_struct_gep loc 1 "ptr" builder) "to" builder, builder)
+              | "directed" -> (L.build_load (L.build_struct_gep loc 2 "ptr" builder) "dir" builder, builder)
+              | "rel" -> (L.build_load (L.build_struct_gep loc 3 "ptr" builder) "rel" builder, builder)
+              | _ -> raise( Failure "dot not supported with this keyword")
+              )
+            | A.TGraph(_, _, _) ->  let (e', builder) = aexpr builder local_var_map e1 in
+              let loc = L.build_alloca (L.type_of e') "e" builder in ignore(L.build_store e' loc builder);
+              (match entry with
+                "nodes" -> (L.build_load (L.build_struct_gep loc 0 "ptr" builder) "nodes" builder, builder)
+              | "edges" -> (L.build_load (L.build_struct_gep loc 1 "ptr" builder) "edges" builder, builder)
+              | _ -> raise( Failure "dot not supported with this keyword")
+              )
+            | _ -> raise(Failure "dot not supported on this type")
+        ) 
            
         | A.AGraph(lst, rel, t) -> 
           let rec split_lists l = 
