@@ -175,11 +175,12 @@ in
     [] -> L.const_int i1_t 1 (*empty recs are equal*)
   | (_,t)::tl -> let (cmp, builder) = compare (L.build_load (L.build_struct_gep rec1 n "tmp" builder) "val" builder) 
                                               (L.build_load (L.build_struct_gep rec2 n "tmp" builder) "val" builder) t builder in
-                  let (restcmp, builder) = compare_fields (n+1) tl rec1 rec2 builder
+                  let (restcmp, builder) = compare_fields (n+1) tl rec1 rec2 builder in
+                  (L.const_and cmp restcmp, builder)
   )
   
 
-    (*let rec copy_list lst t builder =  CHANGE TO COMPARE
+    (*and copy_list lst t builder =  
       let list_typ = get_list_type t and newstruct = L.build_alloca (ltype_of_typ t) "strct" builder in
       let oldstruct = L.build_alloca (ltype_of_typ t) "strct" builder in ignore(L.build_store lst oldstruct builder);
 
