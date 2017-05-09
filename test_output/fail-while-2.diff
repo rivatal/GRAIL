@@ -1,4 +1,4 @@
 1c1
-< Fatal error: exception Parsing.Parse_error
+< Fatal error: exception Failure("(42: int) not a boolean.")
 ---
 > Fatal error: exception Failure("expected Boolean expression in 42")

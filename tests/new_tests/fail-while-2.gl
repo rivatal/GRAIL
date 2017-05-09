@@ -1,6 +1,6 @@
 main()
 {
-  int i = 5;
+  i = 5;
 
   while (true) {
     i = i + 1;
