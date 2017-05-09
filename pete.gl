@@ -1,0 +1,43 @@
+main()
+{
+	//construct the Petersen graph?
+
+	petenodes = [{key: 1}, {key: 2}, {key: 3}, {key: 4}, {key: 5}, {key: 6}, {key: 7}, {key: 8}, {key: 9}, {key: 10}];
+	pete = ({key: 0}) with {weight:1};
+
+	for(n in petenodes){
+		pete &= n;
+	}
+
+	for(i = 0; i < 5; i += 1;){
+		pi = petenodes[i];
+		po = petenodes[i+5];
+		pete .&= pi--po;
+		if(i == 0){
+			p2 = petenodes[2];
+			p3 = petenodes[3];
+			pete .&= pi -- p2;
+			pete .&= pi -- p3;
+		}
+
+		if(i == 1){
+			p3 = petenodes[3];
+			p4 = petenodes[4];
+			pete .&= pi -- p3;
+			pete .&= pi -- p4;
+		}
+
+		if(i == 2){
+			p4 = petenodes[4];
+			pete .&= pi -- p4;
+		}
+	}
+
+	for(i = 5; i < 9; i += 1;){
+		pi = petenodes[i];
+		pplus = petenodes[i+1];
+		pete .&= pi--pplus;
+	}
+
+
+}
