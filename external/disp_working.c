@@ -7,7 +7,6 @@
 #include <string.h>
 #include <stdint.h>
 
-#define _GNU_SOURCE
 #define MAX 50
 #define MAX_NODE_STORE 1000
 /*
@@ -49,7 +48,7 @@ typedef struct {
 }graph;
 
 typedef struct {
-    int  key[MAX_NODE_STORE];
+    node* node_addr[MAX_NODE_STORE];
     int count;
 }node_tbl;
 
@@ -89,36 +88,33 @@ int display_graph(Node_info* info, int directed)
     if(directed)
         system("gnuplot gnuplot_dir.sh -persist");
    else
-        system("gnuplot gnuplot.sh -persist");
+        system("gnuplot gnuplot_dir.sh -persist");
         
    return 0 ;
 }
 
-int set_mapping_node_addr(node* n1, int size) 
-{
-     int found = 0;
-     for(int i = 0; i < size; i++) 
-     {
-        for(int j = 0; j < lookup.count; j++) 
-        { 
-            if(n1[i].key == lookup.key[j])
-                found = 1;
-        }
-     
-        if(!found)
-            lookup.key[lookup.count++] = n1[i].key;
+int set_mapping_node_addr(lst_node* nodes) {
+      for(int i = 0; i < nodes->size; i++) 
+      { 
+           lookup.node_addr[i] = nodes->node_list;
+           nodes->node_list += sizeof(node*);
+           lookup.count++;
       }
-      return 0;
+     
+    return 0;
 }
 
 int get_mapping_node_addr(node* n1) {
      int i = 0;
       for(i = 0; i < lookup.count; i++) 
       { 
-         if(n1->key == lookup.key[i])
+         if(n1 == lookup.node_addr[i])
             return i;
       }
-      return -1;
+      
+      lookup.node_addr[i] = n1;
+      lookup.count++;
+      return i;
 }
 
 /*
@@ -139,18 +135,20 @@ int sample_display(int x)
     
 }
 */
-int fill_edge_info(int* to, int* from, int* weight, edge* edges, int size,int default_weight) {
+int fill_edge_info(int* to, int* from, int* weight, lst_edge* edges, int default_weight) {
 
    int directed = 0;
-   for(int i = 0; i < size; i++) {
+   for(int i = 0; i < edges->size; i++) {
        
-        to[i] = get_mapping_node_addr(edges[i].n1);
-        from[i] = get_mapping_node_addr(edges[i].n2);
-        weight[i] = edges[i].weight.w;
+        edge* e = edges->edge_list;
+        to[i] = get_mapping_node_addr(e->n1);
+        from[i] = get_mapping_node_addr(e->n2);
+        weight[i] = e->weight.w;
         if(weight[i] == 0)
             weight[i] = default_weight;
-        if(edges[i].directed == 1)
+        if(e->directed == 1)
             directed = 1;   
+        edges->edge_list += sizeof(edge*);
    }
 
    return directed;
@@ -159,27 +157,25 @@ int fill_edge_info(int* to, int* from, int* weight, edge* edges, int size,int de
 int display(graph g) {
 
     int directed = 0;
-    node d_nodes[MAX];
-    edge d_edges[MAX];
-    memcpy(d_nodes,g.nodes.node_list,g.nodes.size*sizeof(node));
-    memcpy(d_edges,g.edges.edge_list,g.edges.size*sizeof(edge));
     printf("EDGES - %d\n",g.edges.size);
     printf("NODES - %d\n",g.nodes.size);
     printf("DEFAULT WEIGHT %d\n",g.def_weight.w);
     Node_info n1;
     n1.num_nodes = g.nodes.size;
     n1.num_edges = g.edges.size;
-    set_mapping_node_addr(d_nodes,g.nodes.size);
-    directed = fill_edge_info(n1.to,n1.from,n1.weights,d_edges,g.edges.size,g.def_weight.w);
- 
-    /*
+    //set_mapping_node_addr(&g.nodes);
+    directed = fill_edge_info(n1.to,n1.from,n1.weights,&g.edges,g.def_weight.w);
+  
+  /*
     for(int k = 0; k < g.nodes.size; k++) {
-        printf("\n - node - %p, key - %d\n",&d_nodes[k],d_nodes[k].key);
+        node* n = g.nodes.node_list;
+        printf("\n - node - %p, key - %d\n",n,n->key);
+        g.nodes.node_list += sizeof(node*);
      }
     for(int k = 0; k < g.edges.size; k++) {
-        printf("\nfrom - %p, to - %p,key1 - %d -> key2 - %d\n",
-        d_edges[k].n1,d_edges[k].n2,d_edges[k].n1->key,d_edges[k].n2->key);
+        edge* e = g.edges.edge_list;
+        printf("\nfrom - %p, to - %p,key1 - %d -> key2 - %d\n",e->n1,e->n2,e->n1->key,e->n2->key);
      }
-     */
+ */
     return display_graph(&n1,directed);
 }
