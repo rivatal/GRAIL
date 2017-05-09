@@ -362,7 +362,7 @@ let env, genv, recs,funcs = allenv in
  *)(*    let template = ARecord(fieldslist, templatetype) in  *)
    let aelist = enforce_consistency aelist (gtype) in
 (*   in ignore(print_string("type of template: " ^ string_of_type templatetype)); *)
-   AGraph(aelist, annotatedtemplate, gtype)
+   AGraph(aelist, annotatedtemplate, TGraph(gen_new_type(), nodetype, gtype))
   (*a. check the list for consistency between nodes and edges. (which could be noexprs or lists themselves, or type of e.)
     b. type of e imposes a constraint on ^ and on the graph type. 
     c-- what if there are no nodes? Graph should be a trec of any, and should be overwritable when the first node comes in.
