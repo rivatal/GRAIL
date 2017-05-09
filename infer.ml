@@ -526,7 +526,7 @@ and unify_one (t1: primitiveType) (t2: primitiveType) : substitutions =
   | TInt, TInt | TBool, TBool | TString, TString | TFloat, TFloat | TVoid, TVoid -> []
   | T(x), z | z, T(x) -> [(x, z)]
   | TList(x), TList(y) -> unify_one x y
-  | TGraph(name1, a, b), TGraph(name2, c, d) -> unify_one a c @ unify_one b d
+  | TGraph(name1, a, b), TGraph(name2, c, d) -> unify_one a c @ unify_one b d 
   | TEdge(name1, n1, e1), TEdge(name2, n2, e2) ->
   (* ignore(print_string("matching " ^ name1 ^ "," ^ name2)); *)
     unify_one n1 n2 @ unify_one e1 e2
