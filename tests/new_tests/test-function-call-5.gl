@@ -1,0 +1,12 @@
+add(a, b)
+{
+  c = a + b;
+  return c;
+}
+
+main()
+{
+  d = add(52, 10);
+  printint(d);
+  return 0;
+}
