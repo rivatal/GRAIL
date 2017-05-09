@@ -1,5 +1,5 @@
 1c1
-< Fatal error: exception Failure("error: ((y: 6).a : int) not a valid lvalue@534.")
+< Fatal error: exception Failure("type mismatch: int,str@118")
 ---
-> Fatal error: exception Failure("type mismatch: int,str")
+> Fatal error: exception Failure("error: ((y: 6).a : int) not a valid lvalue@534.")
 \ No newline at end of file

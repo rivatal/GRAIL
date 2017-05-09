@@ -324,8 +324,8 @@ let env, genv, recs,funcs = allenv in
       if (NameMap.mem id genv)
       then (NameMap.find id genv)
       else (raise (failwith "function not defined @ 147")) in
-    (*   ignore(print_string("assigning formals")); 
-      ignore(List.iter (fun (a,b) -> print_string(a ^ " " ^ string_of_type b)) aformals); *)
+    (* ignore(print_string("assigning formals")); *)
+    (* ignore(List.iter (fun (a,b) -> print_string(a ^ " " ^ string_of_type b)) aformals); *)
     let env = assign_formals (List.combine aformals aelist) env id in
     let allenv = env, genv, recs, funcs in
     (* ignore(print_string("check formals"));*)
@@ -460,11 +460,13 @@ and get_subtype (t: primitiveType) : primitiveType =
  *)
 and format_formal (formal: (string * primitiveType) * aexpr) : string * primitiveType =
   match formal with 
-  ((x, _), e) -> (x, type_of e)
+  ((x, _), e) -> ignore(print_string("matching " ^ x ^ " with type: " ^ string_of_type (type_of e))); (x, type_of e)
 
 (*Generates assignment statements for actual expressions to be inferred and bound to their formals*)
 and assign_formals (stufflist: ((id * primitiveType) * aexpr) list) (env: environment) (id: string): environment =
-  List.fold_left (fun e f -> let id, typ = format_formal f in NameMap.add (map_id id) typ e) env stufflist
+  List.fold_left (fun e f -> let id, typ = format_formal f in 
+    print_string("assigning " ^ id ^ " to " ^ (string_of_type typ));
+    NameMap.add (map_id id) typ e) env stufflist
 
 (*Ensures actuals and their corresponding formals have the same type. 
 Required for builtin functions like print.*)
@@ -536,7 +538,7 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
         | TRec(_,_) | T(_) -> ()
         | _ -> raise(failwith("error: " ^ string_of_aexpr ae3 ^ " not a record.")));
      (collect_expr ae1) @ (collect_expr ae2) @ opc @ (collect_expr ae3)     
-  | ADot(ae1, _, _) -> [(type_of ae1, type_of ae1)]
+  | ADot(ae1, _, _) -> []
   | AItem(s, ae1, t) -> collect_expr ae1
   (*    let et1 = type_of ae1 in 
         (match et1 with
@@ -659,6 +661,7 @@ and update_map (allenv: allenv) (a: astmt) : allenv =
 
 
 and update_map_func (a: astmt) (funcs: funcs) (genv: genvironment) : funcs = 
+  ignore(print_string("updating map func for " ^ string_of_astmt a)); 
   match a with
   |AReturn(ae, _) 
   |AExpr(ae) 
@@ -692,8 +695,8 @@ and apply_update (call: aexpr) (funcs: funcs) (genv: genvironment ) : funcs =
 (*    ignore(print_string("updating calls for " ^ id ^ "\n")); *)
    let funcs = List.fold_left (fun a b -> apply_update b a genv) funcs aelist in 
    let (_, aformals, _) =
-      if (NameMap.mem name genv)
-      then (NameMap.find name genv)
+      if (NameMap.mem (name) genv)
+      then (NameMap.find (name) genv)
       else (raise (failwith "function not defined @ 601")) in 
   let flist = List.combine aformals aelist in 
   let aformals = List.map format_formal flist in  
