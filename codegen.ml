@@ -67,7 +67,8 @@ let translate (functions) =
            else
            let struct_name = ("struct."^tname) in 
            let graph_t = L.named_struct_type context struct_name in 
-           let ret_types = [| (ltype_of_typ (A.TList nt)); (ltype_of_typ (A.TList et)); (ltype_of_typ et)|] 
+           let ereltyp = (match et with A.TEdge(_, _, rel) -> rel | _ -> raise(Failure "wrong edge type")) in
+           let ret_types = [| (ltype_of_typ (A.TList nt)); (ltype_of_typ (A.TList et)); (ltype_of_typ ereltyp)|] 
            in L.struct_set_body graph_t ret_types false;
            tymap := TypeMap.add ("struct."^tname) graph_t !tymap;
            graph_t
@@ -539,7 +540,7 @@ in
           let (elist, builder) = build_list_from_els edges (A.TList etyp) builder local_var_map in
           ignore(L.build_store nlist (L.build_struct_gep graph 0 "ptr" builder) builder);
           ignore(L.build_store elist (L.build_struct_gep graph 1 "ptr" builder) builder);
-          (graph, builder)
+          (L.build_load graph "g" builder, builder)
 
 
 
