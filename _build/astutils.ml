@@ -26,7 +26,7 @@ let rec string_of_type (t: primitiveType) =
   | TEdge(name, a, b) -> Printf.sprintf "edge %s (%s) with %s" (string_of_type name) (string_of_type a) (string_of_type b) 
   | TGraph(name, a, b) -> Printf.sprintf "graph %s (%s) with %s" (string_of_type name) (string_of_type a) (string_of_type b) 
   | TList(x) -> "list of " ^ (string_of_type x)
-  | T(x) -> Printf.sprintf "%s" x
+  | T(x) -> Printf.sprintf "any %s" x
 
 let string_of_tuple (t: id * primitiveType) =
   match t with

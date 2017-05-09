@@ -339,7 +339,7 @@ let env, genv, recs,funcs = allenv in
     in let apairlist = helper (List.sort comp pairlist) in
     ignore(if(has_dups pairlist) then(raise(failwith("error: duplicate record entry"))) else());
     let typ = get_rec recs apairlist in 
-    ARecord(apairlist, (typ))
+    ARecord(apairlist, typ)
  | Graph(elist, tedge) ->
    let aelist = infer_expr_list allenv (elist) in
    let edgelist, nodelist = split_list aelist in
@@ -371,8 +371,11 @@ let env, genv, recs,funcs = allenv in
        ae2 = annotate_expr allenv e2 and
        ae3 = annotate_expr allenv e3 in 
       AEdge(ae1, op, ae2, ae3, TEdge(gen_new_type(), type_of ae1, type_of ae3))
+
 and annotate_expr_list (allenv: allenv) (e: expr list): aexpr list =
-  List.map (fun a -> annotate_expr allenv a) e
+  let thelist = List.map (fun a -> annotate_expr allenv a) e in (* in 
+   ignore(print_string("377")); 
+  ignore(List.iter (fun a ->  print_string (string_of_aexpr a)) thelist); *) thelist
 
 and get_namestypes (aelist: (id * aexpr) list) : (id * primitiveType) list =
   let rec helper l fl : (id * primitiveType) list= 
@@ -394,8 +397,8 @@ and get_rec (recs: recs) (fieldslist: (id * aexpr) list) : primitiveType =
   |[] -> let newtype = gen_new_rec(fieldslist) in newtype
   |TRec(name, fl) :: t -> 
   if(fl = curr) 
-  then(TRec(name, fl)) 
-  else(helper t curr rl)
+  then((* ignore(print_string("getting rec " ^ (string_of_type name))); *) TRec(name, fl)) 
+  else((* ignore(print_string("couldn't find rec "));  *)helper t curr rl)
   |_ -> raise(failwith("error"))
 in helper recs (get_namestypes fieldslist) recs
 
@@ -509,7 +512,7 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
                            |T(_), T(_) -> [(t, et1); (et1, TGraph(gen_new_type(), et2, gen_new_type()))]
                            | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ "," ^ (string_of_type et2) ^ " not valid types for Gadd")))   
  *)      | Eadd -> 
-       (match et1, et2 with |TGraph(name, n, e), TEdge(_,_,_) -> ignore(print_string(string_of_type et2 ^ ", " ^ string_of_type e)); [(t, et1); (et2, e)] (* (t, TGraph(name, n, et2))] *)
+       (match et1, et2 with |TGraph(name, n, e), TEdge(_,_,_) -> [(t, et1); (et2, e)] (* (t, TGraph(name, n, et2))] *)
                             | _ -> [(t, et1)] 
 (*                            |T(_), TEdge(_,_,_) | T(_), T(_) ->  [(t, et1); (et1, TGraph(gen_new_type(), gen_new_type(), et2))]
                            | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ ", " ^ (string_of_type et2) ^ " not valid graph for Eadd")) *)
@@ -539,12 +542,12 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
   *)
   | ACall(_, _, _, _, _) 
   | ANoexpr(_) -> []
-  | AList(ael, t) -> 
+  | AList(ael, t) -> [] (* 
     let rec helper l = 
       match l with
       |x :: y :: tail -> (type_of x, type_of y) :: helper (y :: tail)
       |[] | _ -> []
-    in (helper ael)
+    in (helper ael) *)
 
 
 (*Step 3 of HM: unify constraints*)

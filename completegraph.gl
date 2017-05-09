@@ -1,19 +1,16 @@
-completegraph(n)
+main()
 {
 	g = ({key:1}) with {weight: 1};
 
-	for(i = 2; i <= n; i += 1;){
+	for(i = 2; i <= 5; i += 1;){
 		mynode = {key: i};
 		g &= mynode; 
 		for(p in g.nodes){
 			g .&= mynode -- p;
 		}
 	}
+    
+    display(g);
 
-	return g; 
+}   
 
-}
-
-main(){
-	c = completegraph(5);
-}

@@ -1,5 +1,6 @@
-./grail.native < graphtest2.gl > llvm_out.ll && 
-clang -o final llvm_out.ll ./external/disp.c
+
+./grail.native < pete.gl > out.ll && 
+clang -o final out.ll ./external/disp.c -lm
 
 mv final bin
 cd bin
