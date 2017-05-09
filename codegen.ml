@@ -29,7 +29,8 @@ let translate (functions) =
     | A.TString -> str_t 
     | A.TFloat -> float_t
     | A.TList t -> L.struct_type context [|L.pointer_type (ltype_of_typ t); i32_t|]
-    | A.TRec(tname,tlist) ->
+    | A.TRec(tany,tlist) ->
+            let tname = (match tany with A.T s -> s | _ -> raise(Failure "the typer somehow gave us wrong input")) in
             let struct_name = ("struct."^tname) in 
             if TypeMap.mem struct_name !tymap 
             then 
@@ -41,7 +42,8 @@ let translate (functions) =
                 in L.struct_set_body record_t ret_types false;
                 tymap := TypeMap.add ("struct."^tname) record_t !tymap;
                 record_t
-    |A.TEdge(tname,trec1,trec2) ->
+    |A.TEdge(tany,trec1,trec2) ->
+           let tname = (match tany with A.T s -> s | _ -> raise(Failure "the typer somehow gave us wrong input")) in
            let struct_name = ("struct."^tname) in 
            if TypeMap.mem struct_name !tymap 
            then 
@@ -59,7 +61,8 @@ let translate (functions) =
            in L.struct_set_body edge_t all_ret_types false;
            tymap := TypeMap.add ("struct."^tname) edge_t !tymap;
            edge_t
-    | A.TGraph(tname, nt, et) -> 
+    | A.TGraph(tany, nt, et) -> 
+           let tname = (match tany with A.T s -> s | _ -> raise(Failure "the typer somehow gave us wrong input")) in
            let struct_name = ("struct."^tname) in 
            if TypeMap.mem struct_name !tymap 
            then 
