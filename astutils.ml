@@ -24,7 +24,7 @@ let rec string_of_type (t: primitiveType) =
   | TChar -> "char"
   | TVoid -> "void"
   | TEdge(name, _, _) -> Printf.sprintf "edge %s " name
-  | TGraph(name, _, _) -> Printf.sprintf "graph %s " name (* ^ " with " ^ (string_of_type b) *)
+  | TGraph(name, a, b) -> Printf.sprintf "graph %s (%s) with %s" name (string_of_type a) (string_of_type b) 
   | TList(x) -> "list of " ^ (string_of_type x)
   | T(x) -> Printf.sprintf "%s" x
 
@@ -50,8 +50,9 @@ let rec string_of_aexpr (ae: aexpr): string =
   | AUnop(op, e1, t) ->
     let s1 = string_of_aexpr e1 in let sop = string_of_uop op in let st = string_of_type t in
     Printf.sprintf "(%s%s: %s)" sop s1 st
-  | ACall(id, _, _,_, t) ->
-    Printf.sprintf "%s (...): %s" id (string_of_type t)
+  | ACall(id, aelist, _,_, t) ->
+    let s1 = List.map(fun a -> (string_of_aexpr (a))) aelist in 
+    let l = String.concat "," s1 in Printf.sprintf "(call %s(%s)) : %s" id l (string_of_type t)
   | ARecord(aexprs, t) ->
     let rec helper l str : string =
       (match l with

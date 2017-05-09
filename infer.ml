@@ -133,6 +133,7 @@ The result is annotated and passed into the sast. *)
 let rec infer_stmt (allenv: allenv) (e: stmt): (allenv * astmt) =
 (*   ignore(print_string (" inferring " ^ (string_of_stmt e) ^ "\n"));   *) 
   let env, genv, recs, funcs = allenv in 
+  let allenv, inferred_astmt = 
   match e with
   | Asn(e1, e2, switch) -> 
     let ae2 = infer_expr allenv e2 in 
@@ -160,9 +161,13 @@ let rec infer_stmt (allenv: allenv) (e: stmt): (allenv * astmt) =
     (allenv, AAsn(ae1, ae2, switch, typ))
   | Return(expr) ->
     let aexpr = infer_expr allenv expr in 
+(*     let funcs = apply_update aexpr funcs genv in *)
+    let allenv = env, genv, recs, funcs in 
     (allenv, AReturn(aexpr, type_of aexpr))
   | Expr(expr) -> 
     let aexpr = infer_expr allenv expr in 
+(*     let funcs = apply_update aexpr funcs genv in *)
+    let allenv = env, genv, recs, funcs in 
     (allenv, AExpr(aexpr))
   | If(expr, s1, s2) ->
     let conditional = infer_expr allenv expr
@@ -184,8 +189,7 @@ let rec infer_stmt (allenv: allenv) (e: stmt): (allenv * astmt) =
     in (check_bool ae1);
     let (allenv, as2) = (type_stmt allenv s2) in
     let _, astmts = infer_stmt_list allenv stmts in  (*change type_stmt to update the map*)
-    let allenv = outerenv in
-     (allenv, AFor(as1, ae1, as2, astmts))
+     (outerenv, AFor(as1, ae1, as2, astmts))
   | Forin(e1, e2, stmts) -> 
     let outerenv = allenv in
     let env, genv, recs, funcs = allenv in 
@@ -197,12 +201,14 @@ let rec infer_stmt (allenv: allenv) (e: stmt): (allenv * astmt) =
     let aid = infer_expr allenv e1 in
     let _, astmts = infer_stmt_list allenv stmts in  (*change type_stmt to update the map*)
      (outerenv, AForin(aid, ae2, astmts))
+    in let env, genv, recs, funcs = allenv in
+    let funcs = update_map_func inferred_astmt funcs genv 
+  in ((env,genv,recs,funcs), inferred_astmt)
 
 and type_stmt (allenv: allenv) (e: stmt) : allenv * astmt  = 
   let allenv, astmt = infer_stmt allenv e in 
   let _, genv,recs,funcs = allenv in 
   let env,_,recs,_ = update_map allenv astmt in
-  let funcs = update_map_funcs astmt funcs genv in 
   ((env, genv, recs,funcs), astmt)
 
 and infer_stmt_list (allenv: allenv) (e: stmt list) : (allenv * astmt list) =
@@ -213,6 +219,9 @@ and infer_stmt_list (allenv: allenv) (e: stmt list) : (allenv * astmt list) =
       let allenv, ae = type_stmt allenv head in 
       (helper allenv (ae :: astmts) tail)
   in helper allenv [] e 
+
+and update_map_funcs (astmts: astmt list) (funcs: funcs) (genv: genvironment) : funcs = 
+  List.fold_left (fun a b -> update_map_func b a genv) funcs astmts
 
 (*Step 1 of HM: annotate expressions with what can be gathered of their types.*)
 and annotate_expr (allenv: allenv) (e: expr) : aexpr =
@@ -301,7 +310,6 @@ let env, genv, recs,funcs = allenv in
    let testtedge = annotate_expr allenv (Edge(Noexpr, Dash, Noexpr, tedge)) in
    let atedge = annotate_expr allenv tedge in 
    let aelist = annotate_expr_list allenv (elist) in
-   
    let temptype = type_of testtedge in 
    let edgelist, nodelist = split_list aelist in
    ignore(check_type_consistency (temptype :: edgelist));
@@ -600,8 +608,24 @@ and update_map (allenv: allenv) (a: astmt) : allenv =
   |_ -> allenv 
 
 
-and update_map_funcs (a: astmt) (funcs: funcs) (genv: genvironment) : funcs = 
-  let rec apply_update (call: aexpr) (funcs: funcs) (genv: genvironment ) : funcs = 
+and update_map_func (a: astmt) (funcs: funcs) (genv: genvironment) : funcs = 
+  match a with
+  |AReturn(ae, _) 
+  |AExpr(ae) 
+  |AWhile(ae, _) 
+  |AAsn(_,ae, _,_) -> apply_update ae funcs genv
+  |AIf(ae, s1, s2) -> let funcs = apply_update ae funcs genv in 
+                      let funcs = List.fold_left (fun a b -> update_map_func b a genv) funcs s1 in 
+                      List.fold_left (fun a b -> update_map_func b a genv) funcs s2
+  |AFor(s1, ae, s2, s3s) -> 
+                      let funcs = update_map_func s1 funcs genv in 
+                      let funcs = apply_update ae funcs genv in 
+                      let funcs = update_map_func s2 funcs genv in
+                      List.fold_left (fun a b -> update_map_func b a genv) funcs s3s
+  |AForin(_,_,s1s) -> List.fold_left (fun a b -> update_map_func b a genv) funcs s1s
+(*   |_ -> funcs *)
+
+and apply_update (call: aexpr) (funcs: funcs) (genv: genvironment ) : funcs = 
   match call with 
   | AIntLit(_,_)| ABoolLit(_,_) | AFloatLit(_,_) | AStrLit(_,_) | ACharLit(_,_) | AId(_,_) -> funcs
   | AItem(_, e, _) | AUnop(_, e, _) | ADot(e,_,_) -> apply_update e funcs genv
@@ -615,7 +639,8 @@ and update_map_funcs (a: astmt) (funcs: funcs) (genv: genvironment) : funcs =
                             apply_update e1 funcs genv
   | ANoexpr(_) -> funcs
   |ACall(name, aelist, astmts, id, t) -> 
-   ignore(print_string("updating calls for " ^ id ^ "\n"));
+(*    ignore(print_string("updating calls for " ^ id ^ "\n")); *)
+   let funcs = List.fold_left (fun a b -> apply_update b a genv) funcs aelist in 
    let (_, aformals, _) =
       if (NameMap.mem name genv)
       then (NameMap.find name genv)
@@ -624,22 +649,6 @@ and update_map_funcs (a: astmt) (funcs: funcs) (genv: genvironment) : funcs =
   let aformals = List.map format_formal flist in  
   ((AFbody(AFdecl(id, aformals, t), astmts)) :: funcs)
   |_ -> funcs
-in 
-  match a with
-  |AReturn(ae, _) 
-  |AExpr(ae) 
-  |AWhile(ae, _) 
-  |AAsn(_,ae, _,_) -> apply_update ae funcs genv
-  |AIf(ae, s1, s2) -> let funcs = apply_update ae funcs genv in 
-                      let funcs = List.fold_left (fun a b -> update_map_funcs b a genv) funcs s1 in 
-                      List.fold_left (fun a b -> update_map_funcs b a genv) funcs s2
-  |AFor(s1, ae, s2, s3s) -> 
-                      let funcs = update_map_funcs s1 funcs genv in 
-                      let funcs = apply_update ae funcs genv in 
-                      let funcs = update_map_funcs s2 funcs genv in
-                      List.fold_left (fun a b -> update_map_funcs b a genv) funcs s3s
-  |AForin(_,_,s1s) -> List.fold_left (fun a b -> update_map_funcs b a genv) funcs s1s
-(*   |_ -> funcs *)
 
  (*Used when an expression itself changes the environment, i.e, in records or calls 
  that are secretly records. *)
@@ -699,16 +708,20 @@ and get_return_type(r: astmt list) : primitiveType =
   in (find_type returns)
 
 (*Applies the inferred type of formals from function statements to the functions themselves.*)
-and infer_formals (f: string list) (env: environment):  (string * primitiveType) list=
+and infer_formals (f: string list)  (env: environment):  (string * primitiveType) list * bool =
   (*   ignore(print_string "Inferring formals!"); *)
+  let rec helper f has_any env aformals = 
   match f with
-  |[] -> []
+  |[] -> aformals, has_any
   | h :: tail -> 
     let fid = (map_id h) in
     let t = if NameMap.mem fid env
-      then ( 
-        NameMap.find fid env )
-      else raise (failwith "formal not used") in (h,t) :: infer_formals tail env
+      then (NameMap.find fid env)
+      else raise (failwith "formal not used") in 
+      let has_any = if(has_any = false) then(match t with |T(_) -> true |_ -> false) else(has_any) in
+      helper tail has_any env ((h,t) :: aformals)
+  in helper f false env []  
+
 
 (*Called from annotate_stmt, infers expressions inside statements.*)
 and infer_expr (allenv: allenv) (e: expr): (aexpr)  =
@@ -730,12 +743,12 @@ and infer_func (allenv: allenv) (f: func) :  (afunc list * genvironment)  =
     |Fdecl(fname, formals) ->           (*add function to NameMap*) 
       if NameMap.mem fname genv
       then(
-        let aformals = infer_formals formals env in   
+        let aformals, toss = infer_formals formals env in   
         let genv = NameMap.add fname (ret_type, aformals, stmts) genv in 
         (ignore(Stack.pop callstack));
         let funcs = 
         match ret_type with 
         T(_) -> funcs 
-        |_ -> AFbody(AFdecl(fname, aformals, ret_type), istmts) :: funcs
+        |_ -> if(toss) then(funcs) else(AFbody(AFdecl(fname, aformals, ret_type), istmts) :: funcs)
       in funcs, genv) 
       else raise (failwith "function not defined @ 412")
