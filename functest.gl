@@ -5,5 +5,7 @@ add(x){
 main()
 {
 	x = 5;
-	printint(add(x));
+	if(x < 6){
+		printint(add(x));
+	}
 }
