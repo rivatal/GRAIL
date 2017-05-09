@@ -316,9 +316,11 @@ let env, genv, recs,funcs = allenv in
    let edgelist, nodelist = split_list aelist in
    ignore(check_type_consistency (temptype :: edgelist));
    ignore(check_type_consistency (nodelist)); 
-   let gtype = if(List.length nodelist = 0
+   let ntype = if(List.length nodelist = 0
    ) then(gen_new_rec([])) else(List.hd nodelist) in
-   AGraph(aelist, atedge, TGraph(gen_new_name(), gtype, (type_of atedge)))
+   let etype = if(List.length edgelist = 0
+   ) then(TEdge(gen_new_name(), ntype, (type_of atedge))) else(List.hd edgelist) in
+   AGraph(aelist, atedge, TGraph(gen_new_name(), ntype, etype))
   (*a. check the list for consistency between nodes and edges. (which could be noexprs or lists themselves, or type of e.)
     b. type of e imposes a constraint on ^ and on the graph type. 
     c-- what if there are no nodes? Graph should be a trec of any, and should be overwritable when the first node comes in.
