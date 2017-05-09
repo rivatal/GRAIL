@@ -345,7 +345,7 @@ let env, genv, recs,funcs = allenv in
    let testtedge = annotate_expr allenv (Edge(Noexpr, Dash, Noexpr, tedge)) in
    let letsdothis = annotate_expr allenv tedge in 
    let intendedtype = type_of(letsdothis) in 
-   ignore(print_string(string_of_aexpr letsdothis ^ " intended type: " ^ string_of_type intendedtype));
+(*    ignore(print_string(string_of_aexpr letsdothis ^ " intended type: " ^ string_of_type intendedtype)); *)
    let atedge = infer_expr allenv tedge in 
    let aelist = infer_expr_list allenv (elist) in
    let temptype = type_of testtedge in 
