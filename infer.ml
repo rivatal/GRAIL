@@ -298,10 +298,11 @@ let env, genv, recs,funcs = allenv in
     ARecord(apairlist, (get_rec recs apairlist))
    (* type records = (primitiveType * ((id * primitiveType) list)) list *)
  | Graph(elist, tedge) ->
-   let atedge = annotate_expr allenv (Edge(Noexpr, Dash, Noexpr, tedge)) in
+   let testtedge = annotate_expr allenv (Edge(Noexpr, Dash, Noexpr, tedge)) in
+   let atedge = annotate_expr allenv tedge in 
    let aelist = annotate_expr_list allenv (elist) in
    
-   let temptype = type_of atedge in 
+   let temptype = type_of testtedge in 
    let edgelist, nodelist = split_list aelist in
    ignore(check_type_consistency (temptype :: edgelist));
    ignore(check_type_consistency (nodelist)); 
@@ -614,6 +615,7 @@ and update_map_funcs (a: astmt) (funcs: funcs) (genv: genvironment) : funcs =
                             apply_update e1 funcs genv
   | ANoexpr(_) -> funcs
   |ACall(name, aelist, astmts, id, t) -> 
+   ignore(print_string("updating calls for " ^ id ^ "\n"));
    let (_, aformals, _) =
       if (NameMap.mem name genv)
       then (NameMap.find name genv)

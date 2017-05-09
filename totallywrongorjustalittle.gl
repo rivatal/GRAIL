@@ -1,0 +1,10 @@
+add(x){
+	return x+1;
+}
+
+main()
+{
+	x = 5;
+	y = add(x);
+	printint(y);
+}
