@@ -1,0 +1,6 @@
+main(){
+  y = {school:3};
+  x = (y) with {weight:1};
+  x.nodes;
+}
+
