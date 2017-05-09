@@ -297,6 +297,11 @@ let env, genv, recs,funcs = allenv in
          (match et1 with
           |TRec(str, elist) -> 
           get_field_type elist entry
+          |TGraph(_,n,e) ->
+          if(entry="nodes") then(TList(n))
+        else(
+          if(entry="edges") then(TList(e))
+          else(raise(failwith(entry ^ " not a field."))))
           |T(x) -> T(x)
           |x -> raise(failwith (sae1 ^ " not a record.")))    
     in ADot(ae1, entry, typ)
