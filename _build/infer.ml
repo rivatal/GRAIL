@@ -331,6 +331,7 @@ let env, genv, recs,funcs = allenv in
     let in_id = get_func_name id in 
     ACall(id, aelist, astmts, in_id, t) 
 | Record(pairlist) -> 
+    (* ignore(print_string("you matched a record!"));*)
     let rec helper(l: (string * expr) list) =
     match l with
     [] -> []
@@ -339,24 +340,29 @@ let env, genv, recs,funcs = allenv in
     in let apairlist = helper (List.sort comp pairlist) in
     ignore(if(has_dups pairlist) then(raise(failwith("error: duplicate record entry"))) else());
     (*ignore(print_string ("record is size " ^ string_of_int (List.length apairlist) ^ "\n")); *) 
-    ARecord(apairlist, (get_rec recs apairlist))
-   (* type records = (primitiveType * ((id * primitiveType) list)) list *)
+    let typ = get_rec recs apairlist in (* ignore(print_string("type : " ^ string_of_type typ ^ "\n"));*)
+(*     ignore(print_string("returning!")); *)
+    ARecord(apairlist, (typ))
  | Graph(elist, tedge) ->
-   let testtedge = annotate_expr allenv (Edge(Noexpr, Dash, Noexpr, tedge)) in
-   let atedge = infer_expr allenv tedge in 
    let aelist = infer_expr_list allenv (elist) in
-   let temptype = type_of testtedge in 
    let edgelist, nodelist = split_list aelist in
-   ignore(check_type_consistency (temptype :: edgelist));
+   ignore(check_type_consistency ((* temptype :: *) edgelist));
    ignore(check_type_consistency (nodelist)); 
-   let nowwithedge = type_of testtedge in 
-   let ntype = if(List.length nodelist = 0
+   let annotatedtemplate = infer_expr allenv tedge in 
+   let templatetype = type_of annotatedtemplate in 
+   let nodetype = if(List.length nodelist = 0
    ) then(gen_new_rec([])) else(List.hd nodelist) in 
-   print_string("node type is " ^ string_of_type ntype);
-   let intendedtype = match nowwithedge with 
-   |TEdge(a, n, b) -> TEdge(a, ntype, b)
- in let aelist = enforce_consistency aelist (intendedtype) in 
-   AGraph(aelist, atedge, TGraph(gen_new_type(), ntype, intendedtype))
+   let edgetype = if(List.length edgelist = 0) 
+                  then(TEdge(gen_new_type(), gen_new_type(), gen_new_type())) 
+                  else(List.hd edgelist) in 
+   let gtype = match edgetype with 
+   |TEdge(name, nt, et) -> TEdge(name, nodetype, templatetype) in 
+(*    let fieldslist = match annotatedtemplate with 
+   |ARecord(fl,_) -> fl in 
+ *)(*    let template = ARecord(fieldslist, templatetype) in  *)
+   let aelist = enforce_consistency aelist (gtype) in
+(*   in ignore(print_string("type of template: " ^ string_of_type templatetype)); *)
+   AGraph(aelist, annotatedtemplate, gtype)
   (*a. check the list for consistency between nodes and edges. (which could be noexprs or lists themselves, or type of e.)
     b. type of e imposes a constraint on ^ and on the graph type. 
     c-- what if there are no nodes? Graph should be a trec of any, and should be overwritable when the first node comes in.
@@ -562,7 +568,7 @@ and unify_one (t1: primitiveType) (t2: primitiveType) : substitutions =
   | TList(x), TList(y) -> unify_one x y
   | TGraph(name1, a, b), TGraph(name2, c, d) -> unify_one a c @ unify_one b d 
   | TEdge(name1, n1, e1), TEdge(name2, n2, e2) ->
-  (* ignore(print_string("matching " ^ name1 ^ "," ^ name2)); *)
+  (* ignore(print_string("matching " ^ (string_of_type name1) ^ "," ^ (string_of_type name2))); *)
     unify_one n1 n2 @ unify_one e1 e2
   | TRec(a, b), TRec(c, d) -> 
     ignore(let fieldslists = List.combine b d in List.map (fun x -> check_field x) fieldslists);
@@ -750,7 +756,7 @@ and infer_formals (f: string list)  (env: environment):  (string * primitiveType
   (*   ignore(print_string "Inferring formals!"); *)
   let rec helper f has_any env aformals = 
   match f with
-  |[] -> aformals, has_any
+  |[] -> List.rev aformals, has_any
   | h :: tail -> 
     let fid = (map_id h) in
     let t = if NameMap.mem fid env

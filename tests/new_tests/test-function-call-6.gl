@@ -1,0 +1,9 @@
+foo(a)
+{
+  return a;
+}
+
+main()
+{
+  return 0;
+}

@@ -1,0 +1,14 @@
+foo() {}
+
+bar(a, b, c) 
+{ 
+	d = a + c;
+	return d; 
+}
+
+main()
+{
+	f = bar(17, false, 25);
+  	printint(f);
+  	return 0;
+}
