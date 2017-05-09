@@ -1,6 +1,7 @@
 completegraph(n)
 {
-	g = () with {weight: 1};
+	x = {a: 3};
+	g = (x) with {weight: 1};
 
 	for(i = 1; i <= n; i += 1;){
 		mynode = {key: i};
