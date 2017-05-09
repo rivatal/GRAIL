@@ -16,15 +16,15 @@ let string_of_uop (uop: uop) =
 
 let rec string_of_type (t: primitiveType) =
   match t with
-  | TRec(s, l) -> (Printf.sprintf "record %s" s)
+  | TRec(s, l) -> (Printf.sprintf "record %s" (string_of_type s))
   | TInt -> "int"
   | TBool -> "bool"
   | TFloat -> "float"
   | TString -> "str"
   | TChar -> "char"
   | TVoid -> "void"
-  | TEdge(name, a, b) -> Printf.sprintf "edge %s (%s) with %s " name (string_of_type a) (string_of_type b) 
-  | TGraph(name, a, b) -> Printf.sprintf "graph %s (%s) with %s" name (string_of_type a) (string_of_type b) 
+  | TEdge(name, a, b) -> Printf.sprintf "edge %s (%s) with %s " (string_of_type name) (string_of_type a) (string_of_type b) 
+  | TGraph(name, a, b) -> Printf.sprintf "graph %s (%s) with %s" (string_of_type name) (string_of_type a) (string_of_type b) 
   | TList(x) -> "list of " ^ (string_of_type x)
   | T(x) -> Printf.sprintf "%s" x
 

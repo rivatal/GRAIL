@@ -25,13 +25,10 @@ let map_id (id: string) : string =
 let func_variable = ref 1
 let type_variable = ref 1
 
-let gen_new_name() : string =
+let gen_new_type () =
   let c1 = !type_variable in
   incr type_variable; 
-  string_of_int c1
-
-let gen_new_type () =
-  T(gen_new_name())
+  T(string_of_int c1)
 
 let gen_new_void () : primitiveType =
   TVoid (*just chr escaped, no T in the TVoid*)
@@ -270,14 +267,15 @@ let env, genv, recs,funcs = allenv in
     in ADot(ae1, entry, typ)
   | List(e) -> 
     let ael = annotate_expr_list allenv e in 
-    (match ael with
-       [] -> AList(ael, TList(gen_new_type()))
-     | head :: _ -> let t = type_of head
-       in 
-(*        ignore(check_list_exprs ael); *)
-       ignore(check_list_consistency ael);
+    let len = List.length ael in 
+    if (len = 0)
+    then (AList(ael, TList(gen_new_type())))
+    else (
+          ignore(check_list_consistency ael);
 (*        ignore(print_string("Inferred ")); *)
 (*        ignore(List.iter (fun a -> print_string (string_of_aexpr a)) ael); *)
+        let tl = List.nth ael (len-1) in 
+        let t = (type_of (tl)) in 
        AList(ael, TList(t)))
   | Call(id, elist) ->    (*Function calls derive their type from the function declaration*)
     let aelist = List.map (fun a -> infer_expr allenv a) elist in
@@ -319,8 +317,8 @@ let env, genv, recs,funcs = allenv in
    let ntype = if(List.length nodelist = 0
    ) then(gen_new_rec([])) else(List.hd nodelist) in
    let etype = if(List.length edgelist = 0
-   ) then(TEdge(gen_new_name(), ntype, (type_of atedge))) else(List.hd edgelist) in
-   AGraph(aelist, atedge, TGraph(gen_new_name(), ntype, etype))
+   ) then(TEdge(gen_new_type(), ntype, (type_of atedge))) else(List.hd edgelist) in
+   AGraph(aelist, atedge, TGraph(gen_new_type(), ntype, etype))
   (*a. check the list for consistency between nodes and edges. (which could be noexprs or lists themselves, or type of e.)
     b. type of e imposes a constraint on ^ and on the graph type. 
     c-- what if there are no nodes? Graph should be a trec of any, and should be overwritable when the first node comes in.
@@ -331,7 +329,7 @@ let env, genv, recs,funcs = allenv in
    let ae1 = annotate_expr allenv e1 and
        ae2 = annotate_expr allenv e2 and
        ae3 = annotate_expr allenv e3 in 
-      AEdge(ae1, op, ae2, ae3, TEdge(gen_new_name(), type_of ae1, type_of ae3))
+      AEdge(ae1, op, ae2, ae3, TEdge(gen_new_type(), type_of ae1, type_of ae3))
 and annotate_expr_list (allenv: allenv) (e: expr list): aexpr list =
   List.map (fun a -> annotate_expr allenv a) e
 
@@ -347,9 +345,7 @@ in helper aelist []
 (*Generate unique record type based on fields*)
 and gen_new_rec (fieldslist : (id * aexpr) list) : primitiveType =
   let fields = get_namestypes fieldslist
-  in let c1 = !type_variable in
-  incr type_variable; 
-  TRec(string_of_int c1, fields)
+  in TRec(gen_new_type(), fields)
 
 and get_rec (recs: recs) (fieldslist: (id * aexpr) list) : primitiveType =
   let rec helper (l : recs) (curr : ((id * primitiveType) list)) (rl : recs) = 
@@ -466,12 +462,12 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
                       | _ -> raise(failwith("Error @330")))
       | Gadd ->  (*what about a tgraph of any and a trec??*)
       (match et1, et2 with |TGraph(name, n, e), TRec(_, _) -> [(et2, n); (t, TGraph(name, et2, e))]
-                           |T(_), TRec(_,_) ->  [(t, et1); (et1, TGraph(gen_new_name(), et2, gen_new_type()))]
-                           |T(_), T(_) -> [(t, et1); (et1, TGraph(gen_new_name(), et2, gen_new_type()))]
+                           |T(_), TRec(_,_) ->  [(t, et1); (et1, TGraph(gen_new_type(), et2, gen_new_type()))]
+                           |T(_), T(_) -> [(t, et1); (et1, TGraph(gen_new_type(), et2, gen_new_type()))]
                            | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ "," ^ (string_of_type et2) ^ " not valid types for Gadd")))    
       | Eadd -> 
       (match et1, et2 with |TGraph(name, n, e), TEdge(_,_,_) -> [(et2, e); (t, TGraph(name, n, et2))]
-                           |T(_), TRec(_,_) | T(_), T(_) -> [(t, et1); (et1, TGraph(gen_new_name(), gen_new_type(), et2))]
+                           |T(_), TRec(_,_) | T(_), T(_) -> [(t, et1); (et1, TGraph(gen_new_type(), gen_new_type(), et2))]
                            | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ ", " ^ (string_of_type et2) ^ " not valid graph for Eadd"))
       )
       | _ -> raise(failwith("error"))
@@ -531,16 +527,16 @@ and unify_one (t1: primitiveType) (t2: primitiveType) : substitutions =
   (* ignore(print_string("matching " ^ name1 ^ "," ^ name2)); *)
     unify_one n1 n2 @ unify_one e1 e2
   | TRec(a, b), TRec(c, d) -> 
-    ignore(let fieldslists = List.combine b d in List.map (fun a -> check_field a) fieldslists);
-    [a, TRec(c, d)] @ [c, TRec(a, b)] (*right??*)
+    ignore(let fieldslists = List.combine b d in List.map (fun x -> check_field x) fieldslists);
+    unify_one a c (*right??*)
   | _ -> raise (failwith "mismatched types@502")
 
 (*Are we handling lists right?*)
 and substitute (u: primitiveType) (x: id) (t: primitiveType) : primitiveType =
   (*   print_string "substituting"; *)  
   match t with
-  | TInt | TBool | TString | TFloat | TList(_) | TRec(_,_) | TChar | TEdge(_,_,_) | TGraph(_,_,_) | TVoid-> t 
-  | T(c)  -> if c = x then u else t 
+  | TInt | TBool | TString | TFloat | TList(_) | TChar| TVoid-> t 
+  | T(c) | TRec(T(c),_)  | TEdge(T(c),_,_) | TGraph(T(c),_,_) -> if c = x then u else t 
 and apply (subs: substitutions) (t: primitiveType) : primitiveType =
   List.fold_right (fun (x, u) t -> substitute u x t) subs t
 
@@ -580,7 +576,7 @@ and asn_lval (ae: aexpr) (ae2: aexpr) (env: environment) : environment =
   (* 
     |ACall(str, _, _, _, _  ) *)
   |AId(str, _) -> NameMap.add (map_id str) t env
-  |ADot(AId(_, TRec(recname, _)), str, _) -> NameMap.add (map_id (map_id_rec recname str)) t env
+  |ADot(AId(_, TRec(T(recname), _)), str, _) -> NameMap.add (map_id (map_id_rec recname str)) t env
   |AItem(str, _, _) -> NameMap.add (map_id str) (TList(t)) env
   (*is there a problem if this is a record??*)
   |_ -> raise(failwith("error: " ^ string_of_aexpr ae ^ " not a valid lvalue@534."))
@@ -590,7 +586,7 @@ and get_lval (ae: aexpr) : string =
   match ae with
   |ACall(str, _, _, _,_)
   |AId(str, _) -> str 
-  |ADot(AId(_, TRec(recname, _)), str, _) -> map_id_rec recname str
+  |ADot(AId(_, TRec(T(recname), _)), str, _) -> map_id_rec recname str
   |AItem(str, _, _) ->  str 
   (*is there a problem if this is a record??*)
   |_ -> raise(failwith("error: " ^ string_of_aexpr ae ^ " not a valid lvalue@534."))
@@ -659,7 +655,7 @@ and apply_update (call: aexpr) (funcs: funcs) (genv: genvironment ) : funcs =
  and update_map_expr (t: primitiveType) (env, recs: environment * recs) : environment * recs = 
 (*     ignore(print_string("update map derived\n")); *)
     (match t with
-    |TRec(tname, elist) -> 
+    |TRec(T(tname), elist) -> 
       let rec helper l env = 
       (match l with
       |[] -> env

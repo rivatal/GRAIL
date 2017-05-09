@@ -65,7 +65,7 @@ let grail (ast: Ast.afunc list) (input) : Ast.afunc list =
                   ("printbool", (TVoid, [("x", TBool)], [])); 
                   ("printchar", (TVoid, [("x", TChar)], [])); 
                   ("size", (TInt, [("x", TList(Infer.gen_new_type()))], [Return(IntLit(1))])); 
-                  ("display", (TVoid, [("x", TGraph(Infer.gen_new_name(), Infer.gen_new_type(), Infer.gen_new_type()))], []))]
+                  ("display", (TVoid, [("x", TGraph(Infer.gen_new_type(), Infer.gen_new_type(), Infer.gen_new_type()))], []))]
   in let rec addbuiltins l genv =
     match l with
     |[] -> genv 
