@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <math.h>
+
+#define PI 3.14159
 
 #define _GNU_SOURCE
 #define MAX 50
@@ -68,20 +71,29 @@ int display_graph(Node_info* info, int directed)
 {
     FILE* fp = fopen("pnts.dat","w");
     FILE* fe = fopen("edges.dat","w");
-    int count = 5; 
-    for(int i = 0; i < info->num_nodes; i++) 
+    float x, y ;
+    
+     
+     
+    for(int i = 0; i <5; i++) 
     {
-      if(count % 2)
-            fprintf(fp,"%d\t%d\t%d\n",i,count,count+5);
-       else     
-            fprintf(fp,"%d\t%d\t%d\n",i,count + 5,count);
+       x = (cos(PI/2 + ((2*PI)/5)*i));
+       y = (sin(PI/2 + ((2*PI)/5)*i))    ;
+       fprintf(fp,"%d\t%f\t%f\n",i,x,y);
       
-       count += 5;
     }
+    for(int i = 5; i < info->num_nodes; i++) 
+    {
+       x =(0.5*cos(PI/2 + ((2*PI)/5)*i));
+       y =(0.5*sin(PI/2 + ((2*PI)/5)*i));
+       fprintf(fp,"%d\t%f\t%f\n",i,x,y);
+      
+    }
+   
     for(int i = 0; i < info->num_edges; i++) 
     {
         fprintf(fe,"%d\t%d\t%d\t%d\t%d\n", info->from[i], 
-        info->to[i],info->weights[i],0,1);
+        info->to[i],info->weights[i],-1,1);
     }    
 
     fclose(fp);
@@ -99,6 +111,7 @@ int set_mapping_node_addr(node* n1, int size)
      int found = 0;
      for(int i = 0; i < size; i++) 
      {
+        found = 0;
         for(int j = 0; j < lookup.count; j++) 
         { 
             if(n1[i].key == lookup.key[j])
@@ -176,10 +189,12 @@ int display(graph g) {
     for(int k = 0; k < g.nodes.size; k++) {
         printf("\n - node - %p, key - %d\n",&d_nodes[k],d_nodes[k].key);
      }
-    for(int k = 0; k < g.edges.size; k++) {
-        printf("\nfrom - %p, to - %p,key1 - %d -> key2 - %d\n",
-        d_edges[k].n1,d_edges[k].n2,d_edges[k].n1->key,d_edges[k].n2->key);
-     }
      */
+
+    for(int k = 0; k < g.edges.size; k++) {
+        printf("\nfrom key1 - %d -> to key2 - %d\n",
+        d_edges[k].n1->key,d_edges[k].n2->key);
+     }
+
     return display_graph(&n1,directed);
 }
