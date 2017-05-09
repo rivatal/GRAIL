@@ -1,0 +1,6 @@
+f(){
+ a = {key:1};
+ b = {key:2};	
+ x = a -> b with {weight: 10};
+ graph = (x) with {weight:2};
+}
