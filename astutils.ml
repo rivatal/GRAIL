@@ -24,7 +24,7 @@ let rec string_of_type (t: primitiveType) =
   | TChar -> "char"
   | TVoid -> "void"
   | TEdge(name, _, _) -> Printf.sprintf "edge %s " name
-  | TGraph(name, _, _) -> Printf.sprintf "graph %s " name (* ^ " with " ^ (string_of_type b) *)
+  | TGraph(name, a, b) -> Printf.sprintf "graph %s (%s) with %s" name (string_of_type a) (string_of_type b) 
   | TList(x) -> "list of " ^ (string_of_type x)
   | T(x) -> Printf.sprintf "%s" x
 

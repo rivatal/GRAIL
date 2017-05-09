@@ -708,16 +708,20 @@ and get_return_type(r: astmt list) : primitiveType =
   in (find_type returns)
 
 (*Applies the inferred type of formals from function statements to the functions themselves.*)
-and infer_formals (f: string list) (env: environment):  (string * primitiveType) list=
+and infer_formals (f: string list)  (env: environment):  (string * primitiveType) list * bool =
   (*   ignore(print_string "Inferring formals!"); *)
+  let rec helper f has_any env aformals = 
   match f with
-  |[] -> []
+  |[] -> aformals, has_any
   | h :: tail -> 
     let fid = (map_id h) in
     let t = if NameMap.mem fid env
-      then ( 
-        NameMap.find fid env )
-      else raise (failwith "formal not used") in (h,t) :: infer_formals tail env
+      then (NameMap.find fid env)
+      else raise (failwith "formal not used") in 
+      let has_any = if(has_any = false) then(match t with |T(_) -> true |_ -> false) else(has_any) in
+      helper tail has_any env ((h,t) :: aformals)
+  in helper f false env []  
+
 
 (*Called from annotate_stmt, infers expressions inside statements.*)
 and infer_expr (allenv: allenv) (e: expr): (aexpr)  =
@@ -739,12 +743,12 @@ and infer_func (allenv: allenv) (f: func) :  (afunc list * genvironment)  =
     |Fdecl(fname, formals) ->           (*add function to NameMap*) 
       if NameMap.mem fname genv
       then(
-        let aformals = infer_formals formals env in   
+        let aformals, toss = infer_formals formals env in   
         let genv = NameMap.add fname (ret_type, aformals, stmts) genv in 
         (ignore(Stack.pop callstack));
         let funcs = 
         match ret_type with 
         T(_) -> funcs 
-        |_ -> AFbody(AFdecl(fname, aformals, ret_type), istmts) :: funcs
+        |_ -> if(toss) then(funcs) else(AFbody(AFdecl(fname, aformals, ret_type), istmts) :: funcs)
       in funcs, genv) 
       else raise (failwith "function not defined @ 412")
