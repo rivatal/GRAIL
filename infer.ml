@@ -54,6 +54,19 @@ let type_of (ae: aexpr): primitiveType =
   | ANoexpr(t) -> t
   | AGraph(_,_,t) -> t
 
+let change_type (ae: aexpr) (nt: primitiveType): aexpr =  
+  match ae with
+  | AId(a, t) -> AId(a, nt)
+  | ABinop(a,b,c,t) ->  ABinop(a,b,c,nt)
+  | AItem(a,b,t) -> AItem(a,b,nt)
+  | ACall(a,b,c,d, t) -> ACall(a,b,c,d,nt)
+  | AList(a, t) -> AList(a, nt)
+  | ARecord(a,t) -> ARecord(a,nt)
+  | AEdge(a,b,c,d,t) -> AEdge(a,b,c,d,nt)
+  | ADot(a,b,t) -> ADot(a,b,nt)
+  | AUnop(a,b,t) -> AUnop(a,b,nt)
+  | ANoexpr(t) -> ANoexpr(nt)
+  | AGraph(a,b,t) ->  AGraph(a,b,nt)
 (*Comparator used in annotating records.*)
 let comp (x: id * expr) (y: id * expr) : int = 
   match x, y with
@@ -81,19 +94,41 @@ let rec find_in_map(id: string) (env: environment): primitiveType =
 let rec get_type_list (aelist: aexpr list) : primitiveType list = 
   List.map type_of aelist
 
+let split_type (ae: aexpr) : (int) = 
+  let et1 = type_of ae in 
+  match et1 with
+  |TRec(_,_) -> 1
+  |TEdge(_,n,_) -> 2
+  |T(_) | TVoid -> 3
+  |x -> 4
+
+
+let enforce_consistency (plist: aexpr list) (typ: primitiveType) = 
+  let rec helper pl typ = 
+  match pl with 
+  |[] -> []
+  |h :: tl -> 
+  let enforced = match (split_type h) with 
+  |1|3 -> h
+  |2 -> change_type h typ 
+  |x -> raise(failwith(string_of_aexpr h ^ " should not be in constructor."))
+  in enforced :: helper tl typ 
+in helper plist typ
+
 let rec split_list (aelist: aexpr list) : (primitiveType list * primitiveType list) = 
   let rec helper l edgelist nodelist : (primitiveType list * primitiveType list) =
   (match l with 
   |[] -> edgelist, nodelist
-  |et1 :: t ->
-  (match et1 with
-  |TRec(_,_) -> helper t edgelist (et1 :: nodelist)
-  |TEdge(_,n,_) -> helper t (et1 :: edgelist) (n :: nodelist)
-  |T(_) | TVoid -> helper t edgelist nodelist
-  |TList(typ) -> helper (typ :: t) edgelist nodelist
-  |x -> raise(failwith(string_of_type x ^ " not a graph type."));
-  )) 
-  in (helper (get_type_list aelist) [] [])
+  |h :: t ->
+  let et1 = type_of h in
+  (match split_type h with 
+   |1 -> helper t edgelist (et1 :: nodelist)
+   |2 -> (let n = match et1 with TEdge(_,n,_) -> n in helper t (et1 :: edgelist) (n :: nodelist))
+   |3 -> helper t edgelist nodelist 
+   |_ -> raise(failwith(string_of_type et1 ^ " not a graph type."));
+  ))
+  in (helper aelist [] [])
+
 
 (*A checking function for something like the first field of a for*)
 let check_asn (a: stmt) : unit =
@@ -308,17 +343,19 @@ let env, genv, recs,funcs = allenv in
    (* type records = (primitiveType * ((id * primitiveType) list)) list *)
  | Graph(elist, tedge) ->
    let testtedge = annotate_expr allenv (Edge(Noexpr, Dash, Noexpr, tedge)) in
+   let letsdothis = annotate_expr allenv tedge in 
+   let intendedtype = type_of(letsdothis) in 
+   ignore(print_string(string_of_aexpr letsdothis ^ " intended type: " ^ string_of_type intendedtype));
    let atedge = infer_expr allenv tedge in 
    let aelist = infer_expr_list allenv (elist) in
    let temptype = type_of testtedge in 
    let edgelist, nodelist = split_list aelist in
    ignore(check_type_consistency (temptype :: edgelist));
    ignore(check_type_consistency (nodelist)); 
+   let aelist = enforce_consistency aelist intendedtype in 
    let ntype = if(List.length nodelist = 0
    ) then(gen_new_rec([])) else(List.hd nodelist) in
-   let etype = if(List.length edgelist = 0
-   ) then(TEdge(gen_new_type(), ntype, (type_of atedge))) else(List.hd edgelist) in
-   AGraph(aelist, atedge, TGraph(gen_new_type(), ntype, etype))
+   AGraph(aelist, atedge, TGraph(gen_new_type(), ntype, intendedtype))
   (*a. check the list for consistency between nodes and edges. (which could be noexprs or lists themselves, or type of e.)
     b. type of e imposes a constraint on ^ and on the graph type. 
     c-- what if there are no nodes? Graph should be a trec of any, and should be overwritable when the first node comes in.
