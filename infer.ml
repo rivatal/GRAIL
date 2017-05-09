@@ -343,19 +343,16 @@ let env, genv, recs,funcs = allenv in
    (* type records = (primitiveType * ((id * primitiveType) list)) list *)
  | Graph(elist, tedge) ->
    let testtedge = annotate_expr allenv (Edge(Noexpr, Dash, Noexpr, tedge)) in
-   let letsdothis = annotate_expr allenv tedge in 
-   let intendedtype = type_of(letsdothis) in 
-(*    ignore(print_string(string_of_aexpr letsdothis ^ " intended type: " ^ string_of_type intendedtype)); *)
    let atedge = infer_expr allenv tedge in 
    let aelist = infer_expr_list allenv (elist) in
    let temptype = type_of testtedge in 
    let edgelist, nodelist = split_list aelist in
    ignore(check_type_consistency (temptype :: edgelist));
    ignore(check_type_consistency (nodelist)); 
-   let aelist = enforce_consistency aelist intendedtype in 
+   let aelist = enforce_consistency aelist (type_of testtedge) in 
    let ntype = if(List.length nodelist = 0
    ) then(gen_new_rec([])) else(List.hd nodelist) in
-   AGraph(aelist, atedge, TGraph(gen_new_type(), ntype, intendedtype))
+   AGraph(aelist, atedge, TGraph(gen_new_type(), ntype, (type_of testtedge)))
   (*a. check the list for consistency between nodes and edges. (which could be noexprs or lists themselves, or type of e.)
     b. type of e imposes a constraint on ^ and on the graph type. 
     c-- what if there are no nodes? Graph should be a trec of any, and should be overwritable when the first node comes in.
