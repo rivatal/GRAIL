@@ -70,6 +70,13 @@ diff -b test-function-call-2.out tests/new_tests/test-function-call-2.out > test
 diff -b test-function-call-3.out tests/new_tests/test-function-call-3.out > test-function-call-3.diff
 [0;32m ###### SUCCESS [0m
 
+[1;33m ###### Testing test-function-call-4 [0m
+./grail.native < tests/new_tests/test-function-call-4.gl > test-function-call-4.ll
+Fatal error: exception Failure("provided a bad type")
+[0;31m ###### FAILED [0m
+mv: rename test-function-call-4.out to ./test_output/test-function-call-4.out: No such file or directory
+mv: rename test-function-call-4.diff to ./test_output/test-function-call-4.diff: No such file or directory
+
 [1;33m ###### Testing test-gcd [0m
 ./grail.native < tests/new_tests/test-gcd.gl > test-gcd.ll
 /usr/local/opt/llvm/bin/llvm-link test-gcd.ll -o a.out
@@ -136,17 +143,17 @@ diff -b test-print.out tests/new_tests/test-print.out > test-print.diff
 
 [1;33m ###### Testing test-record-1 [0m
 ./grail.native < tests/new_tests/test-record-1.gl > test-record-1.ll
-/usr/local/opt/llvm/bin/llvm-link test-record-1.ll -o a.out
-/usr/local/opt/llvm/bin/lli a.out > test-record-1.out
-diff -b test-record-1.out tests/new_tests/test-record-1.out > test-record-1.diff
-[0;32m ###### SUCCESS [0m
+Fatal error: exception Failure("dot applied to wrong type")
+[0;31m ###### FAILED [0m
+mv: test-record-1.out: No such file or directory
+mv: rename test-record-1.diff to ./test_output/test-record-1.diff: No such file or directory
 
 [1;33m ###### Testing test-record-2 [0m
 ./grail.native < tests/new_tests/test-record-2.gl > test-record-2.ll
-/usr/local/opt/llvm/bin/llvm-link test-record-2.ll -o a.out
-/usr/local/opt/llvm/bin/lli a.out > test-record-2.out
-diff -b test-record-2.out tests/new_tests/test-record-2.out > test-record-2.diff
-[0;32m ###### SUCCESS [0m
+Fatal error: exception Failure("dot applied to wrong type")
+[0;31m ###### FAILED [0m
+mv: test-record-2.out: No such file or directory
+mv: rename test-record-2.diff to ./test_output/test-record-2.diff: No such file or directory
 
 [1;33m ###### Testing test-return-1 [0m
 ./grail.native < tests/new_tests/test-return-1.gl > test-return-1.ll
@@ -240,7 +247,7 @@ diff -b fail-func-arg-num.err tests/new_tests/fail-func-arg-num.err > fail-func-
 
 [1;33m ###### Testing fail-function-return [0m
 ./grail.native < tests/new_tests/fail-function-return.gl 2> fail-function-return.err >> testall.log
-./testall.sh: line 75: 55414 Abort trap: 6           ./grail.native < tests/new_tests/fail-function-return.gl 2> fail-function-return.err >> testall.log
+./testall.sh: line 75: 56997 Abort trap: 6           ./grail.native < tests/new_tests/fail-function-return.gl 2> fail-function-return.err >> testall.log
 diff -b fail-function-return.err tests/new_tests/fail-function-return.err > fail-function-return.diff
 [0;32m ###### SUCCESS [0m
 
@@ -308,7 +315,7 @@ diff -b fail-return-2.err tests/new_tests/fail-return-2.err > fail-return-2.diff
 
 [1;33m ###### Testing fail-return-twice [0m
 ./grail.native < tests/new_tests/fail-return-twice.gl 2> fail-return-twice.err >> testall.log
-./testall.sh: line 75: 55511 Abort trap: 6           ./grail.native < tests/new_tests/fail-return-twice.gl 2> fail-return-twice.err >> testall.log
+./testall.sh: line 75: 57102 Abort trap: 6           ./grail.native < tests/new_tests/fail-return-twice.gl 2> fail-return-twice.err >> testall.log
 diff -b fail-return-twice.err tests/new_tests/fail-return-twice.err > fail-return-twice.diff
 [0;32m ###### SUCCESS [0m
 

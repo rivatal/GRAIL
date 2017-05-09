@@ -14,256 +14,167 @@ ocamlfind ocamldep -package llvm.analysis -package llvm -modules infer.ml > infe
 # Target: astutils.cmo, tags: { package(llvm), package(llvm.analysis), byte, compile, extension:cmo, extension:ml, file:astutils.cmo, file:astutils.ml, implem, ocaml, quiet }
 ocamlfind ocamlc -c -w +a-4 -package llvm.analysis -package llvm -o astutils.cmo astutils.ml
 + ocamlfind ocamlc -c -w +a-4 -package llvm.analysis -package llvm -o astutils.cmo astutils.ml
-File "astutils.ml", line 113, characters 2-1334:
+File "astutils.ml", line 115, characters 2-1334:
 Warning 8: this pattern-matching is not exhaustive.
 Here is an example of a case that is not matched:
 Subset (_, _, _)
 File "astutils.ml", line 19, characters 12-13:
 Warning 27: unused variable l.
 # Target: parser.mly, tags: { package(llvm), package(llvm.analysis), extension:mly, file:parser.mly, infer, ocaml, ocamlyacc, parser, quiet }
-ocamlyacc parser.mly
+ocamlyacc parser.mly # cached
 # Target: parser.mli.depends, tags: { package(llvm), package(llvm.analysis), extension:mli, file:parser.mli, ocaml, ocamldep, quiet }
-ocamlfind ocamldep -package llvm.analysis -package llvm -modules parser.mli > parser.mli.depends
+ocamlfind ocamldep -package llvm.analysis -package llvm -modules parser.mli > parser.mli.depends # cached
 # Target: scanner.mll, tags: { package(llvm), package(llvm.analysis), extension:mll, file:scanner.mll, lexer, ocaml, ocamllex, quiet }
-ocamllex.opt -q scanner.mll
+ocamllex.opt -q scanner.mll # cached
 # Target: scanner.ml.depends, tags: { package(llvm), package(llvm.analysis), extension:ml, file:scanner.ml, ocaml, ocamldep, quiet }
-ocamlfind ocamldep -package llvm.analysis -package llvm -modules scanner.ml > scanner.ml.depends
+ocamlfind ocamldep -package llvm.analysis -package llvm -modules scanner.ml > scanner.ml.depends # cached
 # Target: parser.cmi, tags: { package(llvm), package(llvm.analysis), byte, compile, extension:mli, file:parser.mli, interf, ocaml, quiet }
 ocamlfind ocamlc -c -w +a-4 -package llvm.analysis -package llvm -o parser.cmi parser.mli
 # Target: codegen.cmo, tags: { package(llvm), package(llvm.analysis), byte, compile, extension:cmo, extension:ml, file:codegen.cmo, file:codegen.ml, implem, ocaml, quiet }
 ocamlfind ocamlc -c -w +a-4 -package llvm.analysis -package llvm -o codegen.cmo codegen.ml
 + ocamlfind ocamlc -c -w +a-4 -package llvm.analysis -package llvm -o codegen.cmo codegen.ml
-File "codegen.ml", line 79, characters 75-106:
+File "codegen.ml", line 88, characters 75-106:
 Warning 50: unattached documentation comment (ignored)
-File "codegen.ml", line 31, characters 28-1612:
-Warning 8: this pattern-matching is not exhaustive.
-Here is an example of a case that is not matched:
-(T _|TGraph (_, _, _))
-File "codegen.ml", line 208, characters 4-68:
-Warning 8: this pattern-matching is not exhaustive.
-Here is an example of a case that is not matched:
-(Add|Sub|Mult|Div|Equal|Neq|Less|Leq|Greater|Geq|And|Or|In|Fadd|Fsub|Fmult|
-Fdiv|Gadd|Eadd|To|From|Dash)
-File "codegen.ml", line 251, characters 2-288:
-Warning 8: this pattern-matching is not exhaustive.
-Here is an example of a case that is not matched:
-(T _|TRec (_, _)|TEdge (_, _, _)|TGraph (_, _, _))
-File "codegen.ml", line 280, characters 4-11:
-Warning 40: ANoexpr was selected from type A.aexpr.
-It is not visible in the current scope, and will not 
-be selected if the type becomes unknown.
-File "codegen.ml", line 280, characters 4-11:
-Warning 42: this use of ANoexpr relies on type-directed disambiguation,
-it will not compile with OCaml 4.00 or earlier.
-File "codegen.ml", line 338, characters 20-21:
-Warning 28: wildcard pattern given as argument to a constant constructor
-File "codegen.ml", line 351, characters 19-48:
-Warning 10: this expression should have type unit.
-File "codegen.ml", line 358, characters 15-19:
-Warning 40: Dash was selected from type A.op.
-It is not visible in the current scope, and will not 
-be selected if the type becomes unknown.
-File "codegen.ml", line 358, characters 15-19:
-Warning 42: this use of Dash relies on type-directed disambiguation,
-it will not compile with OCaml 4.00 or earlier.
-File "codegen.ml", line 359, characters 15-17:
-Warning 40: To was selected from type A.op.
-It is not visible in the current scope, and will not 
-be selected if the type becomes unknown.
-File "codegen.ml", line 359, characters 15-17:
-Warning 42: this use of To relies on type-directed disambiguation,
-it will not compile with OCaml 4.00 or earlier.
-File "codegen.ml", line 360, characters 15-19:
-Warning 40: From was selected from type A.op.
-It is not visible in the current scope, and will not 
-be selected if the type becomes unknown.
-File "codegen.ml", line 360, characters 15-19:
-Warning 42: this use of From relies on type-directed disambiguation,
-it will not compile with OCaml 4.00 or earlier.
-File "codegen.ml", line 357, characters 12-132:
-Warning 8: this pattern-matching is not exhaustive.
-Here is an example of a case that is not matched:
-(Add|Sub|Mult|Div|Equal|Neq|Less|Leq|Greater|Geq|And|Or|In|Fadd|Fsub|Fmult|
-Fdiv|Gadd|Eadd|Ladd)
-File "codegen.ml", line 362, characters 18-365:
-Warning 8: this pattern-matching is not exhaustive.
-Here is an example of a case that is not matched:
-(AIntLit (_, _)|ACharLit (_, _)|ABoolLit (_, _)|AStrLit (_, _)|
-AFloatLit (_, _)|ABinop (_, _, _, _)|AUnop (_, _, _)|ACall (_, _, _, _, _)|
-AList (_, _)|AItem (_, _, _)|ARecord (_, _)|ADot (_, _, _)|
-AEdge (_, _, _, _, _)|AGraph (_, _, _)|ANoexpr _)
-File "codegen.ml", line 385, characters 19-48:
-Warning 10: this expression should have type unit.
-File "codegen.ml", line 396, characters 13-16:
-Warning 40: AId was selected from type A.aexpr.
-It is not visible in the current scope, and will not 
-be selected if the type becomes unknown.
-File "codegen.ml", line 396, characters 13-16:
-Warning 42: this use of AId relies on type-directed disambiguation,
-it will not compile with OCaml 4.00 or earlier.
-File "codegen.ml", line 418, characters 13-20:
-Warning 40: ARecord was selected from type A.aexpr.
-It is not visible in the current scope, and will not 
-be selected if the type becomes unknown.
-File "codegen.ml", line 418, characters 13-20:
-Warning 42: this use of ARecord relies on type-directed disambiguation,
-it will not compile with OCaml 4.00 or earlier.
-File "codegen.ml", line 395, characters 13-1516:
-Warning 8: this pattern-matching is not exhaustive.
-Here is an example of a case that is not matched:
-(AIntLit (_, _)|ACharLit (_, _)|ABoolLit (_, _)|AStrLit (_, _)|
-AFloatLit (_, _)|ABinop (_, _, _, _)|AUnop (_, _, _)|ACall (_, _, _, _, _)|
-AList (_, _)|AItem (_, _, _)|ADot (_, _, _)|AEdge (_, _, _, _, _)|
-AGraph (_, _, _)|ANoexpr _)
-File "codegen.ml", line 291, characters 36-7796:
-Warning 8: this pattern-matching is not exhaustive.
-Here is an example of a case that is not matched:
-AGraph (_, _, _)
-File "codegen.ml", line 484, characters 41-45:
-Warning 40: TRec was selected from type A.primitiveType.
-It is not visible in the current scope, and will not 
-be selected if the type becomes unknown.
-File "codegen.ml", line 484, characters 41-45:
-Warning 42: this use of TRec relies on type-directed disambiguation,
-it will not compile with OCaml 4.00 or earlier.
-File "codegen.ml", line 484, characters 24-56:
-Warning 8: this pattern-matching is not exhaustive.
-Here is an example of a case that is not matched:
-(TInt|TBool|TString|TFloat|TChar|TVoid|T _|TList _|TEdge (_, _, _)|
-TGraph (_, _, _))
-File "codegen.ml", line 460, characters 10-1534:
-Warning 8: this pattern-matching is not exhaustive.
-Here is an example of a case that is not matched:
-(AIntLit (_, _)|ACharLit (_, _)|ABoolLit (_, _)|AStrLit (_, _)|
-AFloatLit (_, _)|ABinop (_, _, _, _)|AUnop (_, _, _)|ACall (_, _, _, _, _)|
-AList (_, _)|ARecord (_, _)|AEdge (_, _, _, _, _)|AGraph (_, _, _)|ANoexpr _)
-File "codegen.ml", line 570, characters 18-55:
-Warning 8: this pattern-matching is not exhaustive.
-Here is an example of a case that is not matched:
-(AIntLit (_, _)|ACharLit (_, _)|ABoolLit (_, _)|AStrLit (_, _)|
-AFloatLit (_, _)|ABinop (_, _, _, _)|AUnop (_, _, _)|ACall (_, _, _, _, _)|
-AList (_, _)|AItem (_, _, _)|ARecord (_, _)|ADot (_, _, _)|
-AEdge (_, _, _, _, _)|AGraph (_, _, _)|ANoexpr _)
-File "codegen.ml", line 16, characters 6-11:
-Warning 26: unused variable i64_t.
-File "codegen.ml", line 25, characters 6-18:
-Warning 26: unused variable gen_new_name.
-File "codegen.ml", line 234, characters 63-68:
-Warning 27: unused variable newel.
-File "codegen.ml", line 288, characters 29-39:
-Warning 27: unused variable endbuilder.
-File "codegen.ml", line 305, characters 22-23:
-Warning 27: unused variable t.
-File "codegen.ml", line 323, characters 17-18:
-Warning 27: unused variable f.
-File "codegen.ml", line 330, characters 23-24:
-Warning 27: unused variable t.
-File "codegen.ml", line 389, characters 24-27:
-Warning 27: unused variable typ.
-File "codegen.ml", line 339, characters 19-21:
-Warning 27: unused variable t'.
-File "codegen.ml", line 356, characters 30-34:
-Warning 27: unused variable into.
-File "codegen.ml", line 356, characters 25-29:
-Warning 27: unused variable from.
-File "codegen.ml", line 405, characters 25-30:
-Warning 27: unused variable tname.
-File "codegen.ml", line 405, characters 31-33:
-Warning 27: unused variable e1.
-File "codegen.ml", line 316, characters 8-79:
-Warning 11: this match case is unused.
-File "codegen.ml", line 461, characters 24-27:
-Warning 27: unused variable typ.
-File "codegen.ml", line 466, characters 33-36:
-Warning 27: unused variable typ.
-File "codegen.ml", line 470, characters 29-32:
-Warning 27: unused variable typ.
-File "codegen.ml", line 484, characters 46-47:
-Warning 27: unused variable s.
-File "codegen.ml", line 584, characters 30-47:
-Warning 27: unused variable new_local_var_map.
-File "codegen.ml", line 598, characters 20-30:
-Warning 27: unused variable local_vars.
 # Target: infer.cmo, tags: { package(llvm), package(llvm.analysis), byte, compile, extension:cmo, extension:ml, file:infer.cmo, file:infer.ml, implem, ocaml, quiet }
 ocamlfind ocamlc -c -w +a-4 -package llvm.analysis -package llvm -o infer.cmo infer.ml
 + ocamlfind ocamlc -c -w +a-4 -package llvm.analysis -package llvm -o infer.cmo infer.ml
-File "infer.ml", line 78, characters 8-19:
+File "infer.ml", line 58, characters 2-402:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a case that is not matched:
+(AIntLit (_, _)|ACharLit (_, _)|ABoolLit (_, _)|AStrLit (_, _)|
+AFloatLit (_, _))
+File "infer.ml", line 88, characters 8-19:
 Warning 39: unused rec flag.
-File "infer.ml", line 84, characters 8-21:
+File "infer.ml", line 94, characters 8-21:
 Warning 39: unused rec flag.
-File "infer.ml", line 87, characters 8-18:
+File "infer.ml", line 126, characters 18-50:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a case that is not matched:
+(TInt|TBool|TString|TFloat|TChar|TVoid|T _|TList _|TRec (_, _)|
+TGraph (_, _, _))
+File "infer.ml", line 118, characters 8-18:
 Warning 39: unused rec flag.
-File "infer.ml", line 130, characters 8-30:
+File "infer.ml", line 162, characters 8-30:
 Warning 39: unused rec flag.
-File "infer.ml", line 232, characters 2-4519:
+File "infer.ml", line 356, characters 22-86:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a case that is not matched:
+(TInt|TBool|TString|TFloat|TChar|TVoid|T _|TList _|TRec (_, _)|
+TGraph (_, _, _))
+File "infer.ml", line 264, characters 2-4791:
 Warning 8: this pattern-matching is not exhaustive.
 Here is an example of a case that is not matched:
 Subset (_, _, _)
-File "infer.ml", line 426, characters 10-16:
+File "infer.ml", line 462, characters 10-16:
 Warning 39: unused rec flag.
-File "infer.ml", line 704, characters 10-19:
+File "infer.ml", line 575, characters 2-169:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a case that is not matched:
+(TRec
+   ((TInt|TBool|TString|TFloat|TChar|TVoid|TList _|TRec (_, _)|
+    TEdge (_, _, _)|TGraph (_, _, _)),
+   _)|
+TEdge
+  ((TInt|TBool|TString|TFloat|TChar|TVoid|TList _|TRec (_, _)|
+   TEdge (_, _, _)|TGraph (_, _, _)),
+  _, _)|
+TGraph
+  ((TInt|TBool|TString|TFloat|TChar|TVoid|TList _|TRec (_, _)|
+   TEdge (_, _, _)|TGraph (_, _, _)),
+  _, _))
+File "infer.ml", line 740, characters 10-19:
 Warning 39: unused rec flag.
-File "infer.ml", line 115, characters 10-11:
+File "infer.ml", line 59, characters 11-12:
+Warning 27: unused variable t.
+File "infer.ml", line 60, characters 17-18:
+Warning 27: unused variable t.
+File "infer.ml", line 61, characters 14-15:
+Warning 27: unused variable t.
+File "infer.ml", line 62, characters 19-20:
+Warning 27: unused variable t.
+File "infer.ml", line 63, characters 13-14:
+Warning 27: unused variable t.
+File "infer.ml", line 64, characters 14-15:
+Warning 27: unused variable t.
+File "infer.ml", line 65, characters 18-19:
+Warning 27: unused variable t.
+File "infer.ml", line 66, characters 13-14:
+Warning 27: unused variable t.
+File "infer.ml", line 67, characters 14-15:
+Warning 27: unused variable t.
+File "infer.ml", line 68, characters 11-14:
+Warning 27: unused variable t.
+File "infer.ml", line 69, characters 15-16:
+Warning 27: unused variable t.
+File "infer.ml", line 101, characters 11-12:
+Warning 27: unused variable n.
+File "infer.ml", line 103, characters 3-4:
+Warning 27: unused variable x.
+File "infer.ml", line 114, characters 3-4:
+Warning 27: unused variable x.
+File "infer.ml", line 147, characters 10-11:
 Warning 27: unused variable a.
-File "infer.ml", line 117, characters 9-10:
+File "infer.ml", line 149, characters 9-10:
 Warning 27: unused variable a.
-File "infer.ml", line 117, characters 21-22:
+File "infer.ml", line 149, characters 21-22:
 Warning 27: unused variable c.
-File "infer.ml", line 119, characters 11-12:
+File "infer.ml", line 151, characters 11-12:
 Warning 27: unused variable a.
-File "infer.ml", line 143, characters 13-16:
+File "infer.ml", line 175, characters 13-16:
 Warning 27: unused variable env.
-File "infer.ml", line 212, characters 14-18:
+File "infer.ml", line 244, characters 14-18:
 Warning 27: unused variable recs.
-File "infer.ml", line 249, characters 7-10:
+File "infer.ml", line 281, characters 7-10:
 Warning 27: unused variable a.
-File "infer.ml", line 266, characters 16-19:
+File "infer.ml", line 298, characters 16-19:
 Warning 27: unused variable str.
-File "infer.ml", line 269, characters 11-12:
+File "infer.ml", line 301, characters 11-12:
 Warning 27: unused variable x.
-File "infer.ml", line 285, characters 9-16:
+File "infer.ml", line 318, characters 9-16:
 Warning 27: unused variable oldtype.
-File "infer.ml", line 380, characters 11-16:
+File "infer.ml", line 357, characters 13-14:
+Warning 27: unused variable n.
+File "infer.ml", line 416, characters 11-16:
 Warning 27: unused variable name1.
-File "infer.ml", line 380, characters 33-38:
+File "infer.ml", line 416, characters 33-38:
 Warning 27: unused variable name2.
-File "infer.ml", line 381, characters 12-17:
+File "infer.ml", line 417, characters 12-17:
 Warning 27: unused variable name1.
-File "infer.ml", line 381, characters 35-40:
+File "infer.ml", line 417, characters 35-40:
 Warning 27: unused variable name2.
-File "infer.ml", line 418, characters 88-90:
+File "infer.ml", line 454, characters 88-90:
 Warning 27: unused variable id.
-File "infer.ml", line 429, characters 16-20:
+File "infer.ml", line 465, characters 16-20:
 Warning 27: unused variable tail.
-File "infer.ml", line 478, characters 29-30:
+File "infer.ml", line 514, characters 29-30:
 Warning 27: unused variable t.
-File "infer.ml", line 492, characters 10-11:
+File "infer.ml", line 528, characters 10-11:
 Warning 27: unused variable s.
-File "infer.ml", line 492, characters 18-19:
+File "infer.ml", line 528, characters 18-19:
 Warning 27: unused variable t.
-File "infer.ml", line 500, characters 15-16:
+File "infer.ml", line 536, characters 15-16:
 Warning 27: unused variable t.
-File "infer.ml", line 527, characters 11-16:
+File "infer.ml", line 563, characters 11-16:
 Warning 27: unused variable name1.
-File "infer.ml", line 527, characters 32-37:
+File "infer.ml", line 563, characters 32-37:
 Warning 27: unused variable name2.
-File "infer.ml", line 528, characters 10-15:
+File "infer.ml", line 564, characters 10-15:
 Warning 27: unused variable name1.
-File "infer.ml", line 528, characters 32-37:
+File "infer.ml", line 564, characters 32-37:
 Warning 27: unused variable name2.
-File "infer.ml", line 673, characters 11-16:
+File "infer.ml", line 709, characters 11-16:
 Warning 27: unused variable tname.
-File "infer.ml", line 708, characters 6-7:
+File "infer.ml", line 744, characters 6-7:
 Warning 27: unused variable x.
-File "infer.ml", line 708, characters 11-12:
+File "infer.ml", line 744, characters 11-12:
 Warning 27: unused variable y.
-File "infer.ml", line 708, characters 16-20:
+File "infer.ml", line 744, characters 16-20:
 Warning 27: unused variable tail.
-File "infer.ml", line 741, characters 23-28:
+File "infer.ml", line 777, characters 23-28:
 Warning 27: unused variable funcs.
-File "infer.ml", line 741, characters 17-21:
+File "infer.ml", line 777, characters 17-21:
 Warning 27: unused variable recs.
-File "infer.ml", line 741, characters 11-15:
+File "infer.ml", line 777, characters 11-15:
 Warning 27: unused variable genv.
 # Target: scanner.cmo, tags: { package(llvm), package(llvm.analysis), byte, compile, extension:cmo, extension:ml, file:scanner.cmo, file:scanner.ml, implem, ocaml, quiet }
 ocamlfind ocamlc -c -w +a-4 -package llvm.analysis -package llvm -o scanner.cmo scanner.ml
@@ -285,250 +196,161 @@ ocamlfind ocamlopt -c -w +a-4 -package llvm.analysis -package llvm -o ast.cmx as
 # Target: astutils.cmx, tags: { package(llvm), package(llvm.analysis), compile, extension:cmx, extension:ml, file:astutils.cmx, file:astutils.ml, implem, native, ocaml, quiet }
 ocamlfind ocamlopt -c -w +a-4 -package llvm.analysis -package llvm -o astutils.cmx astutils.ml
 + ocamlfind ocamlopt -c -w +a-4 -package llvm.analysis -package llvm -o astutils.cmx astutils.ml
-File "astutils.ml", line 113, characters 2-1334:
+File "astutils.ml", line 115, characters 2-1334:
 Warning 8: this pattern-matching is not exhaustive.
 Here is an example of a case that is not matched:
 Subset (_, _, _)
 File "astutils.ml", line 19, characters 12-13:
 Warning 27: unused variable l.
 # Target: parser.ml.depends, tags: { package(llvm), package(llvm.analysis), extension:ml, file:parser.ml, ocaml, ocamldep, quiet }
-ocamlfind ocamldep -package llvm.analysis -package llvm -modules parser.ml > parser.ml.depends
+ocamlfind ocamldep -package llvm.analysis -package llvm -modules parser.ml > parser.ml.depends # cached
 # Target: parser.cmx, tags: { package(llvm), package(llvm.analysis), compile, extension:cmx, extension:ml, file:parser.cmx, file:parser.ml, implem, native, ocaml, quiet }
 ocamlfind ocamlopt -c -w +a-4 -package llvm.analysis -package llvm -o parser.cmx parser.ml
 # Target: codegen.cmx, tags: { package(llvm), package(llvm.analysis), compile, extension:cmx, extension:ml, file:codegen.cmx, file:codegen.ml, implem, native, ocaml, quiet }
 ocamlfind ocamlopt -c -w +a-4 -package llvm.analysis -package llvm -o codegen.cmx codegen.ml
 + ocamlfind ocamlopt -c -w +a-4 -package llvm.analysis -package llvm -o codegen.cmx codegen.ml
-File "codegen.ml", line 79, characters 75-106:
+File "codegen.ml", line 88, characters 75-106:
 Warning 50: unattached documentation comment (ignored)
-File "codegen.ml", line 31, characters 28-1612:
-Warning 8: this pattern-matching is not exhaustive.
-Here is an example of a case that is not matched:
-(T _|TGraph (_, _, _))
-File "codegen.ml", line 208, characters 4-68:
-Warning 8: this pattern-matching is not exhaustive.
-Here is an example of a case that is not matched:
-(Add|Sub|Mult|Div|Equal|Neq|Less|Leq|Greater|Geq|And|Or|In|Fadd|Fsub|Fmult|
-Fdiv|Gadd|Eadd|To|From|Dash)
-File "codegen.ml", line 251, characters 2-288:
-Warning 8: this pattern-matching is not exhaustive.
-Here is an example of a case that is not matched:
-(T _|TRec (_, _)|TEdge (_, _, _)|TGraph (_, _, _))
-File "codegen.ml", line 280, characters 4-11:
-Warning 40: ANoexpr was selected from type A.aexpr.
-It is not visible in the current scope, and will not 
-be selected if the type becomes unknown.
-File "codegen.ml", line 280, characters 4-11:
-Warning 42: this use of ANoexpr relies on type-directed disambiguation,
-it will not compile with OCaml 4.00 or earlier.
-File "codegen.ml", line 338, characters 20-21:
-Warning 28: wildcard pattern given as argument to a constant constructor
-File "codegen.ml", line 351, characters 19-48:
-Warning 10: this expression should have type unit.
-File "codegen.ml", line 358, characters 15-19:
-Warning 40: Dash was selected from type A.op.
-It is not visible in the current scope, and will not 
-be selected if the type becomes unknown.
-File "codegen.ml", line 358, characters 15-19:
-Warning 42: this use of Dash relies on type-directed disambiguation,
-it will not compile with OCaml 4.00 or earlier.
-File "codegen.ml", line 359, characters 15-17:
-Warning 40: To was selected from type A.op.
-It is not visible in the current scope, and will not 
-be selected if the type becomes unknown.
-File "codegen.ml", line 359, characters 15-17:
-Warning 42: this use of To relies on type-directed disambiguation,
-it will not compile with OCaml 4.00 or earlier.
-File "codegen.ml", line 360, characters 15-19:
-Warning 40: From was selected from type A.op.
-It is not visible in the current scope, and will not 
-be selected if the type becomes unknown.
-File "codegen.ml", line 360, characters 15-19:
-Warning 42: this use of From relies on type-directed disambiguation,
-it will not compile with OCaml 4.00 or earlier.
-File "codegen.ml", line 357, characters 12-132:
-Warning 8: this pattern-matching is not exhaustive.
-Here is an example of a case that is not matched:
-(Add|Sub|Mult|Div|Equal|Neq|Less|Leq|Greater|Geq|And|Or|In|Fadd|Fsub|Fmult|
-Fdiv|Gadd|Eadd|Ladd)
-File "codegen.ml", line 362, characters 18-365:
-Warning 8: this pattern-matching is not exhaustive.
-Here is an example of a case that is not matched:
-(AIntLit (_, _)|ACharLit (_, _)|ABoolLit (_, _)|AStrLit (_, _)|
-AFloatLit (_, _)|ABinop (_, _, _, _)|AUnop (_, _, _)|ACall (_, _, _, _, _)|
-AList (_, _)|AItem (_, _, _)|ARecord (_, _)|ADot (_, _, _)|
-AEdge (_, _, _, _, _)|AGraph (_, _, _)|ANoexpr _)
-File "codegen.ml", line 385, characters 19-48:
-Warning 10: this expression should have type unit.
-File "codegen.ml", line 396, characters 13-16:
-Warning 40: AId was selected from type A.aexpr.
-It is not visible in the current scope, and will not 
-be selected if the type becomes unknown.
-File "codegen.ml", line 396, characters 13-16:
-Warning 42: this use of AId relies on type-directed disambiguation,
-it will not compile with OCaml 4.00 or earlier.
-File "codegen.ml", line 418, characters 13-20:
-Warning 40: ARecord was selected from type A.aexpr.
-It is not visible in the current scope, and will not 
-be selected if the type becomes unknown.
-File "codegen.ml", line 418, characters 13-20:
-Warning 42: this use of ARecord relies on type-directed disambiguation,
-it will not compile with OCaml 4.00 or earlier.
-File "codegen.ml", line 395, characters 13-1516:
-Warning 8: this pattern-matching is not exhaustive.
-Here is an example of a case that is not matched:
-(AIntLit (_, _)|ACharLit (_, _)|ABoolLit (_, _)|AStrLit (_, _)|
-AFloatLit (_, _)|ABinop (_, _, _, _)|AUnop (_, _, _)|ACall (_, _, _, _, _)|
-AList (_, _)|AItem (_, _, _)|ADot (_, _, _)|AEdge (_, _, _, _, _)|
-AGraph (_, _, _)|ANoexpr _)
-File "codegen.ml", line 291, characters 36-7796:
-Warning 8: this pattern-matching is not exhaustive.
-Here is an example of a case that is not matched:
-AGraph (_, _, _)
-File "codegen.ml", line 484, characters 41-45:
-Warning 40: TRec was selected from type A.primitiveType.
-It is not visible in the current scope, and will not 
-be selected if the type becomes unknown.
-File "codegen.ml", line 484, characters 41-45:
-Warning 42: this use of TRec relies on type-directed disambiguation,
-it will not compile with OCaml 4.00 or earlier.
-File "codegen.ml", line 484, characters 24-56:
-Warning 8: this pattern-matching is not exhaustive.
-Here is an example of a case that is not matched:
-(TInt|TBool|TString|TFloat|TChar|TVoid|T _|TList _|TEdge (_, _, _)|
-TGraph (_, _, _))
-File "codegen.ml", line 460, characters 10-1534:
-Warning 8: this pattern-matching is not exhaustive.
-Here is an example of a case that is not matched:
-(AIntLit (_, _)|ACharLit (_, _)|ABoolLit (_, _)|AStrLit (_, _)|
-AFloatLit (_, _)|ABinop (_, _, _, _)|AUnop (_, _, _)|ACall (_, _, _, _, _)|
-AList (_, _)|ARecord (_, _)|AEdge (_, _, _, _, _)|AGraph (_, _, _)|ANoexpr _)
-File "codegen.ml", line 570, characters 18-55:
-Warning 8: this pattern-matching is not exhaustive.
-Here is an example of a case that is not matched:
-(AIntLit (_, _)|ACharLit (_, _)|ABoolLit (_, _)|AStrLit (_, _)|
-AFloatLit (_, _)|ABinop (_, _, _, _)|AUnop (_, _, _)|ACall (_, _, _, _, _)|
-AList (_, _)|AItem (_, _, _)|ARecord (_, _)|ADot (_, _, _)|
-AEdge (_, _, _, _, _)|AGraph (_, _, _)|ANoexpr _)
-File "codegen.ml", line 16, characters 6-11:
-Warning 26: unused variable i64_t.
-File "codegen.ml", line 25, characters 6-18:
-Warning 26: unused variable gen_new_name.
-File "codegen.ml", line 234, characters 63-68:
-Warning 27: unused variable newel.
-File "codegen.ml", line 288, characters 29-39:
-Warning 27: unused variable endbuilder.
-File "codegen.ml", line 305, characters 22-23:
-Warning 27: unused variable t.
-File "codegen.ml", line 323, characters 17-18:
-Warning 27: unused variable f.
-File "codegen.ml", line 330, characters 23-24:
-Warning 27: unused variable t.
-File "codegen.ml", line 389, characters 24-27:
-Warning 27: unused variable typ.
-File "codegen.ml", line 339, characters 19-21:
-Warning 27: unused variable t'.
-File "codegen.ml", line 356, characters 30-34:
-Warning 27: unused variable into.
-File "codegen.ml", line 356, characters 25-29:
-Warning 27: unused variable from.
-File "codegen.ml", line 405, characters 25-30:
-Warning 27: unused variable tname.
-File "codegen.ml", line 405, characters 31-33:
-Warning 27: unused variable e1.
-File "codegen.ml", line 316, characters 8-79:
-Warning 11: this match case is unused.
-File "codegen.ml", line 461, characters 24-27:
-Warning 27: unused variable typ.
-File "codegen.ml", line 466, characters 33-36:
-Warning 27: unused variable typ.
-File "codegen.ml", line 470, characters 29-32:
-Warning 27: unused variable typ.
-File "codegen.ml", line 484, characters 46-47:
-Warning 27: unused variable s.
-File "codegen.ml", line 584, characters 30-47:
-Warning 27: unused variable new_local_var_map.
-File "codegen.ml", line 598, characters 20-30:
-Warning 27: unused variable local_vars.
 # Target: infer.cmx, tags: { package(llvm), package(llvm.analysis), compile, extension:cmx, extension:ml, file:infer.cmx, file:infer.ml, implem, native, ocaml, quiet }
 ocamlfind ocamlopt -c -w +a-4 -package llvm.analysis -package llvm -o infer.cmx infer.ml
 + ocamlfind ocamlopt -c -w +a-4 -package llvm.analysis -package llvm -o infer.cmx infer.ml
-File "infer.ml", line 78, characters 8-19:
+File "infer.ml", line 58, characters 2-402:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a case that is not matched:
+(AIntLit (_, _)|ACharLit (_, _)|ABoolLit (_, _)|AStrLit (_, _)|
+AFloatLit (_, _))
+File "infer.ml", line 88, characters 8-19:
 Warning 39: unused rec flag.
-File "infer.ml", line 84, characters 8-21:
+File "infer.ml", line 94, characters 8-21:
 Warning 39: unused rec flag.
-File "infer.ml", line 87, characters 8-18:
+File "infer.ml", line 126, characters 18-50:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a case that is not matched:
+(TInt|TBool|TString|TFloat|TChar|TVoid|T _|TList _|TRec (_, _)|
+TGraph (_, _, _))
+File "infer.ml", line 118, characters 8-18:
 Warning 39: unused rec flag.
-File "infer.ml", line 130, characters 8-30:
+File "infer.ml", line 162, characters 8-30:
 Warning 39: unused rec flag.
-File "infer.ml", line 232, characters 2-4519:
+File "infer.ml", line 356, characters 22-86:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a case that is not matched:
+(TInt|TBool|TString|TFloat|TChar|TVoid|T _|TList _|TRec (_, _)|
+TGraph (_, _, _))
+File "infer.ml", line 264, characters 2-4791:
 Warning 8: this pattern-matching is not exhaustive.
 Here is an example of a case that is not matched:
 Subset (_, _, _)
-File "infer.ml", line 426, characters 10-16:
+File "infer.ml", line 462, characters 10-16:
 Warning 39: unused rec flag.
-File "infer.ml", line 704, characters 10-19:
+File "infer.ml", line 575, characters 2-169:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a case that is not matched:
+(TRec
+   ((TInt|TBool|TString|TFloat|TChar|TVoid|TList _|TRec (_, _)|
+    TEdge (_, _, _)|TGraph (_, _, _)),
+   _)|
+TEdge
+  ((TInt|TBool|TString|TFloat|TChar|TVoid|TList _|TRec (_, _)|
+   TEdge (_, _, _)|TGraph (_, _, _)),
+  _, _)|
+TGraph
+  ((TInt|TBool|TString|TFloat|TChar|TVoid|TList _|TRec (_, _)|
+   TEdge (_, _, _)|TGraph (_, _, _)),
+  _, _))
+File "infer.ml", line 740, characters 10-19:
 Warning 39: unused rec flag.
-File "infer.ml", line 115, characters 10-11:
+File "infer.ml", line 59, characters 11-12:
+Warning 27: unused variable t.
+File "infer.ml", line 60, characters 17-18:
+Warning 27: unused variable t.
+File "infer.ml", line 61, characters 14-15:
+Warning 27: unused variable t.
+File "infer.ml", line 62, characters 19-20:
+Warning 27: unused variable t.
+File "infer.ml", line 63, characters 13-14:
+Warning 27: unused variable t.
+File "infer.ml", line 64, characters 14-15:
+Warning 27: unused variable t.
+File "infer.ml", line 65, characters 18-19:
+Warning 27: unused variable t.
+File "infer.ml", line 66, characters 13-14:
+Warning 27: unused variable t.
+File "infer.ml", line 67, characters 14-15:
+Warning 27: unused variable t.
+File "infer.ml", line 68, characters 11-14:
+Warning 27: unused variable t.
+File "infer.ml", line 69, characters 15-16:
+Warning 27: unused variable t.
+File "infer.ml", line 101, characters 11-12:
+Warning 27: unused variable n.
+File "infer.ml", line 103, characters 3-4:
+Warning 27: unused variable x.
+File "infer.ml", line 114, characters 3-4:
+Warning 27: unused variable x.
+File "infer.ml", line 147, characters 10-11:
 Warning 27: unused variable a.
-File "infer.ml", line 117, characters 9-10:
+File "infer.ml", line 149, characters 9-10:
 Warning 27: unused variable a.
-File "infer.ml", line 117, characters 21-22:
+File "infer.ml", line 149, characters 21-22:
 Warning 27: unused variable c.
-File "infer.ml", line 119, characters 11-12:
+File "infer.ml", line 151, characters 11-12:
 Warning 27: unused variable a.
-File "infer.ml", line 143, characters 13-16:
+File "infer.ml", line 175, characters 13-16:
 Warning 27: unused variable env.
-File "infer.ml", line 212, characters 14-18:
+File "infer.ml", line 244, characters 14-18:
 Warning 27: unused variable recs.
-File "infer.ml", line 249, characters 7-10:
+File "infer.ml", line 281, characters 7-10:
 Warning 27: unused variable a.
-File "infer.ml", line 266, characters 16-19:
+File "infer.ml", line 298, characters 16-19:
 Warning 27: unused variable str.
-File "infer.ml", line 269, characters 11-12:
+File "infer.ml", line 301, characters 11-12:
 Warning 27: unused variable x.
-File "infer.ml", line 285, characters 9-16:
+File "infer.ml", line 318, characters 9-16:
 Warning 27: unused variable oldtype.
-File "infer.ml", line 380, characters 11-16:
+File "infer.ml", line 357, characters 13-14:
+Warning 27: unused variable n.
+File "infer.ml", line 416, characters 11-16:
 Warning 27: unused variable name1.
-File "infer.ml", line 380, characters 33-38:
+File "infer.ml", line 416, characters 33-38:
 Warning 27: unused variable name2.
-File "infer.ml", line 381, characters 12-17:
+File "infer.ml", line 417, characters 12-17:
 Warning 27: unused variable name1.
-File "infer.ml", line 381, characters 35-40:
+File "infer.ml", line 417, characters 35-40:
 Warning 27: unused variable name2.
-File "infer.ml", line 418, characters 88-90:
+File "infer.ml", line 454, characters 88-90:
 Warning 27: unused variable id.
-File "infer.ml", line 429, characters 16-20:
+File "infer.ml", line 465, characters 16-20:
 Warning 27: unused variable tail.
-File "infer.ml", line 478, characters 29-30:
+File "infer.ml", line 514, characters 29-30:
 Warning 27: unused variable t.
-File "infer.ml", line 492, characters 10-11:
+File "infer.ml", line 528, characters 10-11:
 Warning 27: unused variable s.
-File "infer.ml", line 492, characters 18-19:
+File "infer.ml", line 528, characters 18-19:
 Warning 27: unused variable t.
-File "infer.ml", line 500, characters 15-16:
+File "infer.ml", line 536, characters 15-16:
 Warning 27: unused variable t.
-File "infer.ml", line 527, characters 11-16:
+File "infer.ml", line 563, characters 11-16:
 Warning 27: unused variable name1.
-File "infer.ml", line 527, characters 32-37:
+File "infer.ml", line 563, characters 32-37:
 Warning 27: unused variable name2.
-File "infer.ml", line 528, characters 10-15:
+File "infer.ml", line 564, characters 10-15:
 Warning 27: unused variable name1.
-File "infer.ml", line 528, characters 32-37:
+File "infer.ml", line 564, characters 32-37:
 Warning 27: unused variable name2.
-File "infer.ml", line 673, characters 11-16:
+File "infer.ml", line 709, characters 11-16:
 Warning 27: unused variable tname.
-File "infer.ml", line 708, characters 6-7:
+File "infer.ml", line 744, characters 6-7:
 Warning 27: unused variable x.
-File "infer.ml", line 708, characters 11-12:
+File "infer.ml", line 744, characters 11-12:
 Warning 27: unused variable y.
-File "infer.ml", line 708, characters 16-20:
+File "infer.ml", line 744, characters 16-20:
 Warning 27: unused variable tail.
-File "infer.ml", line 741, characters 23-28:
+File "infer.ml", line 777, characters 23-28:
 Warning 27: unused variable funcs.
-File "infer.ml", line 741, characters 17-21:
+File "infer.ml", line 777, characters 17-21:
 Warning 27: unused variable recs.
-File "infer.ml", line 741, characters 11-15:
+File "infer.ml", line 777, characters 11-15:
 Warning 27: unused variable genv.
 # Target: scanner.cmx, tags: { package(llvm), package(llvm.analysis), compile, extension:cmx, extension:ml, file:scanner.cmx, file:scanner.ml, implem, native, ocaml, quiet }
 ocamlfind ocamlopt -c -w +a-4 -package llvm.analysis -package llvm -o scanner.cmx scanner.ml
