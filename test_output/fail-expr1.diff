@@ -1,4 +1,0 @@
-1c1
-< ./testall.sh: line 75: ./grail.native: No such file or directory
----
-> Fatal error: exception Failure("mismatched types@502")

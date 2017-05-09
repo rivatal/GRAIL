@@ -1,5 +1,0 @@
-1c1
-< Fatal error: exception Failure("type mismatch: bool,int@118")
----
-> Fatal error: exception Failure("error: int was defined as bool")
-\ No newline at end of file

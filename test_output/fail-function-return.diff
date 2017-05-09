@@ -1,5 +1,0 @@
-1c1
-< ./testall.sh: line 75: ./grail.native: No such file or directory
----
-> Assertion failed: (isa<X>(Val) && "cast<Ty>() argument of incompatible type!"), function cast, file /private/tmp/llvm@3.7-20170130-95292-rmy5z9/llvm-3.7.1.src/include/llvm/Support/Casting.h, line 237.
-\ No newline at end of file
