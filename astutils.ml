@@ -23,7 +23,7 @@ let rec string_of_type (t: primitiveType) =
   | TString -> "str"
   | TChar -> "char"
   | TVoid -> "void"
-  | TEdge(name, a, b) -> Printf.sprintf "edge %s (%s) with %s " (string_of_type name) (string_of_type a) (string_of_type b) 
+  | TEdge(name, a, b) -> Printf.sprintf "edge %s (%s) with %s" (string_of_type name) (string_of_type a) (string_of_type b) 
   | TGraph(name, a, b) -> Printf.sprintf "graph %s (%s) with %s" (string_of_type name) (string_of_type a) (string_of_type b) 
   | TList(x) -> "list of " ^ (string_of_type x)
   | T(x) -> Printf.sprintf "%s" x
@@ -72,6 +72,7 @@ and string_of_aexpr_list l =
   |h :: t -> string_of_aexpr h ^ string_of_aexpr_list t
 
 and string_of_astmt (l: astmt) = 
+let str = 
   match l with 
   | AReturn(aexpr,typ) -> "return " ^ string_of_aexpr aexpr ^ "; " ^ string_of_type typ ^ "\n";
   | AAsn(ae1,ae2,_,_) -> string_of_aexpr ae1 ^ " = " ^ string_of_aexpr ae2 ^ "; ";
@@ -86,6 +87,7 @@ and string_of_astmt (l: astmt) =
     ^ string_of_astmt_list astmts
   | AWhile(ae1, astmts) -> "while (" ^ string_of_aexpr ae1 ^ ") {" ^ string_of_astmt_list astmts ^ "}"
   | AForin(id, aexpr, astmts) -> "for (" ^ string_of_aexpr id ^ " in " ^ string_of_aexpr aexpr ^ "){" ^ string_of_astmt_list astmts
+in str ^ "\n"
 
 and string_of_astmt_list (stmts : astmt list) : string =
   let s1 = List.map(fun a -> (string_of_astmt (a))) stmts in let l = String.concat "" s1 in l

@@ -349,10 +349,14 @@ let env, genv, recs,funcs = allenv in
    let edgelist, nodelist = split_list aelist in
    ignore(check_type_consistency (temptype :: edgelist));
    ignore(check_type_consistency (nodelist)); 
-   let aelist = enforce_consistency aelist (type_of testtedge) in 
+   let nowwithedge = type_of testtedge in 
    let ntype = if(List.length nodelist = 0
-   ) then(gen_new_rec([])) else(List.hd nodelist) in
-   AGraph(aelist, atedge, TGraph(gen_new_type(), ntype, (type_of testtedge)))
+   ) then(gen_new_rec([])) else(List.hd nodelist) in 
+   print_string("node type is " ^ string_of_type ntype);
+   let intendedtype = match nowwithedge with 
+   |TEdge(a, n, b) -> TEdge(a, ntype, b)
+ in let aelist = enforce_consistency aelist (intendedtype) in 
+   AGraph(aelist, atedge, TGraph(gen_new_type(), ntype, intendedtype))
   (*a. check the list for consistency between nodes and edges. (which could be noexprs or lists themselves, or type of e.)
     b. type of e imposes a constraint on ^ and on the graph type. 
     c-- what if there are no nodes? Graph should be a trec of any, and should be overwritable when the first node comes in.
