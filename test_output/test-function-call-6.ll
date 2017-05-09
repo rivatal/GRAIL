@@ -1,3 +1,5 @@
+updating map func for return (a: 5); 5
+
 updating map func for return (0: int); int
 
 ; ModuleID = 'Grail'

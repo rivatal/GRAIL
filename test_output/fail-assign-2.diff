@@ -1,5 +1,5 @@
 1c1
-< Assertion failed: (isValidElementType(EltTy) && "Invalid type for pointer element!"), function get, file /private/tmp/llvm@3.7-20170130-95292-rmy5z9/llvm-3.7.1.src/lib/IR/Type.cpp, line 740.
+< Fatal error: exception Failure("type mismatch: bool,int@118")
 ---
-> Fatal error: exception Failure("main#i not found@79")
+> Fatal error: exception Failure("error: int was defined as bool")
 \ No newline at end of file
