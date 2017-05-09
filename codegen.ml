@@ -180,13 +180,15 @@ in
   )
   
 
-    (*and copy_list lst t builder =  
-      let list_typ = get_list_type t and newstruct = L.build_alloca (ltype_of_typ t) "strct" builder in
-      let oldstruct = L.build_alloca (ltype_of_typ t) "strct" builder in ignore(L.build_store lst oldstruct builder);
+    (*and compare_list lst1 lst2 t builder =  
+      let list_typ = get_list_type t in
+      let struct1 = L.build_alloca (ltype_of_typ t) "strct" builder in ignore(L.build_store lst1 struct21 builder);
+      let struct2 = L.build_alloca (ltype_of_typ t) "strct" builder in ignore(L.build_store lst2 struct2 builder);
 
-      let len = L.build_load (L.build_struct_gep oldstruct 1 "tmp" builder) "len" builder
-      and oldlst = L.build_load (L.build_struct_gep oldstruct 0 "tmp" builder) "lst" builder in
-      ignore(L.build_store len (L.build_struct_gep newstruct 1 "tmp" builder) builder);
+      let len1 = L.build_load (L.build_struct_gep oldstruct 1 "tmp" builder) "len" builder
+      and len2 = 
+
+      
 
       let newlst = L.build_array_alloca(ltype_of_typ list_typ) len "lst" builder  in
       let elind = L.build_alloca i32_t "ind" builder in ignore(L.build_store (L.const_int i32_t 0) elind builder);
