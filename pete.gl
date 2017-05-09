@@ -37,6 +37,10 @@ main()
 		pi = petenodes[i];
 		pplus = petenodes[i+1];
 		pete .&= pi--pplus;
+		if(i == 5){
+		     p9 = petenodes[9];
+		     pete .&= pi--p9;
+		}
 	}
 
 
