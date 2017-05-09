@@ -460,12 +460,11 @@ and get_subtype (t: primitiveType) : primitiveType =
  *)
 and format_formal (formal: (string * primitiveType) * aexpr) : string * primitiveType =
   match formal with 
-  ((x, _), e) -> ignore(print_string("matching " ^ x ^ " with type: " ^ string_of_type (type_of e))); (x, type_of e)
+  ((x, _), e) -> (x, type_of e)
 
 (*Generates assignment statements for actual expressions to be inferred and bound to their formals*)
 and assign_formals (stufflist: ((id * primitiveType) * aexpr) list) (env: environment) (id: string): environment =
   List.fold_left (fun e f -> let id, typ = format_formal f in 
-    print_string("assigning " ^ id ^ " to " ^ (string_of_type typ));
     NameMap.add (map_id id) typ e) env stufflist
 
 (*Ensures actuals and their corresponding formals have the same type. 
@@ -661,7 +660,7 @@ and update_map (allenv: allenv) (a: astmt) : allenv =
 
 
 and update_map_func (a: astmt) (funcs: funcs) (genv: genvironment) : funcs = 
-  ignore(print_string("updating map func for " ^ string_of_astmt a)); 
+(*   ignore(print_string("updating map func for " ^ string_of_astmt a));  *)
   match a with
   |AReturn(ae, _) 
   |AExpr(ae) 
