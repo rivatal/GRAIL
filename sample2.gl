@@ -1,12 +1,12 @@
 f(){
-a = {name:"Sarah"};
+a = {weight:4};
 b .= a;
-b.name = "Aiden";
-c = {name: "Mike"};
-d = {name: "Sarah"}; 
+b.weight = 5;
+c = {weight: 2};
+d = {weight: 2}; 
 
 y = 5;
-if(a <= d){
+if(c == d){
      y = 3;
 }
 
