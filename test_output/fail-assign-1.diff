@@ -1,0 +1,5 @@
+1c1
+< Fatal error: exception Failure("main#a not found@79")
+---
+> Fatal error: exception Failure("type mismatch: bool,int@118")
+\ No newline at end of file
