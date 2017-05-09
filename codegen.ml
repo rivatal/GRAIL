@@ -139,6 +139,82 @@ let translate (functions) =
   )
 in 
 
+  in let compare e1 e2 t builder =
+    (match t with
+    A.TInt | A.TChar | A.TBool -> (L.build_icmp L.Icmp.Eq e1 e2 "tmp" builder, builder)
+    | A.TFloat -> (L.build_fcmp L.Fcmp.Eq e1 e2 "tmp" builder, builder)
+    | A.TRec(_, fields) -> let rec1 = L.build_alloca (ltype_of_typ t) "strct" builder in ignore(L.build_store e1 rec1 builder);
+        let rec2 = L.build_alloca (ltype_of_typ t) "strct" builder in ignore(L.build_store e2 rec2 builder);
+        compare_fields 0 fields rec1 rec2 builder
+    | A.TEdge(_, trec1, trec2) -> let ed1 = L.build_alloca (ltype_of_typ t) "edge" builder in ignore(L.build_store e1 ed1 builder);
+        let ed2 = L.build_alloca (ltype_of_typ t) "edge" builder in ignore(L.build_store e2 ed2 builder);
+        let (fromcomp, builder) = compare (L.build_load (L.build_struct_gep ed1 0 "tmp" builder) "val" builder) 
+                                          (L.build_load (L.build_struct_gep ed2 0 "tmp" builder) "val" builder) trec1 builder in
+        let (tocomp, builder) = compare (L.build_load (L.build_struct_gep ed1 1 "tmp" builder) "val" builder)
+                                        (L.build_load (L.build_struct_gep ed2 1 "tmp" builder) "val" builder)  trec1 builder in
+        let (dircomp, builder) = compare (L.build_load (L.build_struct_gep ed1 2 "tmp" builder) "val" builder)
+                                          (L.build_load (L.build_struct_gep ed2 2 "tmp" builder) "val" builder) A.TBool builder in
+        let (relcomp, builder) = compare (L.build_load (L.build_struct_gep ed1 3 "tmp" builder) "val" builder)
+                                          (L.build_load (L.build_struct_gep ed1 3 "tmp" builder) "val" builder) trec2 builder in
+        (L.const_and fromcomp (L.const_and tocomp (L.const_and dircomp relcomp)), builder)
+
+    | A.TGraph(_, ntyp, etyp) -> let ereltyp = (match etyp with A.TEdge(_, _, rel) -> rel | _ -> raise(Failure "wrong edge type")) in
+        let g1 = L.build_alloca (ltype_of_typ t) "graph" builder in ignore(L.build_store e1 g1 builder);
+        let g2 = L.build_alloca (ltype_of_typ t) "graph" builder in ignore(L.build_store e2 g2 builder);
+        let (nodescomp, builder) = compare (L.build_load (L.build_struct_gep g1 0 "tmp" builder) "val" builder) 
+                                          (L.build_load (L.build_struct_gep g2 0 "tmp" builder) "val" builder) (A.TList ntyp) builder in
+        let (edgescomp, builder) = compare (L.build_load (L.build_struct_gep g1 1 "tmp" builder) "val" builder)
+                                        (L.build_load (L.build_struct_gep g2 1 "tmp" builder) "val" builder)  (A.TList etyp) builder in
+        let (relcomp, builder) = compare (L.build_load (L.build_struct_gep g1 2 "tmp" builder) "val" builder)
+                                          (L.build_load (L.build_struct_gep g2 2 "tmp" builder) "val" builder) ereltyp builder in
+        (L.const_and nodescomp (L.const_and edgescomp relcomp), builder)
+    )
+
+  and compare_fields n fields rec1 rec1 builder = 
+  (match fields with 
+    [] -> L.const_int i1_t 1 (*empty recs are equal*)
+  | (_,t)::tl -> let (cmp, builder) = compare (L.build_load (L.build_struct_gep rec1 n "tmp" builder) "val" builder) 
+                                              (L.build_load (L.build_struct_gep rec2 n "tmp" builder) "val" builder) t builder in
+                  let (restcmp, builder) = compare_fields (n+1) tl rec1 rec2 builder
+  )
+  
+
+    (*let rec copy_list lst t builder =  CHANGE TO COMPARE
+      let list_typ = get_list_type t and newstruct = L.build_alloca (ltype_of_typ t) "strct" builder in
+      let oldstruct = L.build_alloca (ltype_of_typ t) "strct" builder in ignore(L.build_store lst oldstruct builder);
+
+      let len = L.build_load (L.build_struct_gep oldstruct 1 "tmp" builder) "len" builder
+      and oldlst = L.build_load (L.build_struct_gep oldstruct 0 "tmp" builder) "lst" builder in
+      ignore(L.build_store len (L.build_struct_gep newstruct 1 "tmp" builder) builder);
+
+      let newlst = L.build_array_alloca(ltype_of_typ list_typ) len "lst" builder  in
+      let elind = L.build_alloca i32_t "ind" builder in ignore(L.build_store (L.const_int i32_t 0) elind builder);
+
+
+      (*copy over old list elements by effectively using a for-in loop*) 
+      let pred_bb = L.append_block context "checklimits" the_function in
+      ignore (L.build_br pred_bb builder); 
+
+      let body_bb = L.append_block context "assignment" the_function in
+      let body_builder = L.builder_at_end context body_bb in
+      let ind = L.build_load elind "i" body_builder in
+      let oldp = L.build_in_bounds_gep oldlst [|ind|] "ptr" body_builder and newp = L.build_in_bounds_gep newlst [|ind|] "ptr" body_builder in
+      let oldel = (L.build_load oldp "tmp" body_builder) in let (newel, body_builder) = copy oldel list_typ body_builder in
+      ignore(L.build_store newel newp body_builder);
+      
+      ignore(L.build_store (L.build_add (L.build_load elind "tmp" body_builder) (L.const_int i32_t 1) "inc" body_builder) elind body_builder);
+      add_terminal body_builder (L.build_br pred_bb);
+
+      let pred_builder = L.builder_at_end context pred_bb in
+      let bool_val = L.build_icmp L.Icmp.Slt (L.build_load elind "tmp" pred_builder) len "comp" pred_builder in
+
+      let merge_bb = L.append_block context "merge" the_function in
+      ignore (L.build_cond_br bool_val body_bb merge_bb pred_builder);
+
+      let end_builder = L.builder_at_end context merge_bb in
+      ignore(L.build_store newlst (L.build_struct_gep newstruct 0 "tmp" end_builder) end_builder);
+      (L.build_load newstruct "strct" end_builder, end_builder)*)
+
   let rec assign_array ar els n builder = (*stores elements, starting with element n in ar, returns ar*)
     match els with
       [] -> ar
@@ -304,11 +380,12 @@ and copy e t builder = (*returns a deep copy of e and the builder at the end of 
         ignore(L.build_store newdir (L.build_struct_gep newe 2 "tmp" builder) builder);
         ignore(L.build_store newrel (L.build_struct_gep newe 3 "tmp" builder) builder);
         (L.build_load newe "edge" builder, builder)
-    | A.TGraph(_, ntyp, etyp) -> let newg = L.build_alloca (ltype_of_typ t) "graph" builder in
+    | A.TGraph(_, ntyp, etyp) -> let ereltyp = (match et with A.TEdge(_, _, rel) -> rel | _ -> raise(Failure "wrong edge type")) in
+        let newg = L.build_alloca (ltype_of_typ t) "graph" builder in
         let oldg = L.build_alloca (ltype_of_typ t) "graph" builder in ignore(L.build_store e oldg builder);
         let (newnodes, builder) = copy (L.build_load (L.build_struct_gep oldg 0 "tmp" builder) "val" builder) (A.TList ntyp) builder in
         let (newedges, builder) = copy (L.build_load (L.build_struct_gep oldg 1 "tmp" builder) "val" builder) (A.TList etyp) builder in
-        let (newrel, builder) = copy (L.build_load (L.build_struct_gep oldg 2 "tmp" builder) "val" builder) etyp builder in
+        let (newrel, builder) = copy (L.build_load (L.build_struct_gep oldg 2 "tmp" builder) "val" builder) ereltyp builder in
         ignore(L.build_store newnodes (L.build_struct_gep newg 0 "tmp" builder) builder);
         ignore(L.build_store newedges (L.build_struct_gep newg 1 "tmp" builder) builder);
         ignore(L.build_store newrel (L.build_struct_gep newg 2 "tmp" builder) builder);
@@ -446,7 +523,8 @@ in
             )
         |  _  -> aexpr builder1 local_var_map e2 )
       in
-        (match t with 
+      let et = get_expr_type e1 in
+        (match et with 
          | A.TFloat -> ((float_ops op) e1' e2' "tmp" builder', builder')
          | A.TList _ -> list_ops e1' e2' t op builder'
          | A.TGraph(_,_,_) -> graph_ops e1' e2' t op builder'
