@@ -235,11 +235,11 @@ in
         A.Gadd -> let oldns = L.build_load (L.build_struct_gep gstruct 0 "ptr" builder) "nodes" builder in
                   let (newns, builder) =  add_to_list oldns e2 (A.TList ntyp) builder in
                   ignore(L.build_store newns (L.build_struct_gep gstruct 0 "tmp" builder) builder);
-                  (gstruct, builder)
+                  ((L.build_load gstruct "g" builder), builder)
       | A.Eadd -> let oldes = L.build_load (L.build_struct_gep gstruct 1 "ptr" builder) "nodes" builder in
                   let (newes, builder) =  add_to_list oldes e2 (A.TList etyp) builder in
                   ignore(L.build_store newes (L.build_struct_gep gstruct 1 "tmp" builder) builder);
-                  (gstruct, builder)
+                  ((L.build_load gstruct "g" builder), builder)
       | _ -> raise(Failure "wrong operation applied to graphs")
       )
 

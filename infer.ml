@@ -297,6 +297,11 @@ let env, genv, recs,funcs = allenv in
          (match et1 with
           |TRec(str, elist) -> 
           get_field_type elist entry
+          |TGraph(_,n,e) ->
+          if(entry="nodes") then(TList(n))
+        else(
+          if(entry="edges") then(TList(e))
+          else(raise(failwith(entry ^ " not a field."))))
           |T(x) -> T(x)
           |x -> raise(failwith (sae1 ^ " not a record.")))    
     in ADot(ae1, entry, typ)
@@ -362,7 +367,7 @@ let env, genv, recs,funcs = allenv in
  *)(*    let template = ARecord(fieldslist, templatetype) in  *)
    let aelist = enforce_consistency aelist (gtype) in
 (*   in ignore(print_string("type of template: " ^ string_of_type templatetype)); *)
-   AGraph(aelist, annotatedtemplate, gtype)
+   AGraph(aelist, annotatedtemplate, TGraph(gen_new_type(), nodetype, gtype))
   (*a. check the list for consistency between nodes and edges. (which could be noexprs or lists themselves, or type of e.)
     b. type of e imposes a constraint on ^ and on the graph type. 
     c-- what if there are no nodes? Graph should be a trec of any, and should be overwritable when the first node comes in.
