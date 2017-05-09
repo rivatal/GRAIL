@@ -1,0 +1,8 @@
+main()
+{
+  a = ["a", "b", "c"];
+  for ( x in a ) {
+    print(x);
+  }
+  return 0;
+}

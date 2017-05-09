@@ -1,0 +1,10 @@
+main() { 
+	a = 5;
+	if (a < 3) { 
+		print("Bigger"); 
+	}
+	else if (a == 5) {
+		print("Equal");
+	}
+	return 0;
+}

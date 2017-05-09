@@ -1,6 +1,7 @@
 main() {
 	print("String");
-/*	printbool(true);
+	printbool(true);
 	printbool(false); 
-	printint(1); */
+	printint(1); 
+	return 0;
 }

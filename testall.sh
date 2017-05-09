@@ -178,7 +178,7 @@ if [ $# -ge 1 ]
 then
     files=$@
 else
-    files="tests/old_tests/test-*.gl tests/old_tests/fail-*.gl"
+    files="tests/new_tests/test-*.gl tests/new_tests/fail-*.gl"
 fi
 
 for file in $files
@@ -197,7 +197,7 @@ do
     esac
 done
 
-cat testall.log
+# cat testall.log
 
 exit $globalerror
 

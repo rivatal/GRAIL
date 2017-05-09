@@ -1,0 +1,11 @@
+main(){
+	x = ["cat", "bird"];
+	print(x[0]);
+	y .= x;
+	y[0] = "dog";
+	print(x[0]);
+	z = x;
+	z[0] = "dog";
+	print(x[0]);
+	return 0;
+}

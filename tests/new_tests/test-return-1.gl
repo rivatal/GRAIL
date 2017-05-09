@@ -1,0 +1,5 @@
+main() 
+{
+	i = "hello world";
+	return 0;
+}

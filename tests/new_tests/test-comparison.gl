@@ -1,5 +1,3 @@
-/* NEED TO ADD MORE BINARY OPERATOR */
-
 main(){
         if (12 == 12) {
                 print("EQ works");
