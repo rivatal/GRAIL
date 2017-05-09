@@ -371,8 +371,11 @@ let env, genv, recs,funcs = allenv in
        ae2 = annotate_expr allenv e2 and
        ae3 = annotate_expr allenv e3 in 
       AEdge(ae1, op, ae2, ae3, TEdge(gen_new_type(), type_of ae1, type_of ae3))
+
 and annotate_expr_list (allenv: allenv) (e: expr list): aexpr list =
-  List.map (fun a -> annotate_expr allenv a) e
+  let thelist = List.map (fun a -> annotate_expr allenv a) e in (* in 
+   ignore(print_string("377")); 
+  ignore(List.iter (fun a ->  print_string (string_of_aexpr a)) thelist); *) thelist
 
 and get_namestypes (aelist: (id * aexpr) list) : (id * primitiveType) list =
   let rec helper l fl : (id * primitiveType) list= 
@@ -539,12 +542,12 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
   *)
   | ACall(_, _, _, _, _) 
   | ANoexpr(_) -> []
-  | AList(ael, t) -> 
+  | AList(ael, t) -> [] (* 
     let rec helper l = 
       match l with
       |x :: y :: tail -> (type_of x, type_of y) :: helper (y :: tail)
       |[] | _ -> []
-    in (helper ael)
+    in (helper ael) *)
 
 
 (*Step 3 of HM: unify constraints*)
