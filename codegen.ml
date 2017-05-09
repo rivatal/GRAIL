@@ -139,10 +139,10 @@ let translate (functions) =
   )
 in 
 
-  in let compare e1 e2 t builder =
+  let rec compare e1 e2 t builder =
     (match t with
     A.TInt | A.TChar | A.TBool -> (L.build_icmp L.Icmp.Eq e1 e2 "tmp" builder, builder)
-    | A.TFloat -> (L.build_fcmp L.Fcmp.Eq e1 e2 "tmp" builder, builder)
+    | A.TFloat -> (L.build_fcmp L.Fcmp.Oeq e1 e2 "tmp" builder, builder)
     | A.TRec(_, fields) -> let rec1 = L.build_alloca (ltype_of_typ t) "strct" builder in ignore(L.build_store e1 rec1 builder);
         let rec2 = L.build_alloca (ltype_of_typ t) "strct" builder in ignore(L.build_store e2 rec2 builder);
         compare_fields 0 fields rec1 rec2 builder
@@ -168,15 +168,16 @@ in
         let (relcomp, builder) = compare (L.build_load (L.build_struct_gep g1 2 "tmp" builder) "val" builder)
                                           (L.build_load (L.build_struct_gep g2 2 "tmp" builder) "val" builder) ereltyp builder in
         (L.build_mul nodescomp (L.build_mul edgescomp relcomp "tmp" builder) "tmp" builder, builder)
+    | A.TList(_) -> compare_list e1 e2 t builder
     )
 
-  and compare_fields n fields rec1 rec1 builder = 
+  and compare_fields n fields rec1 rec2 builder = 
   (match fields with 
-    [] -> L.const_int i1_t 1 (*empty recs are equal*)
+    [] -> (L.const_int i1_t 1, builder) (*empty recs are equal*)
   | (_,t)::tl -> let (cmp, builder) = compare (L.build_load (L.build_struct_gep rec1 n "tmp" builder) "val" builder) 
                                               (L.build_load (L.build_struct_gep rec2 n "tmp" builder) "val" builder) t builder in
                   let (restcmp, builder) = compare_fields (n+1) tl rec1 rec2 builder in
-                  (L.const_and cmp restcmp, builder)
+                  (L.build_mul cmp restcmp "tmp" builder, builder)
   )
   
 
@@ -185,21 +186,20 @@ in
       let struct1 = L.build_alloca (ltype_of_typ t) "strct" builder in ignore(L.build_store lst1 struct1 builder);
       let struct2 = L.build_alloca (ltype_of_typ t) "strct" builder in ignore(L.build_store lst2 struct2 builder);
 
-      let len1 = L.build_load (L.build_struct_gep oldstruct 1 "tmp" builder) "len" builder
-      and len2 = L.build_load (L.buid) (L.build_struct_gep oldstruct 1 "tmp" builder) "len" builder in
+      let len1 = L.build_load (L.build_struct_gep struct1 1 "tmp" builder) "len" builder
+      and len2 = L.build_load (L.build_struct_gep struct2 1 "tmp" builder) "len" builder in
      
-      let comp_val = L.build_icmp L.Icmp.Eq e1 e2 "tmp" builder in
+      let comp_val = L.build_icmp L.Icmp.Eq len1 len2 "tmp" builder in
       let merge_bb = L.append_block context "merge" the_function in
-      let merge_builder = L.builder_at_end context merge_bb
 
       let then_bb = L.append_block context "compare" the_function in 
 
       ignore (L.build_cond_br comp_val then_bb merge_bb builder);
 
       (*copy over old list elements by effectively using a for-in loop*) 
-      let then_builder = L.builder_at_end context then_bb
+      let then_builder = L.builder_at_end context then_bb in
       let lstvals1 = L.build_load (L.build_struct_gep struct1 0 "tmp" then_builder) "lst" then_builder and
-      let lstvals2 = L.build_load (L.build_struct_gep struct2 0 "tmp" then_builder) "lst" then_builder  in
+      lstvals2 = L.build_load (L.build_struct_gep struct2 0 "tmp" then_builder) "lst" then_builder  in
       let elind = L.build_alloca i32_t "ind" then_builder in ignore(L.build_store (L.const_int i32_t 0) elind then_builder);
 
       let pred_bb = L.append_block context "checklimits" the_function in
@@ -208,10 +208,10 @@ in
       let body_bb = L.append_block context "comparison" the_function in
       let body_builder = L.builder_at_end context body_bb in
       let ind = L.build_load elind "i" body_builder in
-      let p1 = L.build_in_bounds_gep oldlst [|ind|] "ptr" body_builder and p2 = L.build_in_bounds_gep newlst [|ind|] "ptr" body_builder in
-      let el1 = (L.build_load p1 "tmp" body_builder) and el2 = (L.build_load p1 "tmp" body_builder)in 
-      let (elcomp, body_builder) = copy oldel list_typ body_builder in
-      let compval = L.const_and compval 
+      let p1 = L.build_in_bounds_gep lstvals1 [|ind|] "ptr" body_builder and p2 = L.build_in_bounds_gep lstvals2 [|ind|] "ptr" body_builder in
+      let el1 = (L.build_load p1 "tmp" body_builder) and el2 = (L.build_load p1 "tmp" body_builder) in 
+      let (elcomp, body_builder) = compare el1 el2 list_typ body_builder in
+      let comp_val = L.build_mul comp_val elcomp "tmp" body_builder in
       
       ignore(L.build_store (L.build_add (L.build_load elind "tmp" body_builder) (L.const_int i32_t 1) "inc" body_builder) elind body_builder);
       add_terminal body_builder (L.build_br pred_bb);
@@ -222,9 +222,8 @@ in
       ignore (L.build_cond_br bool_val body_bb merge_bb pred_builder);
 
       let end_builder = L.builder_at_end context merge_bb in
-      ignore(L.build_store newlst (L.build_struct_gep newstruct 0 "tmp" end_builder) end_builder);
-      (L.build_load newstruct "strct" end_builder, end_builder)
-
+      (comp_val, end_builder)
+  in
   let rec assign_array ar els n builder = (*stores elements, starting with element n in ar, returns ar*)
     match els with
       [] -> ar
@@ -390,7 +389,7 @@ and copy e t builder = (*returns a deep copy of e and the builder at the end of 
         ignore(L.build_store newdir (L.build_struct_gep newe 2 "tmp" builder) builder);
         ignore(L.build_store newrel (L.build_struct_gep newe 3 "tmp" builder) builder);
         (L.build_load newe "edge" builder, builder)
-    | A.TGraph(_, ntyp, etyp) -> let ereltyp = (match et with A.TEdge(_, _, rel) -> rel | _ -> raise(Failure "wrong edge type")) in
+    | A.TGraph(_, ntyp, etyp) -> let ereltyp = (match etyp with A.TEdge(_, _, rel) -> rel | _ -> raise(Failure "wrong edge type")) in
         let newg = L.build_alloca (ltype_of_typ t) "graph" builder in
         let oldg = L.build_alloca (ltype_of_typ t) "graph" builder in ignore(L.build_store e oldg builder);
         let (newnodes, builder) = copy (L.build_load (L.build_struct_gep oldg 0 "tmp" builder) "val" builder) (A.TList ntyp) builder in
@@ -534,12 +533,15 @@ in
         |  _  -> aexpr builder1 local_var_map e2 )
       in
       let et = get_expr_type e1 in
-        (match et with 
+      (match op with
+      A.Equal -> compare e1' e2' et builder
+    | A.Neq -> let (compval, builder) = compare e1' e2' et builder in (L.build_sub (L.const_int i1_t 1) compval "tmp" builder, builder)
+    | _ ->  (match et with 
          | A.TFloat -> ((float_ops op) e1' e2' "tmp" builder', builder')
          | A.TList _ -> list_ops e1' e2' t op builder'
          | A.TGraph(_,_,_) -> graph_ops e1' e2' t op builder'
          | _ -> ((int_ops op) e1' e2' "tmp" builder', builder')                                            
-        )
+        ))
         | A.ANoexpr _ -> (L.const_int i32_t 0, builder)
       | A.ARecord(alist,trec) ->
             let (argslist, builder) = build_expressions (List.map (fun f -> (snd f)) alist) builder local_var_map
