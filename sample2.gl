@@ -1,0 +1,16 @@
+f(){
+a = {weight:4};
+b .= a;
+b.weight = 5;
+c = {weight: 2};
+d = {weight: 2}; 
+
+y = 5;
+if(c == d){
+     y = 3;
+}
+
+e = a -- c with {weight: 1};
+
+
+}
