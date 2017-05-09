@@ -339,7 +339,7 @@ let env, genv, recs,funcs = allenv in
     in let apairlist = helper (List.sort comp pairlist) in
     ignore(if(has_dups pairlist) then(raise(failwith("error: duplicate record entry"))) else());
     let typ = get_rec recs apairlist in 
-    ARecord(apairlist, typ)
+    ARecord(apairlist, (typ))
  | Graph(elist, tedge) ->
    let aelist = infer_expr_list allenv (elist) in
    let edgelist, nodelist = split_list aelist in
@@ -394,8 +394,8 @@ and get_rec (recs: recs) (fieldslist: (id * aexpr) list) : primitiveType =
   |[] -> let newtype = gen_new_rec(fieldslist) in newtype
   |TRec(name, fl) :: t -> 
   if(fl = curr) 
-  then((* ignore(print_string("getting rec " ^ (string_of_type name))); *) TRec(name, fl)) 
-  else((* ignore(print_string("couldn't find rec "));  *)helper t curr rl)
+  then(TRec(name, fl)) 
+  else(helper t curr rl)
   |_ -> raise(failwith("error"))
 in helper recs (get_namestypes fieldslist) recs
 
@@ -509,7 +509,7 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
                            |T(_), T(_) -> [(t, et1); (et1, TGraph(gen_new_type(), et2, gen_new_type()))]
                            | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ "," ^ (string_of_type et2) ^ " not valid types for Gadd")))   
  *)      | Eadd -> 
-       (match et1, et2 with |TGraph(name, n, e), TEdge(_,_,_) -> [(t, et1); (et2, e)] (* (t, TGraph(name, n, et2))] *)
+       (match et1, et2 with |TGraph(name, n, e), TEdge(_,_,_) -> ignore(print_string(string_of_type et2 ^ ", " ^ string_of_type e)); [(t, et1); (et2, e)] (* (t, TGraph(name, n, et2))] *)
                             | _ -> [(t, et1)] 
 (*                            |T(_), TEdge(_,_,_) | T(_), T(_) ->  [(t, et1); (et1, TGraph(gen_new_type(), gen_new_type(), et2))]
                            | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ ", " ^ (string_of_type et2) ^ " not valid graph for Eadd")) *)
