@@ -13,19 +13,12 @@ let translate (functions) =
   let context = L.global_context () in
   let the_module = L.create_module context "Grail"
   and i32_t = L.i32_type context
-  and i64_t = L.i64_type context
   and i8_t  = L.i8_type  context
   and i1_t  = L.i1_type  context
   and str_t = L.pointer_type (L.i8_type context)
   and float_t = L.float_type context
   and void_t= L.void_type context
   and pointer_t = L.pointer_type
-  in
-  let name_var = ref(1) in 
-  let gen_new_name() = 
-    (incr name_var;
-    ("struct."^ string_of_int(!name_var))
-    )
   in 
   let tymap = (ref TypeMap.empty) 
   in let rec ltype_of_typ = function
@@ -226,7 +219,25 @@ in
     let list_ops e1 e2 t op builder =
     (match op with
       A.Ladd -> add_to_list e1 e2 t builder
+    | _ -> raise(Failure "wrong operation applied to lists")
     )
+
+  in
+
+    let graph_ops e1 e2 t op builder =
+      let (ntyp, etyp) = get_graph_types t in
+      let gstruct = L.build_alloca (ltype_of_typ t) "strct" builder in ignore(L.build_store e1 gstruct builder);
+      (match op with
+        A.Gadd -> let oldns = L.build_load (L.build_struct_gep gstruct 0 "ptr" builder) "nodes" builder in
+                  let (newns, builder) =  add_to_list oldns e2 (A.TList ntyp) builder in
+                  ignore(L.build_store newns (L.build_struct_gep gstruct 0 "tmp" builder) builder);
+                  (gstruct, builder)
+      | A.Eadd -> let oldes = L.build_load (L.build_struct_gep gstruct 1 "ptr" builder) "nodes" builder in
+                  let (newes, builder) =  add_to_list oldes e2 (A.TList etyp) builder in
+                  ignore(L.build_store newes (L.build_struct_gep gstruct 1 "tmp" builder) builder);
+                  (gstruct, builder)
+      | _ -> raise(Failure "wrong operation applied to graphs")
+      )
 
 in
 
@@ -248,10 +259,10 @@ in
 
     let body_bb = L.append_block context "assignment" the_function in
     let body_builder = L.builder_at_end context body_bb in
-    let ind = (L.build_load elind) "i" body_builder in
+    let ind = L.build_load elind "i" body_builder in
     let oldp = L.build_in_bounds_gep oldlst [|ind|] "ptr" body_builder and newp = L.build_in_bounds_gep newlst [|ind|] "ptr" body_builder in
     let oldel = (L.build_load oldp "tmp" body_builder) in let (newel, body_builder) = copy oldel list_typ body_builder in
-    ignore(L.build_store (L.build_load oldp "tmp" body_builder) newp body_builder);
+    ignore(L.build_store newel newp body_builder);
     
     ignore(L.build_store (L.build_add (L.build_load elind "tmp" body_builder) (L.const_int i32_t 1) "inc" body_builder) elind body_builder);
     add_terminal body_builder (L.build_br pred_bb);
@@ -275,6 +286,38 @@ and copy e t builder = (*returns a deep copy of e and the builder at the end of 
     | A.TString -> (e, builder)
     | A.TFloat -> (e, builder)
     | A.TList _ -> copy_list e t builder
+    | A.TRec(_, fields) -> let newrec = L.build_alloca (ltype_of_typ t) "strct" builder in 
+        let oldrec = L.build_alloca (ltype_of_typ t) "strct" builder in ignore(L.build_store e oldrec builder);
+        copy_fields 0 fields newrec oldrec builder
+    | A.TEdge(_, trec1, trec2) -> let newe = L.build_alloca (ltype_of_typ t) "edge" builder in
+        let olde = L.build_alloca (ltype_of_typ t) "edge" builder in ignore(L.build_store e olde builder);
+        let (newfrom, builder) = copy (L.build_load (L.build_struct_gep olde 0 "tmp" builder) "val" builder) trec1 builder in
+        let (newto, builder) = copy (L.build_load (L.build_struct_gep olde 1 "tmp" builder) "val" builder) trec1 builder in
+        let (newdir, builder) = copy (L.build_load (L.build_struct_gep olde 2 "tmp" builder) "val" builder) A.TBool builder in
+        let (newrel, builder) = copy (L.build_load (L.build_struct_gep olde 3 "tmp" builder) "val" builder) trec2 builder in
+        ignore(L.build_store newfrom (L.build_struct_gep newe 0 "tmp" builder) builder);
+        ignore(L.build_store newto (L.build_struct_gep newe 1 "tmp" builder) builder);
+        ignore(L.build_store newdir (L.build_struct_gep newe 2 "tmp" builder) builder);
+        ignore(L.build_store newrel (L.build_struct_gep newe 3 "tmp" builder) builder);
+        (L.build_load newe "edge" builder, builder)
+    | A.TGraph(_, ntyp, etyp) -> let newg = L.build_alloca (ltype_of_typ t) "graph" builder in
+        let oldg = L.build_alloca (ltype_of_typ t) "graph" builder in ignore(L.build_store e oldg builder);
+        let (newnodes, builder) = copy (L.build_load (L.build_struct_gep oldg 0 "tmp" builder) "val" builder) (A.TList ntyp) builder in
+        let (newedges, builder) = copy (L.build_load (L.build_struct_gep oldg 1 "tmp" builder) "val" builder) (A.TList etyp) builder in
+        let (newrel, builder) = copy (L.build_load (L.build_struct_gep oldg 2 "tmp" builder) "val" builder) etyp builder in
+        ignore(L.build_store newnodes (L.build_struct_gep newg 0 "tmp" builder) builder);
+        ignore(L.build_store newedges (L.build_struct_gep newg 1 "tmp" builder) builder);
+        ignore(L.build_store newrel (L.build_struct_gep newg 2 "tmp" builder) builder);
+        (L.build_load newg "graph" builder, builder)
+    | _ -> raise(Failure "not a valid type")
+
+  )
+
+and copy_fields n fields newrec oldrec builder = 
+  (match fields with 
+    [] -> (L.build_load newrec "rec" builder, builder)
+  | (_,t)::tl -> let (newval, builder) = copy (L.build_load (L.build_struct_gep oldrec n "tmp" builder) "val" builder) t builder in
+                  ignore(L.build_store newval (L.build_struct_gep newrec n "tmp" builder) builder); copy_fields (n+1) tl newrec oldrec builder
   )
 
 in
@@ -305,7 +348,7 @@ in
       [] -> ([], builder)
     | e::tl -> let (exp, newbuilder) = aexpr builder local_var_map e in 
             let (other_exps, endbuilder) = 
-            build_expressions tl newbuilder local_var_map in (exp::other_exps, newbuilder))
+            build_expressions tl newbuilder local_var_map in (exp::other_exps, endbuilder))
 
   and build_list_from_els l t builder local_var_map = 
     let list_typ = get_list_type t and (els, newbuilder) = build_expressions l builder local_var_map in 
@@ -316,6 +359,44 @@ in
     ignore(L.build_store init_list p0 newbuilder); ignore(L.build_store (L.const_int i32_t (List.length l)) p1 newbuilder);
     (L.build_load struct_var "lst" newbuilder, newbuilder) 
 
+  and build_edge_with_record e1 op e2 erec typ builder local_var_map = 
+           let (directed,from,into) =
+            match op with
+             | A.Dash -> (false,e1,e2)
+             | A.To -> (true,e1,e2)
+             | A.From -> (true,e2,e1)
+             | _ -> raise(Failure("undefined edge type"))
+             
+             in let get_ptr e = 
+                  (match e with 
+                    A.AId(n,_) -> 
+                        (try StringMap.find n local_var_map
+                        with Not_found -> 
+                        raise (Failure ("undeclared variable " ^ n)))
+                       
+                    | _-> raise (Failure ("Not supported.Node must be declared"))
+                   )
+            (*in let (erec, builder) = aexpr builder local_var_map item*)
+
+            in let argslist =
+            [   get_ptr from;
+                get_ptr into;
+                fst (aexpr builder local_var_map (A.ABoolLit(directed,A.TBool)));
+                erec
+            ]
+
+         in let loc = L.build_alloca (ltype_of_typ typ) "" builder
+     in let rec populate_structure fields i = 
+      match fields with 
+      | [] -> L.build_load loc "" builder
+      | hd :: tl ->
+            ( let eptr = L.build_struct_gep loc i "ptr" builder
+                in ignore(L.build_store hd eptr builder);
+          populate_structure tl (i+1) 
+              )
+    in (populate_structure argslist 0, builder)
+
+
   and aexpr builder local_var_map = function
         A.AIntLit(i, _) -> (L.const_int i32_t i, builder)
       | A.ABoolLit(b, _) -> (L.const_int i1_t (if b then 1 else 0), builder)
@@ -323,14 +404,8 @@ in
       | A.ACharLit(c, _) -> (L.const_int i8_t (C.code c), builder)
       | A.AFloatLit(f, _) -> (L.const_float float_t f, builder)
       | A.AId(s,_) -> (L.build_load (lookup s local_var_map) s builder, builder)
-      | A.AList(l, t) ->  build_list_from_els l t builder local_var_map (*let list_typ = get_list_type t and (els, newbuilder) = build_expressions l builder local_var_map in 
-        let struct_var = L.build_alloca (ltype_of_typ t) "strct" newbuilder in
-        let ar_var = L.build_array_alloca (ltype_of_typ list_typ) (L.const_int i32_t (List.length l)) "lst" newbuilder in
-        let init_list = assign_array ar_var els 0 newbuilder in
-        let p0 = L.build_struct_gep struct_var 0 "p0" newbuilder and p1 = L.build_struct_gep struct_var 1 "p1" newbuilder in
-        ignore(L.build_store init_list p0 newbuilder); ignore(L.build_store (L.const_int i32_t (List.length l)) p1 newbuilder); 
-        (L.build_load struct_var "lst" newbuilder, newbuilder)*)
-      | A.AItem(s, e, t) -> let strct = lookup s local_var_map in let arp = L.build_struct_gep strct 0 "tmp" builder in
+      | A.AList(l, t) ->  build_list_from_els l t builder local_var_map
+      | A.AItem(s, e, _) -> let strct = lookup s local_var_map in let arp = L.build_struct_gep strct 0 "tmp" builder in
                             let ar = L.build_load arp "tmpar" builder and (ad, builder) = aexpr builder local_var_map e in
                             let p = L.build_in_bounds_gep ar [|ad|] "ptr" builder in (L.build_load p "item" builder, builder)
       | A.ACall ("print", [e], _, _, _) -> let (e', builder') =  (aexpr builder local_var_map e) in 
@@ -339,32 +414,38 @@ in
                                       (L.build_call display_func [| e' |] "sample_display" builder', builder')
       | A.ACall("printint", [e], _, _, _) | A.ACall ("printbool", [e], _, _, _) -> let (e', builder') =  (aexpr builder local_var_map e) in
                                         (L.build_call printf_func [| int_format_str ; e' |] "printf" builder', builder')
-
-
-      | A.ACall("printint", [e], _, _, _) | A.ACall ("printbool", [e], _, _, _) -> let (e', builder') =  (aexpr builder local_var_map e) in
-                                        (L.build_call printf_func [| int_format_str ; e' |] "printf" builder', builder')
       | A.ACall("printfloat", [e], _, _, _) -> let (e', builder') =  (aexpr builder local_var_map e) in 
                                 (L.build_call printf_func [| float_format_str ; e' |] "printf" builder', builder')
       |A.ACall("size", [e], _, _, _) -> let (e', builder') = (aexpr builder local_var_map e) in 
         let strct = L.build_alloca (L.type_of e') "strct" builder' in ignore(L.build_store e' strct builder');
         (L.build_load (L.build_struct_gep strct 1 "tmp" builder') "len" builder', builder')
-      | A.ACall (f, act, _, callname, _) ->
+      | A.ACall (_, act, _, callname, _) ->
         let (fdef, fdecl) = StringMap.find callname function_decls in
         let (actuals', builder') = build_expressions (List.rev act) builder local_var_map in
         let actuals = List.rev actuals' in
         let result = (match fdecl.A.typ with A.TVoid -> ""
                                            | _ -> callname ^ "_result") in
         (L.build_call fdef (Array.of_list actuals) result builder', builder')
-      | A.AUnop(op, e, t) ->
+      | A.AUnop(op, e, _) ->
             let (e', builder') = aexpr builder local_var_map e in
            ((match op with
             A.Neg     -> L.build_neg
            | A.Not     -> L.build_not) e' "tmp" builder', builder')
       | A.ABinop (e1, op, e2, t) ->     let (e1', builder1) = aexpr builder local_var_map e1
-        in let (e2', builder') = aexpr builder1 local_var_map e2 in
+        in let (e2', builder') = (
+          match e2 with
+          A.AEdge(n1, op, n2, rel, typ) -> 
+            (match rel with
+              A.ANoexpr _ -> let g = L.build_alloca (ltype_of_typ t) "g" builder1 in ignore(L.build_store e1' g builder1);
+                          build_edge_with_record n1 op n2 (L.build_load (L.build_struct_gep g 2 "ptr" builder1) "tmp" builder1) typ builder1 local_var_map
+            | _ -> aexpr builder1 local_var_map e2
+            )
+        |  _  -> aexpr builder1 local_var_map e2 )
+      in
         (match t with 
-         | A.TFloat _ -> ((float_ops op) e1' e2' "tmp" builder', builder')
-         | A.TList t' -> list_ops e1' e2' t op builder'
+         | A.TFloat -> ((float_ops op) e1' e2' "tmp" builder', builder')
+         | A.TList _ -> list_ops e1' e2' t op builder'
+         | A.TGraph(_,_,_) -> graph_ops e1' e2' t op builder'
          | _ -> ((int_ops op) e1' e2' "tmp" builder', builder')                                            
         )
         | A.ANoexpr _ -> (L.const_int i32_t 0, builder)
@@ -376,47 +457,13 @@ in
 			| [] -> L.build_load loc "" builder
 			| hd :: tl ->
 	          ( let eptr = L.build_struct_gep loc i "ptr" builder
-                in L.build_store hd eptr builder;
+                in ignore(L.build_store hd eptr builder);
 			    populate_structure tl (i+1) 
               )
 		in (populate_structure argslist 0, builder)
-       | A.AEdge(e1,op,e2,item,typ) ->
-           let (directed,from,into) =
-            match op with
-             | Dash -> (false,e1,e2)
-             | To -> (true,e1,e2)
-             | From -> (true,e2,e1)
-             | _ -> raise(Failure("undefined edge type"))
-             
-             in let get_ptr e = 
-                  (match e with 
-                    A.AId(n,_) -> 
-                        try StringMap.find n local_var_map
-                        with Not_found -> 
-                        raise (Failure ("undeclared variable " ^ n))
-                       
-                    | _-> raise (Failure ("Not supported.Node must be declared"))
-                   )
-            in let (erec, builder) = aexpr builder local_var_map item
-
-            in let argslist =
-            [   get_ptr e1;
-                get_ptr e2;
-                fst (aexpr builder local_var_map (A.ABoolLit(directed,A.TBool)));
-                erec
-            ]
-
-         in let loc = L.build_alloca (ltype_of_typ typ) "" builder
-		 in let rec populate_structure fields i = 
-			match fields with 
-			| [] -> L.build_load loc "" builder
-			| hd :: tl ->
-	          ( let eptr = L.build_struct_gep loc i "ptr" builder
-                in L.build_store hd eptr builder;
-			    populate_structure tl (i+1) 
-              )
-		in (populate_structure argslist 0, builder)
-      | A.ADot(e1,entry,typ) ->
+       | A.AEdge(e1,op,e2,item,typ) -> let (rel, builder) = aexpr builder local_var_map item in
+          build_edge_with_record e1 op e2 rel typ builder local_var_map 
+      | A.ADot(e1,entry,_) ->
            let rec match_name lst n = 
              match lst with 
                 | [] -> raise (Failure ("Not found"))
@@ -424,10 +471,13 @@ in
                             1 + match_name t n
           in
           let trec = get_expr_type e1 in
-          let alist = match trec with TRec(s, l) -> l in
+          let alist = (match trec with 
+            A.TRec(_, l) -> l
+          | _ -> raise(Failure ("dot applied to wrong type"))) in
+
           let mems = List.map fst alist in
           (match e1 with
-            | AId(name,trec) ->  
+            | A.AId(name,_) ->  
                 let index = match_name mems entry
                 in let load_loc = lookup name local_var_map 
                 in let ext_val = L.build_struct_gep load_loc index "ext_val" builder      
@@ -475,20 +525,22 @@ in
                                       in (newnodes, newe::edges, newids)               
 
                                     | _ -> (nodes, h::edges, ids))
+              | _ -> raise(Failure "wrong type given to graph constructor")
                             )
           in
 
-          let (nodes, edges, ids) = split_lists lst in 
+          let (nodes, edges, _) = split_lists lst in 
           let (grel, builder) = aexpr builder local_var_map rel in
           let graph = L.build_alloca (ltype_of_typ t) "g" builder in
-          ignore(L.build_store grel (L.build_struct_gep graph 2 "ptr" builder));
+          ignore(L.build_store grel (L.build_struct_gep graph 2 "ptr" builder) builder);
 
           let (ntyp, etyp) = get_graph_types t in
           let (nlist, builder) = build_list_from_els nodes (A.TList ntyp) builder local_var_map in
           let (elist, builder) = build_list_from_els edges (A.TList etyp) builder local_var_map in
-          ignore(L.build_store nlist (L.build_struct_gep graph 0 "ptr" builder));
-          ignore(L.build_store elist (L.build_struct_gep graph 1 "ptr" builder));
+          ignore(L.build_store nlist (L.build_struct_gep graph 0 "ptr" builder) builder);
+          ignore(L.build_store elist (L.build_struct_gep graph 1 "ptr" builder) builder);
           (graph, builder)
+
 
 
             
@@ -508,16 +560,16 @@ in
             in StringMap.add n local_var m in
 
           (match s with
-            A.AId(name, typ) -> 
+            A.AId(name, _) -> 
             let local_var_map = if StringMap.mem name local_var_map 
             then local_var_map 
             else add_local local_var_map (t,name) in 
             ignore (L.build_store e' (lookup name local_var_map) builder'); (builder', local_var_map)
-            | A.AItem(name, adr, typ) ->
+            | A.AItem(name, adr, _) ->
             let arp = L.build_struct_gep (lookup name local_var_map) 0 "tmp" builder and (ad, builder') = aexpr builder' local_var_map adr in
             let ar = L.build_load arp "tmpar" builder' in
             let p = L.build_in_bounds_gep ar [|ad|] "ptr" builder' in ignore(L.build_store e' p builder'); (builder', local_var_map)
-          | A.ADot(r, entry, typ) ->
+          | A.ADot(r, entry, _) ->
             let rec match_name lst n = 
               (match lst with 
                 [] -> raise (Failure ("Not found"))
@@ -531,12 +583,16 @@ in
               )
             in
             let rtype = get_expr_type r in
-            let alist = match rtype with TRec(s, l) -> l in
+            let alist = (match rtype with
+               A.TRec(_, l) -> l
+              | _ -> raise( Failure "wrong type provided to record") )
+                in
             let mems = List.map fst alist in
             let index = match_name mems entry in
             let recval = (lookup name local_var_map) in
             let ptr = L.build_struct_gep recval index "ptr" builder' in
-            ignore(L.build_store e' ptr builder'); (builder', local_var_map))
+            ignore(L.build_store e' ptr builder'); (builder', local_var_map)
+            | _ -> raise(Failure "invalid lvalue"))
 
 
                  
@@ -576,7 +632,7 @@ in
                                          (* Build the code for each statement in the function *)
 
         | A.AForin (e1, e2, body) -> 
-        let ind = (match e1 with A.AId(s, t) -> (s, t)) in let lst = L.build_alloca (ltype_of_typ (A.TList (snd ind))) "lst" builder in
+        let ind = (match e1 with A.AId(s, t) -> (s, t) | _ -> raise(Failure "invalid for loop")) in let lst = L.build_alloca (ltype_of_typ (A.TList (snd ind))) "lst" builder in
         let (e2', builder) = (aexpr builder local_var_map e2)
         in ignore(L.build_store e2' lst builder);
         let elvar = L.build_alloca (ltype_of_typ (snd ind)) (fst ind) builder in
@@ -599,12 +655,12 @@ in
 
         let merge_bb = L.append_block context "merge" the_function in
         ignore (L.build_cond_br bool_val body_bb merge_bb pred_builder);
-        (L.builder_at_end context merge_bb, local_var_map)
+        (L.builder_at_end context merge_bb, new_local_var_map)
 
           
 
 
-    in let (builder,local_vars) = List.fold_left 
+    in let (builder,_) = List.fold_left 
            astmt (builder,local_vars) afunc.A.body 
     in
     (* Add a return if the last block falls off the end *)
