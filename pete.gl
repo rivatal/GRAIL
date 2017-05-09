@@ -43,5 +43,5 @@ main()
 		}
 	}
 
-
+    display(pete);
 }

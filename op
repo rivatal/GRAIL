@@ -1,0 +1,31 @@
+EDGES - 14
+NODES - 5
+DEFAULT WEIGHT 1
+
+from key1 - 2 -> to key2 - 2
+
+from key1 - 2 -> to key2 - 2
+
+from key1 - 3 -> to key2 - 3
+
+from key1 - 3 -> to key2 - 3
+
+from key1 - 3 -> to key2 - 3
+
+from key1 - 4 -> to key2 - 4
+
+from key1 - 4 -> to key2 - 4
+
+from key1 - 4 -> to key2 - 4
+
+from key1 - 4 -> to key2 - 4
+
+from key1 - 5 -> to key2 - 5
+
+from key1 - 5 -> to key2 - 5
+
+from key1 - 5 -> to key2 - 5
+
+from key1 - 5 -> to key2 - 5
+
+from key1 - 5 -> to key2 - 5
