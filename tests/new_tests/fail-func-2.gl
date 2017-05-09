@@ -1,0 +1,8 @@
+foo(a, b, c) { }
+
+bar(a, b, a) {} /* Error: duplicate formal a in bar */
+
+main()
+{
+  return 0;
+}

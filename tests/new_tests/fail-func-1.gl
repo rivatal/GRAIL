@@ -1,0 +1,12 @@
+foo() {}
+
+bar() {}
+
+baz() {}
+
+bar() {} /* Error: duplicate function bar */
+
+main()
+{
+  return 0;
+}

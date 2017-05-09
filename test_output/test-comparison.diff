@@ -1,6 +1,0 @@
-1c1
-< EQ worksEQ 2 worksGT worksLEQ worksGEQ works
-\ No newline at end of file
----
-> EQ worksEQ 2 worksLT worksGT worksLEQ worksGEQ works
-\ No newline at end of file

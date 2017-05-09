@@ -142,7 +142,6 @@ let rec check_field (fields: ((id * primitiveType) * (id * primitiveType))) : un
   |(id1, t1), (id2, t2) -> if(id1 = id2) then(check_compatible_types (t1,t2)) else(raise(failwith("mismatched fields " ^ id1 ^ " & " ^ id2)))
 
 and check_compatible_types (t: primitiveType * primitiveType) : unit =
-  (* ignore(print_string("checking compatible types.")); *)
   match t with 
    |T(_), a | TVoid, a | a, TVoid | a, T(_) -> ()
    |TList(_), TList(T(_)) | TList(T(_)), TList(_) -> ()
@@ -259,7 +258,6 @@ and update_map_funcs (astmts: astmt list) (funcs: funcs) (genv: genvironment) : 
 
 (*Step 1 of HM: annotate expressions with what can be gathered of their types.*)
 and annotate_expr (allenv: allenv) (e: expr) : aexpr =
-(*   ignore(print_string ("annotating " ^ (string_of_expr e) ^ "\n"));     *)  
 let env, genv, recs,funcs = allenv in
   match e with
   | IntLit(n) -> AIntLit(n, TInt)
@@ -274,7 +272,6 @@ let env, genv, recs,funcs = allenv in
   | Item(s, e) -> 
     let et1 = annotate_expr allenv e in 
     let typ = find_in_map s env in
-(*     ignore(print_string("type of " ^ s ^ " is " ^ string_of_type typ)); *)
     (match typ with
       TVoid -> raise (failwith (s ^ " not defined @ 115."))
      |TList(t) -> AItem(s, et1, t)
@@ -312,8 +309,6 @@ let env, genv, recs,funcs = allenv in
     then (AList(ael, TList(gen_new_type())))
     else (
           ignore(check_list_consistency ael);
-(*        ignore(print_string("Inferred ")); *)
-(*        ignore(List.iter (fun a -> print_string (string_of_aexpr a)) ael); *)
         let tl = List.nth ael (len-1) in 
         let t = (type_of (tl)) in 
        AList(ael, TList(t)))
@@ -336,7 +331,6 @@ let env, genv, recs,funcs = allenv in
     let in_id = get_func_name id in 
     ACall(id, aelist, astmts, in_id, t) 
 | Record(pairlist) -> 
-    (* ignore(print_string("you matched a record!"));*)
     let rec helper(l: (string * expr) list) =
     match l with
     [] -> []
@@ -344,9 +338,7 @@ let env, genv, recs,funcs = allenv in
     (id, (annotate_expr allenv expr)) :: helper tl 
     in let apairlist = helper (List.sort comp pairlist) in
     ignore(if(has_dups pairlist) then(raise(failwith("error: duplicate record entry"))) else());
-    (*ignore(print_string ("record is size " ^ string_of_int (List.length apairlist) ^ "\n")); *) 
-    let typ = get_rec recs apairlist in (* ignore(print_string("type : " ^ string_of_type typ ^ "\n"));*)
-(*     ignore(print_string("returning!")); *)
+    let typ = get_rec recs apairlist in 
     ARecord(apairlist, (typ))
  | Graph(elist, tedge) ->
    let aelist = infer_expr_list allenv (elist) in
@@ -485,7 +477,6 @@ and check_formals (aformals: (id * primitiveType) list) (allenv: allenv)  : unit
 
 (*Step 2 of HM: Collect constraints*)
 and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
-(*     ignore(print_string "collecting\n"); *)
   match ae with
   | AIntLit(_) | ABoolLit(_) | AStrLit(_) | AFloatLit(_) | ACharLit(_) | ARecord(_,_) | AGraph(_,_,_) -> []  (* no constraints to impose on literals *)
   | AId(_) -> []                   (* single occurence of val gives us no info *)
@@ -511,16 +502,18 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
               (et2, TList(gen_new_type())); 
               (t, TBool)]
                       | _ -> raise(failwith("Error @330")))
-      | Gadd ->  (*what about a tgraph of any and a trec??*)
-      (match et1, et2 with |TGraph(name, n, e), TRec(_, _) -> [(et2, n); (t, TGraph(name, et2, e))]
+      | Gadd ->  [(t, et1)](*what about a tgraph of any and a trec??*)
+(*       (match et1, et2 with  
+                           |TGraph(name, n, e), TRec(_, _) -> [(et2, n); (t, TGraph(name, et2, e))]
                            |T(_), TRec(_,_) ->  [(t, et1); (et1, TGraph(gen_new_type(), et2, gen_new_type()))]
                            |T(_), T(_) -> [(t, et1); (et1, TGraph(gen_new_type(), et2, gen_new_type()))]
-                           | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ "," ^ (string_of_type et2) ^ " not valid types for Gadd")))    
-      | Eadd -> 
-      (match et1, et2 with |TGraph(name, n, e), TEdge(_,_,_) -> [(et2, e); (t, TGraph(name, n, et2))]
-                           |T(_), TEdge(_,_,_) | T(_), T(_) ->  [(t, et1); (et1, TGraph(gen_new_type(), gen_new_type(), et2))]
-                           | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ ", " ^ (string_of_type et2) ^ " not valid graph for Eadd"))
-      )
+                           | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ "," ^ (string_of_type et2) ^ " not valid types for Gadd")))   
+ *)      | Eadd -> 
+       (match et1, et2 with |TGraph(name, n, e), TEdge(_,_,_) -> ignore(print_string(string_of_type et2 ^ ", " ^ string_of_type e)); [(t, et1); (et2, e)] (* (t, TGraph(name, n, et2))] *)
+                            | _ -> [(t, et1)] 
+(*                            |T(_), TEdge(_,_,_) | T(_), T(_) ->  [(t, et1); (et1, TGraph(gen_new_type(), gen_new_type(), et2))]
+                           | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ ", " ^ (string_of_type et2) ^ " not valid graph for Eadd")) *)
+      )      
       | _ -> raise(failwith("error"))
      in
     (collect_expr ae1) @ (collect_expr ae2) @ opc (*opc appended at the rightmost since we apply substitutions right to left *)
@@ -529,7 +522,7 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
     let opc = match op with
           | To | From | Dash ->
           (match et1, et2 with
-          |TRec(_,_), TRec(_,_) -> [(et1, et2)]
+          |TRec(_,_), TRec(_,_) -> ignore(check_compatible_types (et1,et2)); []
           | _ -> raise(failwith("error: " ^ string_of_aexpr ae1 ^ " and " ^ string_of_aexpr ae2 ^ " must be nodes.")))
           | _ -> raise(failwith((string_of_op op) ^ " not an edge operator."))
      in 
@@ -556,7 +549,6 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
 
 (*Step 3 of HM: unify constraints*)
 and unify (constraints: (primitiveType * primitiveType) list) : substitutions =
-(*       ignore(print_string "unifying\n"); *)
   match constraints with
   | [] -> []
   | (x, y) :: xs ->
@@ -576,7 +568,7 @@ and unify_one (t1: primitiveType) (t2: primitiveType) : substitutions =
   | TGraph(name1, a, b), TGraph(name2, c, d) -> unify_one a c @ unify_one b d 
   | TEdge(name1, n1, e1), TEdge(name2, n2, e2) ->
   (* ignore(print_string("matching " ^ (string_of_type name1) ^ "," ^ (string_of_type name2))); *)
-    unify_one n1 n2 @ unify_one e1 e2
+    unify_one name1 (TEdge(name2, n2, e2))
   | TRec(a, b), TRec(c, d) -> 
     ignore(let fieldslists = List.combine b d in List.map (fun x -> check_field x) fieldslists);
     unify_one a c (*right??*)
@@ -584,7 +576,6 @@ and unify_one (t1: primitiveType) (t2: primitiveType) : substitutions =
 
 (*Are we handling lists right?*)
 and substitute (u: primitiveType) (x: id) (t: primitiveType) : primitiveType =
-  (*   print_string "substituting"; *)  
   match t with
   | TInt | TBool | TString | TFloat | TList(_) | TChar| TVoid-> t 
   | T(c) | TRec(T(c),_)  | TEdge(T(c),_,_) | TGraph(T(c),_,_) -> if c = x then u else t 
@@ -593,7 +584,6 @@ and apply (subs: substitutions) (t: primitiveType) : primitiveType =
 
 (*Step 4: Used in final application of substitutions*) 
 and apply_expr (subs: substitutions) (ae: aexpr): aexpr =
-(*     ignore(print_string "applying\n"); *)
   match ae with
   | ABoolLit(b, t) -> ABoolLit(b, apply subs t)
   | AIntLit(n, t) -> AIntLit(n, apply subs t)
@@ -653,14 +643,11 @@ and update_map (allenv: allenv) (a: astmt) : allenv =
   |AAsn(ae1, ae2, _,_) ->
     let env, recs = (update_map_expr (type_of ae2) (env, recs)) in
     let env = asn_lval ae1 ae2 env in 
-   (* ignore(print_string (" updating " ^ (map_id (get_lval ae1)) ^ " with type " ^ (string_of_type (type_of ae2)) ^ "\n"));  *)
-   (* ignore(print_string(get_lval ae1 ^ " is " ^ string_of_type (NameMap.find(map_id (get_lval ae1)) env))); *)
    env, genv, recs, funcs
   |_ -> allenv 
 
 
 and update_map_func (a: astmt) (funcs: funcs) (genv: genvironment) : funcs = 
-(*   ignore(print_string("updating map func for " ^ string_of_astmt a));  *)
   match a with
   |AReturn(ae, _) 
   |AExpr(ae) 
@@ -720,10 +707,10 @@ and apply_update (call: aexpr) (funcs: funcs) (genv: genvironment ) : funcs =
       else(t :: recs) in
       let env = helper elist env in
     (env, recs)
-    |TEdge(tname, TRec(a,b), TRec(c,d)) -> 
+(*     |TEdge(tname, TRec(a,b), TRec(c,d)) -> 
       let env, recs = update_map_expr (TRec(a,b)) (env, recs) 
       in update_map_expr (TRec(c,d)) (env, recs)
-      |_ -> env, recs)
+ *)      |_ -> env, recs)
 
 (*Checks that return statements are consistent and returns the type for functions.*)
 and grab_returns (r: astmt list) : primitiveType list =

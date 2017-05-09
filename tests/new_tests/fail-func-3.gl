@@ -1,0 +1,12 @@
+foo() {}
+
+bar() {}
+
+print() {} /* Should not be able to define print */
+
+baz() {}
+
+main()
+{
+  return 0;
+}

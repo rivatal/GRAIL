@@ -36,10 +36,10 @@ let translate (functions) =
             then 
                TypeMap.find struct_name !tymap
             else
-                let record_t = L.named_struct_type context struct_name in 
-			    let ret_types = 
-			    Array.of_list(List.map (fun (_,t) -> ltype_of_typ t) tlist) 
-                in L.struct_set_body record_t ret_types false;
+                
+			         let ret_types = Array.of_list(List.map (fun (_,t) -> ltype_of_typ t) tlist) in
+                let record_t = L.struct_type context ret_types in 
+                (*in L.struct_set_body record_t ret_types false;*)
                 tymap := TypeMap.add ("struct."^tname) record_t !tymap;
                 record_t
     |A.TEdge(tany,trec1,trec2) ->
@@ -50,15 +50,17 @@ let translate (functions) =
                TypeMap.find struct_name !tymap
            else
            let struct_name = ("struct."^tname) in 
-           let edge_t = L.named_struct_type context struct_name in 
+           (*let edge_t = L.named_struct_type context struct_name in *)
            let ret_types = 
                           [  pointer_t (ltype_of_typ trec1);
                              pointer_t (ltype_of_typ trec1);
                              ltype_of_typ A.TBool;
                              ltype_of_typ trec2;
                            ] 
-           in let all_ret_types = Array.of_list(ret_types)
-           in L.struct_set_body edge_t all_ret_types false;
+           in 
+           let all_ret_types = Array.of_list(ret_types) in
+           let edge_t = L.struct_type context all_ret_types in
+           (*in L.struct_set_body edge_t all_ret_types false;*)
            tymap := TypeMap.add ("struct."^tname) edge_t !tymap;
            edge_t
     | A.TGraph(tany, nt, et) -> 
@@ -69,10 +71,10 @@ let translate (functions) =
                TypeMap.find struct_name !tymap
            else
            let struct_name = ("struct."^tname) in 
-           let graph_t = L.named_struct_type context struct_name in 
+           (*let graph_t = L.named_struct_type context struct_name in *)
            let ereltyp = (match et with A.TEdge(_, _, rel) -> rel | _ -> raise(Failure "wrong edge type")) in
            let ret_types = [| (ltype_of_typ (A.TList nt)); (ltype_of_typ (A.TList et)); (ltype_of_typ ereltyp)|] 
-           in L.struct_set_body graph_t ret_types false;
+           in let graph_t = L.struct_type context ret_types in
            tymap := TypeMap.add ("struct."^tname) graph_t !tymap;
            graph_t
     | _ -> raise(Failure "provided a bad type")
@@ -139,6 +141,93 @@ let translate (functions) =
   )
 in 
 
+  let rec compare e1 e2 t builder =
+    (match t with
+    A.TInt | A.TChar | A.TBool -> (L.build_icmp L.Icmp.Eq e1 e2 "tmp" builder, builder)
+    | A.TFloat -> (L.build_fcmp L.Fcmp.Oeq e1 e2 "tmp" builder, builder)
+    | A.TRec(_, fields) -> let rec1 = L.build_alloca (ltype_of_typ t) "strct" builder in ignore(L.build_store e1 rec1 builder);
+        let rec2 = L.build_alloca (ltype_of_typ t) "strct" builder in ignore(L.build_store e2 rec2 builder);
+        compare_fields 0 fields rec1 rec2 builder
+    | A.TEdge(_, trec1, trec2) -> let ed1 = L.build_alloca (ltype_of_typ t) "edge" builder in ignore(L.build_store e1 ed1 builder);
+        let ed2 = L.build_alloca (ltype_of_typ t) "edge" builder in ignore(L.build_store e2 ed2 builder);
+        let (fromcomp, builder) = compare (L.build_load (L.build_struct_gep ed1 0 "tmp" builder) "val" builder) 
+                                          (L.build_load (L.build_struct_gep ed2 0 "tmp" builder) "val" builder) trec1 builder in
+        let (tocomp, builder) = compare (L.build_load (L.build_struct_gep ed1 1 "tmp" builder) "val" builder)
+                                        (L.build_load (L.build_struct_gep ed2 1 "tmp" builder) "val" builder)  trec1 builder in
+        let (dircomp, builder) = compare (L.build_load (L.build_struct_gep ed1 2 "tmp" builder) "val" builder)
+                                          (L.build_load (L.build_struct_gep ed2 2 "tmp" builder) "val" builder) A.TBool builder in
+        let (relcomp, builder) = compare (L.build_load (L.build_struct_gep ed1 3 "tmp" builder) "val" builder)
+                                          (L.build_load (L.build_struct_gep ed1 3 "tmp" builder) "val" builder) trec2 builder in
+        (L.build_mul fromcomp (L.build_mul tocomp (L.build_mul dircomp relcomp "tmp" builder) "tmp" builder) "tmp" builder, builder)
+
+    | A.TGraph(_, ntyp, etyp) -> let ereltyp = (match etyp with A.TEdge(_, _, rel) -> rel | _ -> raise(Failure "wrong edge type")) in
+        let g1 = L.build_alloca (ltype_of_typ t) "graph" builder in ignore(L.build_store e1 g1 builder);
+        let g2 = L.build_alloca (ltype_of_typ t) "graph" builder in ignore(L.build_store e2 g2 builder);
+        let (nodescomp, builder) = compare (L.build_load (L.build_struct_gep g1 0 "tmp" builder) "val" builder) 
+                                          (L.build_load (L.build_struct_gep g2 0 "tmp" builder) "val" builder) (A.TList ntyp) builder in
+        let (edgescomp, builder) = compare (L.build_load (L.build_struct_gep g1 1 "tmp" builder) "val" builder)
+                                        (L.build_load (L.build_struct_gep g2 1 "tmp" builder) "val" builder)  (A.TList etyp) builder in
+        let (relcomp, builder) = compare (L.build_load (L.build_struct_gep g1 2 "tmp" builder) "val" builder)
+                                          (L.build_load (L.build_struct_gep g2 2 "tmp" builder) "val" builder) ereltyp builder in
+        (L.build_mul nodescomp (L.build_mul edgescomp relcomp "tmp" builder) "tmp" builder, builder)
+    | A.TList(_) -> compare_list e1 e2 t builder
+    )
+
+  and compare_fields n fields rec1 rec2 builder = 
+  (match fields with 
+    [] -> (L.const_int i1_t 1, builder) (*empty recs are equal*)
+  | (_,t)::tl -> let (cmp, builder) = compare (L.build_load (L.build_struct_gep rec1 n "tmp" builder) "val" builder) 
+                                              (L.build_load (L.build_struct_gep rec2 n "tmp" builder) "val" builder) t builder in
+                  let (restcmp, builder) = compare_fields (n+1) tl rec1 rec2 builder in
+                  (L.build_mul cmp restcmp "tmp" builder, builder)
+  )
+  
+
+    and compare_list lst1 lst2 t builder =  
+      let list_typ = get_list_type t in
+      let struct1 = L.build_alloca (ltype_of_typ t) "strct" builder in ignore(L.build_store lst1 struct1 builder);
+      let struct2 = L.build_alloca (ltype_of_typ t) "strct" builder in ignore(L.build_store lst2 struct2 builder);
+
+      let len1 = L.build_load (L.build_struct_gep struct1 1 "tmp" builder) "len" builder
+      and len2 = L.build_load (L.build_struct_gep struct2 1 "tmp" builder) "len" builder in
+     
+      let comp_val = L.build_icmp L.Icmp.Eq len1 len2 "tmp" builder in
+      let comp_loc = L.build_alloca i1_t "loc" builder in ignore(L.build_store comp_val comp_loc builder);
+      let merge_bb = L.append_block context "merge" the_function in
+
+      let then_bb = L.append_block context "compare" the_function in 
+
+      ignore (L.build_cond_br comp_val then_bb merge_bb builder);
+
+      (*copy over old list elements by effectively using a for-in loop*) 
+      let then_builder = L.builder_at_end context then_bb in
+      let lstvals1 = L.build_load (L.build_struct_gep struct1 0 "tmp" then_builder) "lst" then_builder and
+      lstvals2 = L.build_load (L.build_struct_gep struct2 0 "tmp" then_builder) "lst" then_builder  in
+      let elind = L.build_alloca i32_t "ind" then_builder in ignore(L.build_store (L.const_int i32_t 0) elind then_builder);
+
+      let pred_bb = L.append_block context "checklimits" the_function in
+      ignore (L.build_br pred_bb then_builder); 
+
+      let body_bb = L.append_block context "comparison" the_function in
+      let body_builder = L.builder_at_end context body_bb in
+      let ind = L.build_load elind "i" body_builder in
+      let p1 = L.build_in_bounds_gep lstvals1 [|ind|] "ptr" body_builder and p2 = L.build_in_bounds_gep lstvals2 [|ind|] "ptr" body_builder in
+      let el1 = (L.build_load p1 "tmp" body_builder) and el2 = (L.build_load p2 "tmp" body_builder) in 
+      let (elcomp, body_builder) = compare el1 el2 list_typ body_builder in
+      let comp_val = L.build_mul (L.build_load comp_loc "tmp" body_builder) elcomp "tmp" body_builder in
+      ignore(L.build_store comp_val comp_loc body_builder);
+      
+      ignore(L.build_store (L.build_add (L.build_load elind "tmp" body_builder) (L.const_int i32_t 1) "inc" body_builder) elind body_builder);
+      add_terminal body_builder (L.build_br pred_bb);
+
+      let pred_builder = L.builder_at_end context pred_bb in
+      let bool_val = L.build_icmp L.Icmp.Slt (L.build_load elind "tmp" pred_builder) len1 "comp" pred_builder in
+
+      ignore (L.build_cond_br bool_val body_bb merge_bb pred_builder);
+
+      let end_builder = L.builder_at_end context merge_bb in
+      (L.build_load comp_loc "tmp" end_builder, end_builder)
+  in
   let rec assign_array ar els n builder = (*stores elements, starting with element n in ar, returns ar*)
     match els with
       [] -> ar
@@ -304,11 +393,12 @@ and copy e t builder = (*returns a deep copy of e and the builder at the end of 
         ignore(L.build_store newdir (L.build_struct_gep newe 2 "tmp" builder) builder);
         ignore(L.build_store newrel (L.build_struct_gep newe 3 "tmp" builder) builder);
         (L.build_load newe "edge" builder, builder)
-    | A.TGraph(_, ntyp, etyp) -> let newg = L.build_alloca (ltype_of_typ t) "graph" builder in
+    | A.TGraph(_, ntyp, etyp) -> let ereltyp = (match etyp with A.TEdge(_, _, rel) -> rel | _ -> raise(Failure "wrong edge type")) in
+        let newg = L.build_alloca (ltype_of_typ t) "graph" builder in
         let oldg = L.build_alloca (ltype_of_typ t) "graph" builder in ignore(L.build_store e oldg builder);
         let (newnodes, builder) = copy (L.build_load (L.build_struct_gep oldg 0 "tmp" builder) "val" builder) (A.TList ntyp) builder in
         let (newedges, builder) = copy (L.build_load (L.build_struct_gep oldg 1 "tmp" builder) "val" builder) (A.TList etyp) builder in
-        let (newrel, builder) = copy (L.build_load (L.build_struct_gep oldg 2 "tmp" builder) "val" builder) etyp builder in
+        let (newrel, builder) = copy (L.build_load (L.build_struct_gep oldg 2 "tmp" builder) "val" builder) ereltyp builder in
         ignore(L.build_store newnodes (L.build_struct_gep newg 0 "tmp" builder) builder);
         ignore(L.build_store newedges (L.build_struct_gep newg 1 "tmp" builder) builder);
         ignore(L.build_store newrel (L.build_struct_gep newg 2 "tmp" builder) builder);
@@ -416,6 +506,12 @@ in
                                       (L.build_call printf_func [| e' |] "printf" builder', builder')
       | A.ACall ("sample_display", [e], _, _, _) -> let (e', builder') =  (aexpr builder local_var_map e) in 
                                       (L.build_call display_func [| e' |] "sample_display" builder', builder')
+      |A.ACall("display",[e],_,_,_) ->
+        let t = get_expr_type e in 
+        let graph_display_t = L.function_type i32_t [|ltype_of_typ t|] in
+        let graph_display_func = L.declare_function "display" graph_display_t the_module in let (e', builder') =  (aexpr builder local_var_map e) in 
+                                      (L.build_call graph_display_func [| e' |] "graph_display" builder', builder')
+      
       | A.ACall("printint", [e], _, _, _) | A.ACall ("printbool", [e], _, _, _) -> let (e', builder') =  (aexpr builder local_var_map e) in
                                         (L.build_call printf_func [| int_format_str ; e' |] "printf" builder', builder')
       | A.ACall("printfloat", [e], _, _, _) -> let (e', builder') =  (aexpr builder local_var_map e) in 
@@ -446,12 +542,16 @@ in
             )
         |  _  -> aexpr builder1 local_var_map e2 )
       in
-        (match t with 
+      let et = get_expr_type e1 in
+      (match op with
+      A.Equal -> compare e1' e2' et builder
+    | A.Neq -> let (compval, builder) = compare e1' e2' et builder in (L.build_sub (L.const_int i1_t 1) compval "tmp" builder, builder)
+    | _ ->  (match et with 
          | A.TFloat -> ((float_ops op) e1' e2' "tmp" builder', builder')
          | A.TList _ -> list_ops e1' e2' t op builder'
          | A.TGraph(_,_,_) -> graph_ops e1' e2' t op builder'
          | _ -> ((int_ops op) e1' e2' "tmp" builder', builder')                                            
-        )
+        ))
         | A.ANoexpr _ -> (L.const_int i32_t 0, builder)
       | A.ARecord(alist,trec) ->
             let (argslist, builder) = build_expressions (List.map (fun f -> (snd f)) alist) builder local_var_map
@@ -474,30 +574,45 @@ in
                 | h :: t -> if h = n then 0 else 
                             1 + match_name t n
           in
-          let trec = get_expr_type e1 in
-          let alist = (match trec with 
-            A.TRec(_, l) -> l
-          | _ -> raise(Failure ("dot applied to wrong type"))) in
-
-          let mems = List.map fst alist in
-          (match e1 with
-            | A.AId(name,_) ->  
-                let index = match_name mems entry
-                in let load_loc = lookup name local_var_map 
-                in let ext_val = L.build_struct_gep load_loc index "ext_val" builder      
-                in (L.build_load ext_val "" builder, builder)
-            |_ ->
-                let (e',builder) = aexpr builder local_var_map e1
-                in 
-                let loc = L.build_alloca (L.type_of e') "e" builder in
-                let _ = L.build_store e' loc builder
-                in 
-                let mems = 
-			         List.map (fun (id,_)  -> id) alist 
-                       
-                in let index = match_name mems entry
-                in let ext_val = L.build_struct_gep loc index "ext_val" builder      
-                in (L.build_load ext_val "" builder, builder))
+          let t = get_expr_type e1 in
+          (match t with 
+            A.TRec(_, alist) -> let mems = List.map fst alist in
+            (match e1 with
+              | A.AId(name,_) ->  
+                  let index = match_name mems entry
+                  in let load_loc = lookup name local_var_map 
+                  in let ext_val = L.build_struct_gep load_loc index "ext_val" builder      
+                  in (L.build_load ext_val "" builder, builder)
+              |_ ->
+                  let (e',builder) = aexpr builder local_var_map e1
+                  in 
+                  let loc = L.build_alloca (L.type_of e') "e" builder in
+                  let _ = L.build_store e' loc builder
+                  in 
+                  let mems = 
+    		         List.map (fun (id,_)  -> id) alist 
+                         
+                  in let index = match_name mems entry
+                  in let ext_val = L.build_struct_gep loc index "ext_val" builder      
+                  in (L.build_load ext_val "" builder, builder))
+            | A.TEdge(_, _, _) ->  let (e', builder) = aexpr builder local_var_map e1 in
+              let loc = L.build_alloca (L.type_of e') "e" builder in ignore(L.build_store e' loc builder);
+              (match entry with
+                "from" -> (L.build_load (L.build_struct_gep loc 0 "ptr" builder) "from" builder, builder)
+              | "to" -> (L.build_load (L.build_struct_gep loc 1 "ptr" builder) "to" builder, builder)
+              | "directed" -> (L.build_load (L.build_struct_gep loc 2 "ptr" builder) "dir" builder, builder)
+              | "rel" -> (L.build_load (L.build_struct_gep loc 3 "ptr" builder) "rel" builder, builder)
+              | _ -> raise( Failure "dot not supported with this keyword")
+              )
+            | A.TGraph(_, _, _) ->  let (e', builder) = aexpr builder local_var_map e1 in
+              let loc = L.build_alloca (L.type_of e') "e" builder in ignore(L.build_store e' loc builder);
+              (match entry with
+                "nodes" -> (L.build_load (L.build_struct_gep loc 0 "ptr" builder) "nodes" builder, builder)
+              | "edges" -> (L.build_load (L.build_struct_gep loc 1 "ptr" builder) "edges" builder, builder)
+              | _ -> raise( Failure "dot not supported with this keyword")
+              )
+            | _ -> raise(Failure "dot not supported on this type")
+        ) 
            
         | A.AGraph(lst, rel, t) -> 
           let rec split_lists l = 

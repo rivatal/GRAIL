@@ -1,1 +1,1 @@
-Fatal error: exception Failure("error: int was defined as bool")
+Fatal error: exception Failure("type mismatch: bool,int@118")
