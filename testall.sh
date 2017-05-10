@@ -5,8 +5,12 @@
 #make
 
 # Path to the LLVM interpreter
-LLI="/usr/bin/lli"
-LLL="/usr/bin/llvm-link"
+# Riva's path
+# LLI="/usr/bin/lli"
+# LLL="/usr/bin/llvm-link"
+# Jiaxin's path
+LLI="/usr/local/opt/llvm/bin/lli"
+LLL="/usr/local/opt/llvm/bin/llvm-link"
 
 # coloring notes
 # success = green
@@ -104,6 +108,7 @@ Check() {
 
     if [ $error -eq 0 ] ; then
         if [ $keep -eq 0 ] ; then
+            mv ${basename}.ll ./test_output/
             rm -f $generatedfiles
         fi
         echo "${GREEN}OK ${NC}"
@@ -197,7 +202,7 @@ do
     esac
 done
 
-cat testall.log
+# cat testall.log
 
 exit $globalerror
 
