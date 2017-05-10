@@ -316,7 +316,7 @@ let env, genv, recs,funcs = allenv in
           (match entry with 
           |"from" |"to" -> n 
           |"dir" -> TBool
-          |"rel" -> TEdge(a,n,e)
+          |"rel" -> e
           | _ -> raise(failwith(entry ^ " not a field@320."))
           )
           |T(x) -> T(x)
