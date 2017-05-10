@@ -13,11 +13,14 @@ type allenv = environment * genvironment * recs * funcs
 (* Unknown type,  resolved type. eg.[(T, TInt); (U, TBool)] *)
 type substitutions = (id * primitiveType) list
 
+(*Keep track of what function we're in when we annotate calls.*)
 let callstack = Stack.create()
 
+(* Maps an id to its name in the env *)
 let map_id (id: string) : string =
   let fname = Stack.top callstack in
   (map_id_with fname id)
+
 
 let func_variable = ref 1
 let type_variable = ref 1
