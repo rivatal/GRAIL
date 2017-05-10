@@ -34,19 +34,6 @@ let check_formals (s: string list) : unit =
     |_ -> ()
   in helper (List.sort mycmp s)
 
-(* Culls uncalled functions (whose variables are still typed as any) from the sast. *)
-let rec enforce_no_any (funcs: Ast.afunc list) : Ast.afunc list = 
-  match funcs with 
-  |[] -> []
-  |AFbody(AFdecl(_, aformals, _), _) :: tail ->
-  let toss = 
-    List.fold_left (fun hasany f -> 
-    (if(hasany = false) 
-     then(match f with | (_,T(_)) -> true | _ -> false) 
-    else(true))) false aformals
-  in 
-  if(toss) then(enforce_no_any tail) else(List.hd funcs :: enforce_no_any tail)
-
 let rec get_ids_formals(e: string list)(f: string) =
   check_formals e;
   match e with 
@@ -66,7 +53,7 @@ let infer_func (e: Ast.func) (genv : genvironment) : (Ast.afunc list * genvironm
 let grail (ast: Ast.afunc list) (input) : Ast.afunc list =
   let rec get_sast(p: Ast.program) (genv : genvironment) (l : Ast.afunc list) : Ast.afunc list  =   
     match p with
-    [] -> enforce_no_any (List.rev l)
+    [] -> List.rev l
     |hd :: tl -> let (afuncs, genv) =
                    infer_func hd genv 
     in get_sast tl genv (afuncs @ l) 
@@ -86,7 +73,6 @@ let grail (ast: Ast.afunc list) (input) : Ast.afunc list =
   in let genv = addbuiltins builtins NameMap.empty 
   in 
   get_sast (parse (input)) genv []
-
 
 let format_sast_codegen (ast : Ast.afunc) : Ast.sast_afunc = 
   match ast with 
@@ -133,7 +119,9 @@ let format_sast_codegen (ast : Ast.afunc) : Ast.sast_afunc =
     in 
    let sast = 
    List.map format_sast_codegen (grail [] file)
+
    in 
+   ignore(if((List.length sast) = 0) then(raise(failwith("error: invalid main"))) else());
    let m = Codegen.translate sast in
    Llvm_analysis.assert_valid_module m;  
    print_string (Llvm.string_of_llmodule m);;
