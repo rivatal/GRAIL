@@ -824,9 +824,6 @@ and infer_func (allenv: allenv) (f: func) :  (afunc list * genvironment)  =
         let aformals, toss = infer_formals formals env in   
         let genv = NameMap.add fname (ret_type, aformals, stmts) genv in 
         (ignore(Stack.pop callstack));
-        let funcs = 
-        match ret_type with 
-        T(_) -> funcs 
-        |_ -> if(toss) then(funcs) else(AFbody(AFdecl(fname, aformals, ret_type), istmts) :: funcs)
+        let funcs = if(fname = "main") then(AFbody(AFdecl(fname, aformals, ret_type), istmts) :: funcs) else(funcs)
       in funcs, genv) 
       else raise (failwith "function not defined @ 412")
