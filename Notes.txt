@@ -425,4 +425,5 @@ Only allow noexprs as nodes in a constructor of a graph or add to.
 
 g .&= e <- f;
 
-
+agraph with something other than a record?
+Record with a call in it?

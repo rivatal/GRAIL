@@ -835,7 +835,8 @@ and infer_func (allenv: allenv) (f: func) :  (afunc list * genvironment)  =
         let toss = has_any aformals in 
         let funcs = 
         match ret_type with 
-        T(_) -> funcs   
+        T(_) -> funcs 
         |_ -> if(toss) then(funcs) else(AFbody(AFdecl(fname, aformals, ret_type), astmts) :: funcs)
       in funcs, genv) 
       else raise (failwith "function not defined @ 412")
+
