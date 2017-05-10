@@ -54,7 +54,7 @@ rule token = parse
 | "from"   { FROM }
 | "to"	   { TO }
 | "rel"    { REL }
-| "directed" { DIRECTED }
+| "dir" { DIRECTED }
 | "edges"	{ EDGES }
 | "nodes"	{ NODES }
 | "if"     { IF }

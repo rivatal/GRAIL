@@ -106,7 +106,7 @@ stmt:
   | expr DOT FROM { Dot($1, "from") }
   | expr DOT TO { Dot($1, "to") }
   | expr DOT REL { Dot($1, "rel") }
-  | expr DOT DIRECTED { Dot($1, "directed") }
+  | expr DOT DIRECTED { Dot($1, "dir") }
   | expr DOT EDGES { Dot($1, "edges") }
   | expr DOT NODES { Dot($1, "nodes") }
   | expr PLUS   expr { Binop($1, Add,   $3) }
