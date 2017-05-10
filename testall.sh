@@ -5,8 +5,12 @@
 #make
 
 # Path to the LLVM interpreter
-LLI="/usr/bin/lli"
-LLL="/usr/bin/llvm-link"
+# Riva's path
+# LLI="/usr/bin/lli"
+# LLL="/usr/bin/llvm-link"
+# Jiaxin's path
+LLI="/usr/local/opt/llvm/bin/lli"
+LLL="/usr/local/opt/llvm/bin/llvm-link"
 
 # coloring notes
 # success = green
