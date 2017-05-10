@@ -287,8 +287,6 @@ in
           | A.Leq     -> L.build_icmp L.Icmp.Sle
           | A.Greater -> L.build_icmp L.Icmp.Sgt
           | A.Geq     -> L.build_icmp L.Icmp.Sge
-          | A.And     -> L.build_and
-          | A.Or      -> L.build_or
           | _ -> raise (Failure "wrong operation applied to ints")
          )
     in
@@ -308,6 +306,14 @@ in
        | _ -> raise (Failure "wrong operation applied to floats")
       )
     in
+
+    let bool_ops op = 
+    (match op with 
+      A.And     -> L.build_and
+    | A.Or      -> L.build_or
+    | _ -> raise (Failure "wrong operation applied to bools") )
+
+  in
 
     let list_ops e1 e2 t op builder =
     (match op with
@@ -522,7 +528,7 @@ in
         let strct = L.build_alloca (L.type_of e') "strct" builder' in ignore(L.build_store e' strct builder');
         (L.build_load (L.build_struct_gep strct 1 "tmp" builder') "len" builder', builder')
       | A.ACall (_, act, _, callname, _) ->
-        let (fdef, fdecl) = StringMap.find callname function_decls in
+        let (fdef, fdecl) = try StringMap.find callname function_decls with Not_found -> raise (Failure ("undeclared function " ^ callname)) in
         let (actuals', builder') = build_expressions (List.rev act) builder local_var_map in
         let actuals = List.rev actuals' in
         let result = (match fdecl.A.typ with A.TVoid -> ""
@@ -550,6 +556,7 @@ in
     | A.Neq -> let (compval, builder) = compare e1' e2' et builder in (L.build_sub (L.const_int i1_t 1) compval "tmp" builder, builder)
     | _ ->  (match et with 
          | A.TFloat -> ((float_ops op) e1' e2' "tmp" builder', builder')
+         | A.TBool -> ((bool_ops op) e1' e2' "tmp" builder', builder')
          | A.TList _ -> list_ops e1' e2' t op builder'
          | A.TGraph(_,_,_) -> graph_ops e1' e2' t op builder'
          | _ -> ((int_ops op) e1' e2' "tmp" builder', builder')                                            
