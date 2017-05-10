@@ -1,0 +1,8 @@
+main() {
+	x = {a: 1, b: 2};	
+	y = {a: 3, b: 4};
+	e = x->y with {weight: 1};
+	z = e.from;
+	printint(z.a);
+	return 0;
+}

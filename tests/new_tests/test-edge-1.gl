@@ -1,0 +1,6 @@
+main() {
+	x = {thing1: 1, thing2: 2};
+	y = {thing1: 1, thing2: 2};
+	e1 = x -> y with {weight: 1};
+	return 0;
+}

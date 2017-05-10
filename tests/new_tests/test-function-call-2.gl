@@ -5,4 +5,5 @@ f() {
 main() {
 	f();
 	print("MAIN");
+	return 0;
 }
