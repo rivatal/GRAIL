@@ -830,7 +830,7 @@ and infer_func (allenv: allenv) (f: func) :  (afunc list * genvironment)  =
         let aformals = infer_formals formals env in   
         let genv = NameMap.add fname (ret_type, aformals, stmts) genv in 
         let allenv = env, genv, recs, funcs in
-        let (_, astmts) = infer_stmt_list allenv stmts in  
+        let ((env, genv, recs, funcs), astmts) = infer_stmt_list allenv stmts in  
         (ignore(Stack.pop callstack));
         let toss = has_any aformals in 
         let funcs = 

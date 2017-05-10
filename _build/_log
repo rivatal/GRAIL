@@ -64,7 +64,7 @@ Warning 8: this pattern-matching is not exhaustive.
 Here is an example of a value that is not matched:
 (TInt|TBool|TString|TFloat|TChar|T _|TVoid|TList _|TRec (_, _)|
 TGraph (_, _, _))
-File "infer.ml", line 274, characters 2-5505:
+File "infer.ml", line 274, characters 2-5494:
 Warning 8: this pattern-matching is not exhaustive.
 Here is an example of a value that is not matched:
 Subset (_, _, _)
@@ -135,6 +135,8 @@ File "infer.ml", line 290, characters 7-10:
 Warning 27: unused variable a.
 File "infer.ml", line 307, characters 16-19:
 Warning 27: unused variable str.
+File "infer.ml", line 315, characters 17-18:
+Warning 27: unused variable a.
 File "infer.ml", line 323, characters 11-12:
 Warning 27: unused variable x.
 File "infer.ml", line 384, characters 16-18:
@@ -179,6 +181,10 @@ File "infer.ml", line 820, characters 23-28:
 Warning 27: unused variable funcs.
 File "infer.ml", line 820, characters 11-15:
 Warning 27: unused variable genv.
+File "infer.ml", line 833, characters 25-29:
+Warning 27: unused variable recs.
+File "infer.ml", line 833, characters 14-17:
+Warning 27: unused variable env.
 # Target: scanner.cmo, tags: { byte, compile, extension:cmo, extension:ml, file:scanner.cmo, file:scanner.ml, implem, ocaml, package(llvm), package(llvm.analysis), quiet }
 ocamlfind ocamlc -c -w +a-4 -package llvm.analysis -package llvm -o scanner.cmo scanner.ml
 # Target: grail.cmo, tags: { byte, compile, extension:cmo, extension:ml, file:grail.cmo, file:grail.ml, implem, ocaml, package(llvm), package(llvm.analysis), quiet }
@@ -237,7 +243,7 @@ Warning 8: this pattern-matching is not exhaustive.
 Here is an example of a value that is not matched:
 (TInt|TBool|TString|TFloat|TChar|T _|TVoid|TList _|TRec (_, _)|
 TGraph (_, _, _))
-File "infer.ml", line 274, characters 2-5505:
+File "infer.ml", line 274, characters 2-5494:
 Warning 8: this pattern-matching is not exhaustive.
 Here is an example of a value that is not matched:
 Subset (_, _, _)
@@ -308,6 +314,8 @@ File "infer.ml", line 290, characters 7-10:
 Warning 27: unused variable a.
 File "infer.ml", line 307, characters 16-19:
 Warning 27: unused variable str.
+File "infer.ml", line 315, characters 17-18:
+Warning 27: unused variable a.
 File "infer.ml", line 323, characters 11-12:
 Warning 27: unused variable x.
 File "infer.ml", line 384, characters 16-18:
@@ -352,6 +360,10 @@ File "infer.ml", line 820, characters 23-28:
 Warning 27: unused variable funcs.
 File "infer.ml", line 820, characters 11-15:
 Warning 27: unused variable genv.
+File "infer.ml", line 833, characters 25-29:
+Warning 27: unused variable recs.
+File "infer.ml", line 833, characters 14-17:
+Warning 27: unused variable env.
 # Target: scanner.cmx, tags: { compile, extension:cmx, extension:ml, file:scanner.cmx, file:scanner.ml, implem, native, ocaml, package(llvm), package(llvm.analysis), quiet }
 ocamlfind ocamlopt -c -w +a-4 -package llvm.analysis -package llvm -o scanner.cmx scanner.ml
 # Target: grail.cmx, tags: { compile, extension:cmx, extension:ml, file:grail.cmx, file:grail.ml, implem, native, ocaml, package(llvm), package(llvm.analysis), quiet }

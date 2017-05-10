@@ -316,7 +316,7 @@ let env, genv, recs,funcs = allenv in
           (match entry with 
           |"from" |"to" -> n 
           |"dir" -> TBool
-          |"rel" -> TEdge(a,n,e)
+          |"rel" -> e
           | _ -> raise(failwith(entry ^ " not a field@320."))
           )
           |T(x) -> T(x)
@@ -830,13 +830,12 @@ and infer_func (allenv: allenv) (f: func) :  (afunc list * genvironment)  =
         let aformals = infer_formals formals env in   
         let genv = NameMap.add fname (ret_type, aformals, stmts) genv in 
         let allenv = env, genv, recs, funcs in
-        let (_, astmts) = infer_stmt_list allenv stmts in  
+        let ((env, genv, recs, funcs), astmts) = infer_stmt_list allenv stmts in  
         (ignore(Stack.pop callstack));
         let toss = has_any aformals in 
         let funcs = 
         match ret_type with 
-        T(_) -> funcs 
+        T(_) -> funcs   
         |_ -> if(toss) then(funcs) else(AFbody(AFdecl(fname, aformals, ret_type), astmts) :: funcs)
       in funcs, genv) 
       else raise (failwith "function not defined @ 412")
-
