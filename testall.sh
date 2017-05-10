@@ -108,6 +108,7 @@ Check() {
 
     if [ $error -eq 0 ] ; then
         if [ $keep -eq 0 ] ; then
+            mv ${basename}.ll ./test_output/
             rm -f $generatedfiles
         fi
         echo "${GREEN}OK ${NC}"
