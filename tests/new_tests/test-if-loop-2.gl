@@ -6,4 +6,5 @@ main() {
 	else {
 		print("Smaller");
 	}
+	return 0;
 }

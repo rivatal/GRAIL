@@ -3,4 +3,5 @@ main() {
 	if (a > 0) { 
 		print("Bigger"); 
 	}
+	return 0;
 }
