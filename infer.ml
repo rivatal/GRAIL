@@ -266,7 +266,7 @@ and update_map_funcs (astmts: astmt list) (funcs: funcs) (genv: genvironment) : 
 (*Step 1 of HM: annotate expressions with what can be gathered of their types.*)
 and annotate_expr (allenv: allenv) (e: expr) : aexpr =
 let env, genv, recs,funcs = allenv in
-  print_string("annotating " ^ string_of_expr e);
+(*   print_string("annotating " ^ string_of_expr e); *)
   let annotated = 
   match e with
   | IntLit(n) -> AIntLit(n, TInt)
@@ -380,7 +380,7 @@ let env, genv, recs,funcs = allenv in
        ae2 = annotate_expr allenv e2 and
        ae3 = annotate_expr allenv e3 in 
       AEdge(ae1, op, ae2, ae3, TEdge(gen_new_type(), type_of ae1, type_of ae3))
-  in print_string("Annotated" ^ string_of_aexpr annotated); annotated
+  in (* print_string("Annotated" ^ string_of_aexpr annotated);  *)annotated
 
 and annotate_expr_list (allenv: allenv) (e: expr list): aexpr list =
   let thelist = List.map (fun a -> annotate_expr allenv a) e in (* in 
@@ -501,7 +501,7 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
   in (collect_expr ae1) @ opc
   | ABinop(ae1, op, ae2, t) ->
     let et1 = type_of ae1 and et2 = type_of ae2 in
-    print_string("Collecting binop " ^ string_of_type et1 ^ " op " ^ string_of_type et2);
+(*     print_string("Collecting binop " ^ string_of_type et1 ^ " op " ^ string_of_type et2); *)
     (* impose constraints based on binary operator *)
     let opc = match op with
       | Add | Mult | Sub | Div -> [(et1, TInt); (et2, TInt); (t, TInt)]
