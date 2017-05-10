@@ -101,6 +101,7 @@ Check() {
   #  Run "clang -emit-llvm -o list.bc -c src/list.c" &&
     Run "$GRAIL" "<" $1 ">" "${basename}.ll" &&
     Run "$LLL" "${basename}.ll" "-o" "a.out" &&
+    chmod +x a.out &&
     Run "$LLI" "a.out" ">" "${basename}.out"&&
     Compare ${basename}.out ${reffile}.out ${basename}.diff
 
