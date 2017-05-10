@@ -1,0 +1,5 @@
+main() {
+	x = {key: "word"};
+	g = (x->x) with {weight:1};
+	return 0;
+}

@@ -1,0 +1,10 @@
+main() {
+	x = {a: 1, b: 2};
+	y = {a: 3, b: 4};
+	p = {a: 1, b: 2};
+	q = {a: 3, b: 4};
+	e1 = x->y with {weight: 1};
+	e2 = p->q with {weight: 1};
+	list = [e1, e2];
+	return 0;
+}

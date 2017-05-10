@@ -1,0 +1,13 @@
+main() {
+	a = {key:1};
+	b = {key:2};
+	c = {key:3};
+	d = {key:4};
+	e = {key:5};
+	x = a->d with {weight: 25};
+	y = a->c with {weight: 15};
+	z = b->e with {weight: 20};
+	m = d->e with {weight: 30};
+	graph = (a,b,c,d,x,y,z,e) with {weight:2};
+	return 0;
+}

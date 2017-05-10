@@ -1,0 +1,10 @@
+main() {
+	a = {key: 1, cap: 10};
+	b = {key: 2, cap: 10};
+	c = {key: 3, cap: 15};
+	d = {key: 4, cap: 20};
+	x = a->a with {weight: 10};
+	y = b->b with {weight: 20};
+	graph = (x,y) with {weight: 2};
+	return 0;
+}

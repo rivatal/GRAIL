@@ -1,0 +1,4 @@
+main() {
+	g = ({key:1}) with {weight:1};
+	return 0;
+}
