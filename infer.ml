@@ -249,18 +249,17 @@ and type_stmt (allenv: allenv) (e: stmt) : allenv * astmt  =
   let env,_,recs,_ = update_map allenv astmt in
   ((env, genv, recs,funcs), astmt)
 
-
 and infer_stmt_list (allenv: allenv) (e: stmt list) : (allenv * astmt list) =
    let rec helper allenv astmts stmts  : (allenv * astmt list) = 
     match stmts with
       [] -> (allenv, List.rev astmts)
-     |fst :: snd :: tail -> 
+      |fst :: snd :: tail -> 
       let allenv, ae = type_stmt allenv fst in 
       let allenv, ae2 = type_stmt allenv snd in       
       (match ae with 
       |AReturn(ae, _) -> raise(failwith("error: unreachable statment " ^ string_of_astmt ae2));
       |_ -> (helper allenv (ae2 :: ae :: astmts) tail))
-     |x :: tail -> let allenv, ae = type_stmt allenv x in helper allenv (ae :: astmts) tail
+      |x :: tail -> let allenv, ae = type_stmt allenv x in helper allenv (ae :: astmts) tail
   in helper allenv [] e 
 
 and update_map_funcs (astmts: astmt list) (funcs: funcs) (genv: genvironment) : funcs = 
@@ -303,7 +302,7 @@ let env, genv, recs,funcs = allenv in
     let et1 = type_of ae1 in
     let sae1 = string_of_aexpr ae1 in
     let typ =   
-         match et1 with
+         (match et1 with
           |TRec(str, elist) -> 
           get_field_type elist entry
           |TGraph(_,n,e) ->
@@ -320,7 +319,7 @@ let env, genv, recs,funcs = allenv in
           | _ -> raise(failwith(entry ^ " not a field@320."))
           )
           |T(x) -> T(x)
-          |x -> raise(failwith (sae1 ^ " not a record."))
+          |x -> raise(failwith (sae1 ^ " not a record.")))    
     in ADot(ae1, entry, typ)
   | List(e) -> 
     let ael = annotate_expr_list allenv e in 
@@ -342,12 +341,12 @@ let env, genv, recs,funcs = allenv in
     ignore(let len = List.length aformals in
     if (List.length aelist != len)
     then(raise(failwith("error: " ^ id ^ " takes " ^ (string_of_int len) ^ " formal/s")))
-    else());
+    else());      
     (* ignore(print_string("assigning formals")); *)
     (* ignore(List.iter (fun (a,b) -> print_string(a ^ " " ^ string_of_type b)) aformals); *)
     let env = assign_formals (List.combine aformals aelist) env id in
     let allenv = env, genv, recs, funcs in
-    ignore(check_formals_compatible aformals allenv);
+    ignore(check_formals aformals allenv);
     let (_, astmts) = (infer_stmt_list allenv stmts) in
     let t = get_return_type astmts in 
     ignore(Stack.pop callstack); 
@@ -489,7 +488,7 @@ and assign_formals (stufflist: ((id * primitiveType) * aexpr) list) (env: enviro
 
 (*Ensures actuals and their corresponding formals have the same type. 
 Required for builtin functions like print.*)
-and check_formals_compatible (aformals: (id * primitiveType) list) (allenv: allenv)  : unit =
+and check_formals (aformals: (id * primitiveType) list) (allenv: allenv)  : unit =
 (*   ignore(print_string("checking formals\n"));  *)
   let env, _,_,_ = allenv in 
   let rec helper af env = 
@@ -530,18 +529,18 @@ and collect_expr (ae: aexpr) : (primitiveType * primitiveType) list =
               [(et1, x); 
               (et2, TList(gen_new_type())); 
               (t, TBool)]
-                      | _ -> raise(failwith("error @330")))
+                      | _ -> raise(failwith("Error @330")))
       | Gadd ->  [(t, et1)](*what about a tgraph of any and a trec??*)
 (*       (match et1, et2 with  
                            |TGraph(name, n, e), TRec(_, _) -> [(et2, n); (t, TGraph(name, et2, e))]
                            |T(_), TRec(_,_) ->  [(t, et1); (et1, TGraph(gen_new_type(), et2, gen_new_type()))]
                            |T(_), T(_) -> [(t, et1); (et1, TGraph(gen_new_type(), et2, gen_new_type()))]
-                           | _ -> raise(failwith("error-- " ^ (string_of_type et1) ^ "," ^ (string_of_type et2) ^ " not valid types for Gadd")))   
+                           | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ "," ^ (string_of_type et2) ^ " not valid types for Gadd")))   
  *)      | Eadd -> 
        (match et1, et2 with |TGraph(name, n, e), TEdge(_,_,_) -> [(t, et1); (et2, e)] (* (t, TGraph(name, n, et2))] *)
                             | _ -> [(t, et1)] 
 (*                            |T(_), TEdge(_,_,_) | T(_), T(_) ->  [(t, et1); (et1, TGraph(gen_new_type(), gen_new_type(), et2))]
-                           | _ -> raise(failwith("error-- " ^ (string_of_type et1) ^ ", " ^ (string_of_type et2) ^ " not valid graph for Eadd")) *)
+                           | _ -> raise(failwith("Error-- " ^ (string_of_type et1) ^ ", " ^ (string_of_type et2) ^ " not valid graph for Eadd")) *)
       )      
       | _ -> raise(failwith("error"))
      in
@@ -759,7 +758,7 @@ and grab_returns (r: astmt list) : primitiveType list =
       if(fors != [])
       then(raise(failwith("error-- predicate return")))
       else (grab_returns tail)
-     |AForin(_, _, y) ->
+      |AForin(_, _, y) ->
       let fors = grab_returns y in
       if(fors != [])
       then(raise(failwith("error-- predicate return")))
@@ -777,7 +776,7 @@ and get_return_type(r: astmt list) : primitiveType =
       [] -> gen_new_void()
     | [t] -> t 
     | x :: y :: tail -> 
-     raise (failwith "error: multiple returns.");
+     raise (failwith "Error: multiple returns.");
   in (find_type returns)
 
 (*Applies the inferred type of formals from function statements to the functions themselves.*)
