@@ -758,6 +758,11 @@ and grab_returns (r: astmt list) : primitiveType list =
       if(fors != [])
       then(raise(failwith("error-- predicate return")))
       else (grab_returns tail)
+      |AForin(_, _, y) ->
+      let fors = grab_returns y in
+      if(fors != [])
+      then(raise(failwith("error-- predicate return")))
+      else (grab_returns tail)
      |AWhile(_, y) ->
       let whiles = grab_returns y in
       if(whiles != [])
