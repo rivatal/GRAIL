@@ -253,9 +253,13 @@ and infer_stmt_list (allenv: allenv) (e: stmt list) : (allenv * astmt list) =
    let rec helper allenv astmts stmts  : (allenv * astmt list) = 
     match stmts with
       [] -> (allenv, List.rev astmts)
-     |head :: tail -> 
-      let allenv, ae = type_stmt allenv head in 
-      (helper allenv (ae :: astmts) tail)
+      |fst :: snd :: tail -> 
+      let allenv, ae = type_stmt allenv fst in 
+      let allenv, ae2 = type_stmt allenv snd in       
+      (match ae with 
+      |AReturn(ae, _) -> raise(failwith("error: unreachable statment " ^ string_of_astmt ae2));
+      |_ -> (helper allenv (ae2 :: ae :: astmts) tail))
+      |x :: tail -> let allenv, ae = type_stmt allenv x in helper allenv (ae :: astmts) tail
   in helper allenv [] e 
 
 and update_map_funcs (astmts: astmt list) (funcs: funcs) (genv: genvironment) : funcs = 
