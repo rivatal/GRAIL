@@ -13,32 +13,32 @@ type allenv = environment * genvironment * recs * funcs
 (* Unknown type,  resolved type. eg.[(T, TInt); (U, TBool)] *)
 type substitutions = (id * primitiveType) list
 
-(*Keep track of what function we're in when we annotate calls.*)
 let callstack = Stack.create()
 
-(* Maps an id to its name in the env *)
+
+
 let map_id (id: string) : string =
   let fname = Stack.top callstack in
   (map_id_with fname id)
 
-
+(* generates a new unknown type placeholder.
+ * returns T(string) of the generated alphabet *)
 let func_variable = ref 1
 let type_variable = ref 1
 
-(* generates a new unknown type placeholder.
- * returns T(string) of the generated integer *)
 let gen_new_type () =
   let c1 = !type_variable in
   incr type_variable; 
   T(string_of_int c1)
 
 let gen_new_void () : primitiveType =
-  TVoid 
+  TVoid (*just chr escaped, no T in the TVoid*)
 
 let get_func_name (id: id) : string =
   let calln = !func_variable in
   incr func_variable;
   map_func_id id (string_of_int   calln) 
+
 
 let type_of (ae: aexpr): primitiveType =  
   match ae with
@@ -260,7 +260,7 @@ and infer_stmt_list (allenv: allenv) (e: stmt list) : (allenv * astmt list) =
       let allenv, ae2 = type_stmt allenv snd in       
       (match ae with 
       |AReturn(ae, _) -> raise(failwith("error: unreachable statment " ^ string_of_astmt ae2));
-      |_ -> (helper allenv (ae2 :: ae :: astmts) (snd :: tail)))
+      |_ -> (helper allenv (ae2 :: ae :: astmts) tail))
       |x :: tail -> let allenv, ae = type_stmt allenv x in helper allenv (ae :: astmts) tail
   in helper allenv [] e 
 
