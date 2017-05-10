@@ -1,0 +1,8 @@
+f(x) {
+	return x;
+}
+
+main() {
+	f(3,5);
+	return 0;
+}

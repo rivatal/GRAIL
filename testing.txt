@@ -12,6 +12,7 @@ test-for-2...[0;32mOK [0m
 test-forin-1...[0;32mOK [0m
 test-forin-2...[0;32mOK [0m
 test-from-1...[0;32mOK [0m
+test-from-2...[0;32mOK [0m
 test-function-call-1...[0;32mOK [0m
 test-function-call-2...[0;32mOK [0m
 test-function-call-3...[0;32mOK [0m
@@ -25,6 +26,7 @@ test-graph-1...[0;32mOK [0m
 test-graph-2...[0;32mOK [0m
 test-graph-3...[0;32mOK [0m
 test-graph-4...[0;32mOK [0m
+test-graph-5...[0;32mOK [0m
 test-graph-add-1...[0;32mOK [0m
 test-hello...[0;32mOK [0m
 test-if-loop-1...[0;32mOK [0m
@@ -33,7 +35,9 @@ test-if-loop-3...[0;32mOK [0m
 test-list-1...[0;32mOK [0m
 test-list-2...[0;32mOK [0m
 test-list-3...[0;32mOK [0m
+test-list-4...[0;32mOK [0m
 test-list-rec...[0;32mOK [0m
+test-main-1...[0;32mOK [0m
 test-node-1...[0;31mFAILED [0m
   test-node-1.out differs
 test-print...[0;32mOK [0m
@@ -44,6 +48,7 @@ test-size-1...[0;32mOK [0m
 test-to-1...[0;32mOK [0m
 test-while-1...[0;32mOK [0m
 test-while-2...[0;32mOK [0m
+fail-arg-1...[0;32mOK [0m
 fail-assign-1...[0;32mOK [0m
 fail-assign-2...[0;32mOK [0m
 fail-dead-1...[0;32mOK [0m
