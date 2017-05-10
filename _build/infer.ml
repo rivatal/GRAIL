@@ -257,7 +257,7 @@ and infer_stmt_list (allenv: allenv) (e: stmt list) : (allenv * astmt list) =
       let allenv, ae2 = type_stmt allenv snd in       
       (match ae with 
       |AReturn(ae, _) -> raise(failwith("error: unreachable statment " ^ string_of_astmt ae2));
-      |_ -> (helper allenv (ae2 :: ae :: astmts) (snd :: tail)))
+      |_ -> (helper allenv (ae2 :: ae :: astmts) tail))
       |x :: tail -> let allenv, ae = type_stmt allenv x in helper allenv (ae :: astmts) tail
   in helper allenv [] e 
 
