@@ -6,11 +6,11 @@
 
 # Path to the LLVM interpreter
 # Riva's path
-# LLI="/usr/bin/lli"
-# LLL="/usr/bin/llvm-link"
+ LLI="/usr/bin/lli"
+ LLL="/usr/bin/llvm-link"
 # Jiaxin's path
-LLI="/usr/local/opt/llvm/bin/lli"
-LLL="/usr/local/opt/llvm/bin/llvm-link"
+# LLI="/usr/local/opt/llvm/bin/lli"
+# LLL="/usr/local/opt/llvm/bin/llvm-link"
 
 # coloring notes
 # success = green
@@ -109,8 +109,10 @@ Check() {
 
     if [ $error -eq 0 ] ; then
         if [ $keep -eq 0 ] ; then
-            mv ${basename}.ll ./test_output/
-            rm -f $generatedfiles
+            mv ${basename}.out ./test_output/
+	    mv ${basename}.ll ./test_output/
+            mv ${basename}.diff ./test_output/
+	    rm -f $generatedfiles
         fi
         echo "${GREEN}OK ${NC}"
         echo "${GREEN} ###### SUCCESS ${NC}" 1>&2

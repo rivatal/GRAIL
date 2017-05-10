@@ -1,0 +1,9 @@
+main() {
+	x = {thing1: 1, thing2: 2};
+	y = {thing1: 1, thing2: 2};
+	z = {thing1: 1, thing2: 3};	
+	e1 = x->y with {weight: 1};
+	e2 = x->x with {weight: 1};
+	printbool(e1 == e2);
+	return 0;
+}

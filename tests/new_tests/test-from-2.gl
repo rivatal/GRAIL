@@ -1,0 +1,12 @@
+f() {
+	x = {school: "h"};
+	y = {school: "f"};
+	e = x -- y with {weight:1};
+	return e.from;
+}
+
+main() {
+	y = f();
+	return 0;
+}
+

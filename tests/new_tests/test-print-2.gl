@@ -1,0 +1,8 @@
+printem(a) {
+	printint(a);
+}
+
+main() {
+	printem(42);
+	return 0;
+}

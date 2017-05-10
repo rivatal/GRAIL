@@ -1,4 +1,5 @@
 main(){
 	x = 3;
 	print("IN Y");
+	return 0;
 }

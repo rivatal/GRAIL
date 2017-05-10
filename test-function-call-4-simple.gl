@@ -1,9 +1,0 @@
-printem(a)
-{
-  printint(a);
-}
-
-main()
-{
-  printem(42);
-}

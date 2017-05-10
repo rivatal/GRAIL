@@ -1,0 +1,9 @@
+f(x, y) {
+	return x;
+}
+
+main() {
+	f(3, "sdf");
+	return 0;
+}
+
