@@ -26,6 +26,7 @@ test-graph-1...[0;32mOK [0m
 test-graph-2...[0;32mOK [0m
 test-graph-3...[0;32mOK [0m
 test-graph-4...[0;32mOK [0m
+test-graph-5...[0;32mOK [0m
 test-graph-add-1...[0;32mOK [0m
 test-hello...[0;32mOK [0m
 test-if-loop-1...[0;32mOK [0m
@@ -34,6 +35,7 @@ test-if-loop-3...[0;32mOK [0m
 test-list-1...[0;32mOK [0m
 test-list-2...[0;32mOK [0m
 test-list-3...[0;32mOK [0m
+test-list-4...[0;32mOK [0m
 test-list-rec...[0;32mOK [0m
 test-main-1...[0;32mOK [0m
 test-node-1...[0;31mFAILED [0m
