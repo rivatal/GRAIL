@@ -39,7 +39,6 @@ let translate (functions) =
                 
 			         let ret_types = Array.of_list(List.map (fun (_,t) -> ltype_of_typ t) tlist) in
                 let record_t = L.struct_type context ret_types in 
-                (*in L.struct_set_body record_t ret_types false;*)
                 tymap := TypeMap.add ("struct."^tname) record_t !tymap;
                 record_t
     |A.TEdge(tany,trec1,trec2) ->
@@ -49,8 +48,6 @@ let translate (functions) =
            then 
                TypeMap.find struct_name !tymap
            else
-           let struct_name = ("struct."^tname) in 
-           (*let edge_t = L.named_struct_type context struct_name in *)
            let ret_types = 
                           [  pointer_t (ltype_of_typ trec1);
                              pointer_t (ltype_of_typ trec1);
@@ -60,7 +57,6 @@ let translate (functions) =
            in 
            let all_ret_types = Array.of_list(ret_types) in
            let edge_t = L.struct_type context all_ret_types in
-           (*in L.struct_set_body edge_t all_ret_types false;*)
            tymap := TypeMap.add ("struct."^tname) edge_t !tymap;
            edge_t
     | A.TGraph(tany, nt, et) -> 
@@ -70,8 +66,6 @@ let translate (functions) =
            then 
                TypeMap.find struct_name !tymap
            else
-           let struct_name = ("struct."^tname) in 
-           (*let graph_t = L.named_struct_type context struct_name in *)
            let ereltyp = (match et with A.TEdge(_, _, rel) -> rel | _ -> raise(Failure "wrong edge type")) in
            let ret_types = [| (ltype_of_typ (A.TList nt)); (ltype_of_typ (A.TList et)); (ltype_of_typ ereltyp)|] 
            in let graph_t = L.struct_type context ret_types in
@@ -87,7 +81,7 @@ let translate (functions) =
   let display_t = L.function_type i32_t [| i32_t |] in
   let display_func = L.declare_function "sample_display" display_t the_module in
 
-  (* Define each function (arguments and return type) so we can call it *) (** Fix the type thing here **)
+  (* Define each function (arguments and return type) so we can call it *) 
   let function_decls =
     let function_decl m afunc=
       let name = afunc.A.fname
@@ -97,7 +91,7 @@ let translate (functions) =
       StringMap.add name (L.define_function name ftype the_module, afunc) m in
     List.fold_left function_decl StringMap.empty functions in
 
-  (* Fill in the body of the given function *) (* FIX The Type Thing Here *)
+  (* Fill in the body of the given function *) 
   let build_function_body afunc =
     let (the_function, _) = StringMap.find afunc.A.fname function_decls in
     let builder = L.builder_at_end context (L.entry_block the_function) in
@@ -134,14 +128,14 @@ let translate (functions) =
     |  _ -> raise(Failure "problem typing lists"))
   in
 
-  let get_graph_types t = (*maps TGraph to the node and  types*)
+  let get_graph_types t = (*maps TGraph to the node and edge types*)
   (match t with
     A.TGraph(_, nt, et) -> (nt, et)
   | _ -> raise(Failure "not a graph")
   )
 in 
-
-  let rec compare e1 e2 t builder =
+  
+  let rec compare e1 e2 t builder = (*implements structural equality*)
     (match t with
     A.TInt | A.TChar | A.TBool -> (L.build_icmp L.Icmp.Eq e1 e2 "tmp" builder, builder)
     | A.TFloat -> (L.build_fcmp L.Fcmp.Oeq e1 e2 "tmp" builder, builder)
@@ -171,9 +165,11 @@ in
                                           (L.build_load (L.build_struct_gep g2 2 "tmp" builder) "val" builder) ereltyp builder in
         (L.build_mul nodescomp (L.build_mul edgescomp relcomp "tmp" builder) "tmp" builder, builder)
     | A.TList(_) -> compare_list e1 e2 t builder
+    | A.TString -> raise(Failure "comparison of strings not supported")
+    | _ -> raise(Failure "bad type provided to comparison operation")
     )
 
-  and compare_fields n fields rec1 rec2 builder = 
+  and compare_fields n fields rec1 rec2 builder = (*comparison for records*)
   (match fields with 
     [] -> (L.const_int i1_t 1, builder) (*empty recs are equal*)
   | (_,t)::tl -> let (cmp, builder) = compare (L.build_load (L.build_struct_gep rec1 n "tmp" builder) "val" builder) 
@@ -183,7 +179,7 @@ in
   )
   
 
-    and compare_list lst1 lst2 t builder =  
+    and compare_list lst1 lst2 t builder =  (*comparison for lists*)
       let list_typ = get_list_type t in
       let struct1 = L.build_alloca (ltype_of_typ t) "strct" builder in ignore(L.build_store lst1 struct1 builder);
       let struct2 = L.build_alloca (ltype_of_typ t) "strct" builder in ignore(L.build_store lst2 struct2 builder);
@@ -199,7 +195,7 @@ in
 
       ignore (L.build_cond_br comp_val then_bb merge_bb builder);
 
-      (*compare list elements by effectively using a for-in loop*) 
+      (*compare list elements by checking size equality and then effectively using for-in loop*) 
       let then_builder = L.builder_at_end context then_bb in
       let lstvals1 = L.build_load (L.build_struct_gep struct1 0 "tmp" then_builder) "lst" then_builder and
       lstvals2 = L.build_load (L.build_struct_gep struct2 0 "tmp" then_builder) "lst" then_builder  in
@@ -235,7 +231,7 @@ in
                       ignore(L.build_store e p builder); assign_array ar tl (n+1) builder
     in
 
-    let add_to_list lst el t builder = 
+    let add_to_list lst el t builder = (*adds element el to the end of lst*)
       let list_typ = get_list_type t and newstruct = L.build_alloca (ltype_of_typ t) "strct" builder in
       let oldstruct = L.build_alloca (ltype_of_typ t) "strct" builder in ignore(L.build_store lst oldstruct builder);
 
@@ -340,7 +336,7 @@ in
 
 in
 
-  let rec copy_list lst t builder = 
+  let rec copy_list lst t builder = (*deep copy for lists*)
     let list_typ = get_list_type t and newstruct = L.build_alloca (ltype_of_typ t) "strct" builder in
     let oldstruct = L.build_alloca (ltype_of_typ t) "strct" builder in ignore(L.build_store lst oldstruct builder);
 
@@ -395,7 +391,7 @@ and copy e t builder = (*returns a deep copy of e and the builder at the end of 
         let (newdir, builder) = copy (L.build_load (L.build_struct_gep olde 2 "tmp" builder) "val" builder) A.TBool builder in
         let (newrel, builder) = copy (L.build_load (L.build_struct_gep olde 3 "tmp" builder) "val" builder) trec2 builder in
         let frompoint = L.build_alloca (ltype_of_typ trec1) "fromp" builder in ignore(L.build_store newfrom frompoint builder);
-        let topoint = L.build_alloca (ltype_of_typ trec1) "top" builder in ignore(L.build_store newfrom topoint builder);
+        let topoint = L.build_alloca (ltype_of_typ trec1) "top" builder in ignore(L.build_store newto topoint builder);
         ignore(L.build_store frompoint (L.build_struct_gep newe 0 "tmp" builder) builder);
         ignore(L.build_store topoint (L.build_struct_gep newe 1 "tmp" builder) builder);
         ignore(L.build_store newdir (L.build_struct_gep newe 2 "tmp" builder) builder);
@@ -415,7 +411,7 @@ and copy e t builder = (*returns a deep copy of e and the builder at the end of 
 
   )
 
-and copy_fields n fields newrec oldrec builder = 
+and copy_fields n fields newrec oldrec builder = (*deep copy for records*)
   (match fields with 
     [] -> (L.build_load newrec "rec" builder, builder)
   | (_,t)::tl -> let (newval, builder) = copy (L.build_load (L.build_struct_gep oldrec n "tmp" builder) "val" builder) t builder in
@@ -424,7 +420,7 @@ and copy_fields n fields newrec oldrec builder =
 
 in
 
-let get_expr_type e = 
+let get_expr_type e = (*a quick utility function to map an aexpr to its type*)
   (match e with
     A.AIntLit(_, t) -> t
   | A.ACharLit(_, t) -> t
@@ -452,7 +448,7 @@ in
             let (other_exps, endbuilder) = 
             build_expressions tl newbuilder local_var_map in (exp::other_exps, endbuilder))
 
-  and build_list_from_els l t builder local_var_map = 
+  and build_list_from_els l t builder local_var_map = (*builds a list LLVM object given a list of its elements*)
     let list_typ = get_list_type t and (els, newbuilder) = build_expressions l builder local_var_map in 
     let struct_var = L.build_alloca (ltype_of_typ t) "strct" newbuilder in
     let ar_var = L.build_array_alloca (ltype_of_typ list_typ) (L.const_int i32_t (List.length l)) "lst" newbuilder in
@@ -461,7 +457,7 @@ in
     ignore(L.build_store init_list p0 newbuilder); ignore(L.build_store (L.const_int i32_t (List.length l)) p1 newbuilder);
     (L.build_load struct_var "lst" newbuilder, newbuilder) 
 
-  and build_edge_with_record e1 op e2 erec typ builder local_var_map = 
+  and build_edge_with_record e1 op e2 erec typ builder local_var_map = (*builds an edge using the LLVM record erec*)
            let (directed,from,into) =
             match op with
              | A.Dash -> (false,e1,e2)
@@ -478,7 +474,6 @@ in
                        
                     | _-> raise (Failure ("Not supported.Node must be declared"))
                    )
-            (*in let (erec, builder) = aexpr builder local_var_map item*)
 
             in let argslist =
             [   get_ptr from;
@@ -757,7 +752,7 @@ in
 
         | A.AFor (s1, e2, s3, body) -> List.fold_left astmt (builder, local_var_map)
                                          [s1 ; A.AWhile(e2, List.rev (s3::(List.rev body)))]
-                                         (* Build the code for each statement in the function *)
+                                         
 
         | A.AForin (e1, e2, body) -> 
         let ind = (match e1 with A.AId(s, t) -> (s, t) | _ -> raise(Failure "invalid for loop")) in let lst = L.build_alloca (ltype_of_typ (A.TList (snd ind))) "lst" builder in
@@ -787,7 +782,7 @@ in
 
           
 
-
+    (* Build the code for each statement in the function *)
     in let (builder,_) = List.fold_left 
            astmt (builder,local_vars) afunc.A.body 
     in
