@@ -59,7 +59,7 @@ let rec string_of_aexpr (ae: aexpr): string =
          [] -> str
        |(id, aexpr) :: t -> helper t (id ^ " " ^ string_of_aexpr aexpr ^ str))
     in 
-(*     ignore(print_string ("list is length " ^ string_of_int (List.length aexprs))); *)
+    (*     ignore(print_string ("list is length " ^ string_of_int (List.length aexprs))); *)
     ((string_of_type t) ^ "{" ^ (helper aexprs "") ^ "}")
   | AEdge(e1, op, e2, e3, t) -> Printf.sprintf "%s %s %s %s : %s" (string_of_aexpr e1) (string_of_op op) (string_of_aexpr e2) (string_of_aexpr e3) (string_of_type t)
   | AList(elist, t) -> Printf.sprintf "(%s : %s)" (string_of_aexpr_list elist) (string_of_type t)
@@ -72,22 +72,22 @@ and string_of_aexpr_list l =
   |h :: t -> string_of_aexpr h ^ string_of_aexpr_list t
 
 and string_of_astmt (l: astmt) = 
-let str = 
-  match l with 
-  | AReturn(aexpr,typ) -> "return " ^ string_of_aexpr aexpr ^ "; " ^ string_of_type typ ^ "\n";
-  | AAsn(ae1,ae2,_,_) -> string_of_aexpr ae1 ^ " = " ^ string_of_aexpr ae2 ^ "; ";
-  | AExpr(aexpr) -> " " ^ string_of_aexpr aexpr ^ "; "
-  | AIf(e, s1, s2) ->  
-    let a = "if (" ^ string_of_aexpr e ^ ") {" ^ string_of_astmt_list s1 ^ "; " in
-    let b =  (match s2 with
-          [] -> ""
-        |rest -> string_of_astmt_list rest) in (a ^ b)
-  | AFor(as1, ae1, as2, astmts) ->
-    "for (" ^ string_of_astmt as1  ^ string_of_aexpr ae1 ^ " ; " ^ string_of_astmt as2 
-    ^ string_of_astmt_list astmts
-  | AWhile(ae1, astmts) -> "while (" ^ string_of_aexpr ae1 ^ ") {" ^ string_of_astmt_list astmts ^ "}"
-  | AForin(id, aexpr, astmts) -> "for (" ^ string_of_aexpr id ^ " in " ^ string_of_aexpr aexpr ^ "){" ^ string_of_astmt_list astmts
-in str ^ "\n"
+  let str = 
+    match l with 
+    | AReturn(aexpr,typ) -> "return " ^ string_of_aexpr aexpr ^ "; " ^ string_of_type typ ^ "\n";
+    | AAsn(ae1,ae2,_,_) -> string_of_aexpr ae1 ^ " = " ^ string_of_aexpr ae2 ^ "; ";
+    | AExpr(aexpr) -> " " ^ string_of_aexpr aexpr ^ "; "
+    | AIf(e, s1, s2) ->  
+      let a = "if (" ^ string_of_aexpr e ^ ") {" ^ string_of_astmt_list s1 ^ "; " in
+      let b =  (match s2 with
+            [] -> ""
+          |rest -> string_of_astmt_list rest) in (a ^ b)
+    | AFor(as1, ae1, as2, astmts) ->
+      "for (" ^ string_of_astmt as1  ^ string_of_aexpr ae1 ^ " ; " ^ string_of_astmt as2 
+      ^ string_of_astmt_list astmts
+    | AWhile(ae1, astmts) -> "while (" ^ string_of_aexpr ae1 ^ ") {" ^ string_of_astmt_list astmts ^ "}"
+    | AForin(id, aexpr, astmts) -> "for (" ^ string_of_aexpr id ^ " in " ^ string_of_aexpr aexpr ^ "){" ^ string_of_astmt_list astmts
+  in str ^ "\n"
 
 and string_of_astmt_list (stmts : astmt list) : string =
   let s1 = List.map(fun a -> (string_of_astmt (a))) stmts in let l = String.concat "" s1 in l
@@ -164,10 +164,14 @@ let string_of_func (func: sast_afunc) =
 *)
 (*Maps a variable to its name in the environment*)
 let map_id_with (fname: string )(id: string) : string =
-(*    ignore(print_string("map_id_with " ^ fname ^ "#" ^ id ^ "\n"));  *)
+  (*    ignore(print_string("map_id_with " ^ fname ^ "#" ^ id ^ "\n"));  *)
   (fname ^ "#" ^ id)
 
-
 let map_func_id (fname: string) (calln: string): string =
-(*    ignore(print_string("map_id_with " ^ fname ^ "#" ^ id ^ "\n"));  *)
+  (*    ignore(print_string("map_id_with " ^ fname ^ "#" ^ id ^ "\n"));  *)
   (fname ^ "!" ^ calln)
+
+(*Store variables with record names*)
+let map_id_rec (rname: string) (id: string) : string =
+(*   ignore(print_string ("getting name: " ^ rname ^ ";" ^ id ^ "\n"));  *)
+  rname ^ ";" ^ id
