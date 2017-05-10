@@ -25,6 +25,7 @@ test-graph-1...[0;32mOK [0m
 test-graph-2...[0;32mOK [0m
 test-graph-3...[0;32mOK [0m
 test-graph-4...[0;32mOK [0m
+test-graph-add-1...[0;32mOK [0m
 test-hello...[0;32mOK [0m
 test-if-loop-1...[0;32mOK [0m
 test-if-loop-2...[0;32mOK [0m
@@ -32,6 +33,9 @@ test-if-loop-3...[0;32mOK [0m
 test-list-1...[0;32mOK [0m
 test-list-2...[0;32mOK [0m
 test-list-3...[0;32mOK [0m
+test-list-rec...[0;32mOK [0m
+test-node-1...[0;31mFAILED [0m
+  test-node-1.out differs
 test-print...[0;32mOK [0m
 test-record-1...[0;32mOK [0m
 test-record-2...[0;32mOK [0m
@@ -43,8 +47,6 @@ test-while-2...[0;32mOK [0m
 fail-assign-1...[0;32mOK [0m
 fail-assign-2...[0;32mOK [0m
 fail-dead-1...[0;32mOK [0m
-fail-dead-2...[0;31mFAILED [0m
-  fail-dead-2.err differs
 fail-expr-1...[0;32mOK [0m
 fail-expr-2...[0;32mOK [0m
 fail-for-1...[0;32mOK [0m
@@ -63,6 +65,7 @@ fail-function-return...[0;31mFAILED [0m
 fail-if-1...[0;32mOK [0m
 fail-if-2...[0;32mOK [0m
 fail-if-3...[0;32mOK [0m
+fail-list-1...[0;32mOK [0m
 fail-nomain...[0;31mFAILED [0m
   failed: ./grail.native < tests/new_tests/fail-nomain.gl 2> fail-nomain.err >> testall.log did not report an error
 fail-record-1...[0;32mOK [0m

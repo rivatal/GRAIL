@@ -1,0 +1,9 @@
+main() {
+	a = {key: 1};
+	b = {key: 2};
+	c = {key: 3};
+	g = (a,b) with {weight: 1};
+	g &= c;
+	g .&= a->c;
+	return 0;
+}

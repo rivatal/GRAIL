@@ -1,0 +1,4 @@
+main() {
+	list = [{first:1, second:2}, {first:3, second:4}];
+	return 0;
+}
