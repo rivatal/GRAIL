@@ -1,0 +1,11 @@
+> printem!9(a: int, b: int, c: int, d: int){ : void
+ (call printint!5((a: int))) : void; 
+ (call printint!6((b: int))) : void; 
+ (call printint!7((c: int))) : void; 
+ (call printint!8((d: int))) : void; 
+}
+main(){ : int
+ (call printem!9((42: int),(17: int),(192: int),(8: int))) : void; 
+return (0: int); int
+
+}
