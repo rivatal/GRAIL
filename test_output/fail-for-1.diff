@@ -1,5 +1,0 @@
-1c1
-< ./testall.sh: 1: eval: ./grail.native: not found
----
-> Fatal error: exception Failure("function not defined @ 147")
-\ No newline at end of file

@@ -171,7 +171,7 @@ let rec check_list_consistency (e: aexpr list) : unit =
 (* A function is a list of statements. Each statement's expressions are inferred here.
 The result is annotated and passed into the sast. *)
 let rec infer_stmt (allenv: allenv) (e: stmt): (allenv * astmt) =
-(*   ignore(print_string (" inferring " ^ (string_of_stmt e) ^ "\n"));   *) 
+(*   ignore(print_string ("\ninferring " ^ (string_of_stmt e)));   *) 
   let env, genv, recs, funcs = allenv in 
   let allenv, inferred_astmt = 
   match e with
@@ -201,12 +201,10 @@ let rec infer_stmt (allenv: allenv) (e: stmt): (allenv * astmt) =
     (allenv, AAsn(ae1, ae2, switch, typ))
   | Return(expr) ->
     let aexpr = infer_expr allenv expr in 
-(*     let funcs = apply_update aexpr funcs genv in *)
     let allenv = env, genv, recs, funcs in 
     (allenv, AReturn(aexpr, type_of aexpr))
   | Expr(expr) -> 
     let aexpr = infer_expr allenv expr in 
-(*     let funcs = apply_update aexpr funcs genv in *)
     let allenv = env, genv, recs, funcs in 
     (allenv, AExpr(aexpr))
   | If(expr, s1, s2) ->
@@ -266,7 +264,7 @@ and update_map_funcs (astmts: astmt list) (funcs: funcs) (genv: genvironment) : 
 (*Step 1 of HM: annotate expressions with what can be gathered of their types.*)
 and annotate_expr (allenv: allenv) (e: expr) : aexpr =
 let env, genv, recs,funcs = allenv in
-(*   print_string("annotating " ^ string_of_expr e); *)
+(*   print_string("annotating " ^ string_of_expr e ^ " @269\n"); *)
   let annotated = 
   match e with
   | IntLit(n) -> AIntLit(n, TInt)
@@ -332,12 +330,12 @@ let env, genv, recs,funcs = allenv in
     (* ignore(List.iter (fun (a,b) -> print_string(a ^ " " ^ string_of_type b)) aformals); *)
     let env = assign_formals (List.combine aformals aelist) env id in
     let allenv = env, genv, recs, funcs in
-    (* ignore(print_string("check formals"));*)
     ignore(check_formals aformals allenv);
     let (_, astmts) = (infer_stmt_list allenv stmts) in
     let t = get_return_type astmts in 
-    ignore(Stack.pop callstack);
+    ignore(Stack.pop callstack); 
     let in_id = get_func_name id in 
+(*     ignore(print_string("getting in_id for " ^ (map_id id) ^ " " ^ in_id ^ "\n")); *)
     ACall(id, aelist, astmts, in_id, t) 
 | Record(pairlist) -> 
     let rec helper(l: (string * expr) list) =
@@ -380,7 +378,7 @@ let env, genv, recs,funcs = allenv in
        ae2 = annotate_expr allenv e2 and
        ae3 = annotate_expr allenv e3 in 
       AEdge(ae1, op, ae2, ae3, TEdge(gen_new_type(), type_of ae1, type_of ae3))
-  in (* print_string("Annotated" ^ string_of_aexpr annotated);  *)annotated
+  in  annotated
 
 and annotate_expr_list (allenv: allenv) (e: expr list): aexpr list =
   let thelist = List.map (fun a -> annotate_expr allenv a) e in (* in 
@@ -465,7 +463,7 @@ and get_subtype (t: primitiveType) : primitiveType =
  *)
 and format_formal (formal: (string * primitiveType) * aexpr) : string * primitiveType =
   match formal with 
-  ((x, _), e) -> (x, type_of e)
+  ((x, _), e) -> (* print_string("matching " ^ x ^ " with " ^ string_of_type(type_of e) ^ "\n"); *) (x, type_of e)
 
 (*Generates assignment statements for actual expressions to be inferred and bound to their formals*)
 and assign_formals (stufflist: ((id * primitiveType) * aexpr) list) (env: environment) (id: string): environment =
@@ -692,7 +690,7 @@ and apply_update (call: aexpr) (funcs: funcs) (genv: genvironment ) : funcs =
                             apply_update e1 funcs genv
   | ANoexpr(_) -> funcs
   |ACall(name, aelist, astmts, id, t) -> 
-(*    ignore(print_string("updating calls for " ^ id ^ "\n")); *)
+(*    ignore(print_string("updating calls for " ^ id ^ "\n"));  *)
    let funcs = List.fold_left (fun a b -> apply_update b a genv) funcs aelist in 
    let (_, aformals, _) =
       if (NameMap.mem (name) genv)
@@ -779,6 +777,7 @@ and infer_formals (f: string list)  (env: environment):  (string * primitiveType
 (*Called from annotate_stmt, infers expressions inside statements.*)
 and infer_expr (allenv: allenv) (e: expr): (aexpr)  =
   let annotated_expr = annotate_expr allenv e in
+(*   print_string("Annotated" ^ string_of_aexpr annotated_expr);  *)
   let constraints = collect_expr annotated_expr in 
   let subs = unify constraints in
   let ret = apply_expr subs annotated_expr in ret
@@ -789,6 +788,7 @@ and infer_expr_list (allenv: allenv) (e: expr list ) : (aexpr list) =
 (*The calling method for this file. Infers all types for a func (statements, formals), and
 outputs an annotated func. *)
 and infer_func (allenv: allenv) (f: func) :  (afunc list * genvironment)  =
+(*   ignore(print_string("inferring new func\n")); *)
   let env, genv, recs, funcs = allenv in
   match f with
   |Fbody(decl, stmts) -> 
