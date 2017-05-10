@@ -150,14 +150,14 @@ in
         compare_fields 0 fields rec1 rec2 builder
     | A.TEdge(_, trec1, trec2) -> let ed1 = L.build_alloca (ltype_of_typ t) "edge" builder in ignore(L.build_store e1 ed1 builder);
         let ed2 = L.build_alloca (ltype_of_typ t) "edge" builder in ignore(L.build_store e2 ed2 builder);
-        let (fromcomp, builder) = compare (L.build_load (L.build_struct_gep ed1 0 "tmp" builder) "val" builder) 
-                                          (L.build_load (L.build_struct_gep ed2 0 "tmp" builder) "val" builder) trec1 builder in
-        let (tocomp, builder) = compare (L.build_load (L.build_struct_gep ed1 1 "tmp" builder) "val" builder)
-                                        (L.build_load (L.build_struct_gep ed2 1 "tmp" builder) "val" builder)  trec1 builder in
+        let (fromcomp, builder) = compare (L.build_load (L.build_load (L.build_struct_gep ed1 0 "tmp" builder) "val" builder) "val" builder) 
+                                          (L.build_load (L.build_load (L.build_struct_gep ed2 0 "tmp" builder) "val" builder) "val" builder) trec1 builder in
+        let (tocomp, builder) = compare (L.build_load (L.build_load (L.build_struct_gep ed1 1 "tmp" builder) "val" builder) "val" builder) 
+                                          (L.build_load (L.build_load (L.build_struct_gep ed2 1 "tmp" builder) "val" builder) "val" builder) trec1 builder in
         let (dircomp, builder) = compare (L.build_load (L.build_struct_gep ed1 2 "tmp" builder) "val" builder)
                                           (L.build_load (L.build_struct_gep ed2 2 "tmp" builder) "val" builder) A.TBool builder in
         let (relcomp, builder) = compare (L.build_load (L.build_struct_gep ed1 3 "tmp" builder) "val" builder)
-                                          (L.build_load (L.build_struct_gep ed1 3 "tmp" builder) "val" builder) trec2 builder in
+                                          (L.build_load (L.build_struct_gep ed2 3 "tmp" builder) "val" builder) trec2 builder in
         (L.build_mul fromcomp (L.build_mul tocomp (L.build_mul dircomp relcomp "tmp" builder) "tmp" builder) "tmp" builder, builder)
 
     | A.TGraph(_, ntyp, etyp) -> let ereltyp = (match etyp with A.TEdge(_, _, rel) -> rel | _ -> raise(Failure "wrong edge type")) in
@@ -199,7 +199,7 @@ in
 
       ignore (L.build_cond_br comp_val then_bb merge_bb builder);
 
-      (*copy over old list elements by effectively using a for-in loop*) 
+      (*compare list elements by effectively using a for-in loop*) 
       let then_builder = L.builder_at_end context then_bb in
       let lstvals1 = L.build_load (L.build_struct_gep struct1 0 "tmp" then_builder) "lst" then_builder and
       lstvals2 = L.build_load (L.build_struct_gep struct2 0 "tmp" then_builder) "lst" then_builder  in
@@ -384,12 +384,14 @@ and copy e t builder = (*returns a deep copy of e and the builder at the end of 
         copy_fields 0 fields newrec oldrec builder
     | A.TEdge(_, trec1, trec2) -> let newe = L.build_alloca (ltype_of_typ t) "edge" builder in
         let olde = L.build_alloca (ltype_of_typ t) "edge" builder in ignore(L.build_store e olde builder);
-        let (newfrom, builder) = copy (L.build_load (L.build_struct_gep olde 0 "tmp" builder) "val" builder) trec1 builder in
-        let (newto, builder) = copy (L.build_load (L.build_struct_gep olde 1 "tmp" builder) "val" builder) trec1 builder in
+        let (newfrom, builder) = copy (L.build_load (L.build_load (L.build_struct_gep olde 0 "tmp" builder) "val" builder) "val" builder) trec1 builder in
+        let (newto, builder) = copy (L.build_load (L.build_load (L.build_struct_gep olde 1 "tmp" builder) "val" builder) "val" builder) trec1 builder in
         let (newdir, builder) = copy (L.build_load (L.build_struct_gep olde 2 "tmp" builder) "val" builder) A.TBool builder in
         let (newrel, builder) = copy (L.build_load (L.build_struct_gep olde 3 "tmp" builder) "val" builder) trec2 builder in
-        ignore(L.build_store newfrom (L.build_struct_gep newe 0 "tmp" builder) builder);
-        ignore(L.build_store newto (L.build_struct_gep newe 1 "tmp" builder) builder);
+        let frompoint = L.build_alloca (ltype_of_typ trec1) "fromp" builder in ignore(L.build_store newfrom frompoint builder);
+        let topoint = L.build_alloca (ltype_of_typ trec1) "top" builder in ignore(L.build_store newfrom topoint builder);
+        ignore(L.build_store frompoint (L.build_struct_gep newe 0 "tmp" builder) builder);
+        ignore(L.build_store topoint (L.build_struct_gep newe 1 "tmp" builder) builder);
         ignore(L.build_store newdir (L.build_struct_gep newe 2 "tmp" builder) builder);
         ignore(L.build_store newrel (L.build_struct_gep newe 3 "tmp" builder) builder);
         (L.build_load newe "edge" builder, builder)
@@ -600,8 +602,8 @@ in
               (match entry with
                 "from" -> (L.build_load (L.build_load (L.build_struct_gep loc 0 "ptr" builder) "from" builder) "from" builder, builder)
               | "to" -> (L.build_load (L.build_load (L.build_struct_gep loc 1 "ptr" builder) "to" builder) "to" builder, builder)
-              | "directed" -> (L.build_load (L.build_load (L.build_struct_gep loc 2 "ptr" builder) "dir" builder) "dir" builder, builder)
-              | "rel" -> (L.build_load (L.build_load (L.build_struct_gep loc 3 "ptr" builder) "rel" builder) "rel" builder, builder)
+              | "dir" -> (L.build_load (L.build_struct_gep loc 2 "ptr" builder) "dir" builder, builder)
+              | "rel" -> (L.build_load (L.build_struct_gep loc 3 "ptr" builder) "rel" builder, builder)
               | _ -> raise( Failure "dot not supported with this keyword")
               )
             | A.TGraph(_, _, _) ->  let (e', builder) = aexpr builder local_var_map e1 in
