@@ -101,7 +101,6 @@ stmt:
   | LBRACKET actuals_opt RBRACKET { List($2)}
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | ID LBRACKET expr RBRACKET { Item($1, $3) }
-  | ID LBRACKET ID COLON expr RBRACKET { Subset($1, $3, $5) }
   | expr DOT ID { Dot($1, $3) }
   | expr DOT FROM { Dot($1, "from") }
   | expr DOT TO { Dot($1, "to") }

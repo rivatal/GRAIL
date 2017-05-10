@@ -32,7 +32,6 @@ type expr =
   | List of expr list
   | Call of string * expr list
   | Item of string * expr
-  | Subset of string * string * expr
   | Dot of expr * string
   | Unop of uop * expr
   | Binop of expr * op * expr
