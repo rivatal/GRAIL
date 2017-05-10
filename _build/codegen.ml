@@ -598,10 +598,10 @@ in
             | A.TEdge(_, _, _) ->  let (e', builder) = aexpr builder local_var_map e1 in
               let loc = L.build_alloca (L.type_of e') "e" builder in ignore(L.build_store e' loc builder);
               (match entry with
-                "from" -> (L.build_load (L.build_struct_gep loc 0 "ptr" builder) "from" builder, builder)
-              | "to" -> (L.build_load (L.build_struct_gep loc 1 "ptr" builder) "to" builder, builder)
-              | "directed" -> (L.build_load (L.build_struct_gep loc 2 "ptr" builder) "dir" builder, builder)
-              | "rel" -> (L.build_load (L.build_struct_gep loc 3 "ptr" builder) "rel" builder, builder)
+                "from" -> (L.build_load (L.build_load (L.build_struct_gep loc 0 "ptr" builder) "from" builder) "from" builder, builder)
+              | "to" -> (L.build_load (L.build_load (L.build_struct_gep loc 1 "ptr" builder) "to" builder) "to" builder, builder)
+              | "directed" -> (L.build_load (L.build_load (L.build_struct_gep loc 2 "ptr" builder) "dir" builder) "dir" builder, builder)
+              | "rel" -> (L.build_load (L.build_load (L.build_struct_gep loc 3 "ptr" builder) "rel" builder) "rel" builder, builder)
               | _ -> raise( Failure "dot not supported with this keyword")
               )
             | A.TGraph(_, _, _) ->  let (e', builder) = aexpr builder local_var_map e1 in

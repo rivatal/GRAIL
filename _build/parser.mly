@@ -131,8 +131,8 @@ stmt:
   | expr CARAT  expr { Binop($1, Ladd, $3)}  
   | MINUS expr %prec NEG { Unop(Neg, $2) }
   | NOT expr         { Unop(Not, $2) }
-  | expr LARROW expr with_opt { Edge($1, To, $3, $4) }
-  | expr RARROW expr with_opt { Edge($1, From, $3, $4) }
+  | expr RARROW expr with_opt { Edge($1, To, $3, $4) }
+  | expr LARROW expr with_opt { Edge($1, From, $3, $4) }
   | expr DASH expr with_opt  { Edge($1, Dash, $3, $4) }
   | LPAREN RPAREN WITH expr { Graph([], $4) }
   | LPAREN expr RPAREN WITH expr { Graph([$2], $5) }
