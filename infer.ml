@@ -1,4 +1,3 @@
-(*https://github.com/prakhar1989/type-inference/blob/master/infer.ml*)
 (*Assoc Arrays! And fancy subset?*)
 open Ast
 open Astutils   
@@ -78,6 +77,7 @@ let get_rec (recs: recs) (fieldslist: (id * aexpr) list) : primitiveType =
 in helper recs (List.map (fun (a, b) -> a, type_of b) fieldslist) recs
 
 
+
 (*Ensures an expression is a conditional (e.g. for predicate statements)*)
 let check_bool (e: aexpr) : unit =
 (*     print_string "Checking bool"; *)
@@ -133,7 +133,7 @@ let rec has_dups l =
   |[]| _ -> false
 
 (*finds the variable in the map*)
-let rec find_in_map(id: string) (env: environment): primitiveType =
+let find_in_map(id: string) (env: environment): primitiveType =
    let mapped = map_id id in       (*in astutils*)
    if (NameMap.mem mapped env)  
    then (NameMap.find mapped env)
@@ -413,7 +413,9 @@ let env, genv, recs, funcs = allenv in
                   then(TEdge(gen_new_type(), gen_new_type(), gen_new_type())) 
                   else(List.hd edgelist) in 
    let gtype = match edgetype with 
-   |TEdge(name, nt, et) -> TEdge(name, ntype, etype) in 
+   |TEdge(name, nt, et) -> TEdge(name, ntype, etype) 
+   |_ -> raise(failwith("error"));
+   in 
    let aelist = enforce_node_consistency aelist (gtype) in
    AGraph(aelist, atemplate, TGraph(gen_new_type(), ntype, gtype))
   (*a. check the list for consistency between nodes and edges. (which could be noexprs or lists themselves, or type of e.)
@@ -508,6 +510,7 @@ and substitute (u: primitiveType) (x: id) (t: primitiveType) : primitiveType =
   match t with
   | TInt | TBool | TString | TFloat | TList(_) | TChar| TVoid-> t 
   | T(c) | TRec(T(c),_)  | TEdge(T(c),_,_) | TGraph(T(c),_,_) -> if c = x then u else t 
+  | _ -> raise(failwith("error"))
 and apply (subs: substitutions) (t: primitiveType) : primitiveType =
   List.fold_right (fun (x, u) t -> substitute u x t) subs t
 
@@ -691,3 +694,5 @@ and infer_func (allenv: allenv) (f: func) :  (afunc list * genvironment)  =
         |_ -> if(toss) then(funcs) else(AFbody(AFdecl(fname, aformals, ret_type), astmts) :: funcs)
       in funcs, genv) 
       else raise (failwith "function not defined @ 412")
+
+(*Credit to: https://github.com/prakhar1989/type-inference/blob/master/infer.ml*)
