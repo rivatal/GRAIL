@@ -76,8 +76,6 @@ let get_rec (recs: recs) (fieldslist: (id * aexpr) list) : primitiveType =
   |_ -> raise(failwith("error"))
 in helper recs (List.map (fun (a, b) -> a, type_of b) fieldslist) recs
 
-
-
 (*Ensures an expression is a conditional (e.g. for predicate statements)*)
 let check_bool (e: aexpr) : unit =
 (*     print_string "Checking bool"; *)

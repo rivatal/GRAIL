@@ -5,4 +5,5 @@ function(x) {
 main(){	
 	x = 3; 
 	function("sdf"); 
+	return 0;
 }

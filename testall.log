@@ -475,12 +475,12 @@ entry:
   ret i8* %x2
 }
 
-define void @main() {
+define i32 @main() {
 entry:
   %x = alloca i32
   store i32 3, i32* %x
   %"function!2_result" = call i8* @"function!2"(i8* getelementptr inbounds ([4 x i8]* @str, i32 0, i32 0))
-  ret void
+  ret i32 0
 }
 [0;31m ###### FAILED [0m
 mv: cannot stat ‘fail-function-return.diff’: No such file or directory
