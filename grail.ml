@@ -5,6 +5,16 @@ module NameMap = Map.Make(String)
 type environment = primitiveType NameMap.t
 type genvironment = (primitiveType * (string * primitiveType) list * stmt list) NameMap.t
 
+let  builtins = ref [
+                  ("print", (TVoid, [("x", TString)], []));
+                  ("sample_display",(TInt, [("x",TInt)],[Return(IntLit(0))]));
+                  ("printint", (TVoid, [("x", TInt)], [])); 
+                  ("printfloat", (TVoid, [("x", TFloat)], [])); 
+                  ("printbool", (TVoid, [("x", TBool)], [])); 
+                  ("printchar", (TVoid, [("x", TChar)], [])); 
+                  ("size", (TInt, [("x", TList(Infer.gen_new_type()))], [Return(IntLit(1))])); 
+                  ("display", (TVoid, [("x", TGraph(Infer.gen_new_type(), Infer.gen_new_type(), Infer.gen_new_type()))], []))]
+
 let parse (s) : Ast.program =
   Parser.program Scanner.token (s)
 
@@ -35,17 +45,17 @@ let check_formals (s: string list) : unit =
   in helper (List.sort mycmp s)
 
 (* Culls uncalled functions (whose variables are still typed as any) from the sast. *)
-let rec enforce_no_any (funcs: Ast.afunc list) : Ast.afunc list = 
+let rec enforce_no_any(funcs: Ast.afunc list) : Ast.afunc list = 
   match funcs with 
   |[] -> []
-  |AFbody(AFdecl(_, aformals, ret), _) :: tail ->
+  |AFbody(AFdecl(name, aformals, ret), stmts) :: tail ->
   let toss = 
     List.fold_left (fun hasany f -> 
     (match f with | (_,T(_)) -> true | _ -> hasany)) false aformals
   in 
   let toss = match ret with T(_) -> true | _ -> toss in 
+  let toss = if(List.length stmts = 0) then(true) else(toss) in
   if(toss) then(enforce_no_any tail) else(List.hd funcs :: enforce_no_any tail)
-
 
 let rec get_formals(formals: string list)(func: string) : (id * primitiveType) list =
   check_formals formals;
@@ -63,24 +73,15 @@ let infer_func (e: Ast.func) (genv : genvironment) : (Ast.afunc list * genvironm
 let grail (ast: Ast.afunc list) (input) : Ast.afunc list =
   let rec get_sast(p: Ast.program) (genv : genvironment) (l : Ast.afunc list) : Ast.afunc list  =   
     match p with
-    [] -> enforce_no_any (List.rev l)
+    [] -> let li = enforce_no_any (List.rev l) in li
     |hd :: tl -> let (afuncs, genv) =
                    infer_func hd genv 
-    in get_sast tl genv (afuncs @ l) 
-  in 
-  let builtins = [("print", (TVoid, [("x", TString)], []));
-                  ("sample_display",(TInt, [("x",TInt)],[Return(IntLit(0))]));
-                  ("printint", (TVoid, [("x", TInt)], [])); 
-                  ("printfloat", (TVoid, [("x", TFloat)], [])); 
-                  ("printbool", (TVoid, [("x", TBool)], [])); 
-                  ("printchar", (TVoid, [("x", TChar)], [])); 
-                  ("size", (TInt, [("x", TList(Infer.gen_new_type()))], [Return(IntLit(1))])); 
-                  ("display", (TVoid, [("x", TGraph(Infer.gen_new_type(), Infer.gen_new_type(), Infer.gen_new_type()))], []))]
-  in let rec addbuiltins l genv =
+    in get_sast tl genv (afuncs @ l) in 
+   let rec addbuiltins l genv =
     match l with
     |[] -> genv 
     |(a, b) :: t -> let genv = NameMap.add a b genv in addbuiltins t genv
-  in let genv = addbuiltins builtins NameMap.empty 
+  in let genv = addbuiltins !builtins NameMap.empty 
   in 
   get_sast (parse (input)) genv []
 
