@@ -4,12 +4,21 @@
 @fmt1 = private unnamed_addr constant [4 x i8] c"%f\0A\00"
 @fmt2 = private unnamed_addr constant [4 x i8] c"%d\0A\00"
 @fmt3 = private unnamed_addr constant [4 x i8] c"%f\0A\00"
+@fmt4 = private unnamed_addr constant [4 x i8] c"%d\0A\00"
+@fmt5 = private unnamed_addr constant [4 x i8] c"%f\0A\00"
 
 declare i32 @printf(i8*, ...)
 
 declare i32 @sample_display(i32)
 
 define void @"display!1"({ { { i32 }*, i32 }, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }, { i32 } } %x) {
+entry:
+  %x1 = alloca { { { i32 }*, i32 }, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }, { i32 } }
+  store { { { i32 }*, i32 }, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }, { i32 } } %x, { { { i32 }*, i32 }, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }, { i32 } }* %x1
+  ret void
+}
+
+define void @"display!2"({ { { i32 }*, i32 }, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }, { i32 } } %x) {
 entry:
   %x1 = alloca { { { i32 }*, i32 }, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }, { i32 } }
   store { { { i32 }*, i32 }, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }, { i32 } } %x, { { { i32 }*, i32 }, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }, { i32 } }* %x1
@@ -653,10 +662,10 @@ merge345:                                         ; preds = %while73
   store i32 5, i32* %i72
   br label %while346
 
-while346:                                         ; preds = %merge392, %merge345
-  %i399 = load i32* %i72
-  %tmp400 = icmp slt i32 %i399, 9
-  br i1 %tmp400, label %while_body347, label %merge401
+while346:                                         ; preds = %merge399, %merge345
+  %i445 = load i32* %i72
+  %tmp446 = icmp slt i32 %i445, 9
+  br i1 %tmp446, label %while_body347, label %merge447
 
 while_body347:                                    ; preds = %while346
   %tmp348 = getelementptr inbounds { { i32 }*, i32 }* %petenodes, i32 0, i32 0
@@ -735,13 +744,90 @@ merge392:                                         ; preds = %checklimits382
   %g396 = load { { { i32 }*, i32 }, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }, { i32 } }* %strct368
   store { { { i32 }*, i32 }, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }, { i32 } } %g396, { { { i32 }*, i32 }, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }, { i32 } }* %pete
   %i397 = load i32* %i72
-  %tmp398 = add i32 %i397, 1
-  store i32 %tmp398, i32* %i72
+  %tmp398 = icmp eq i32 %i397, 5
+  br i1 %tmp398, label %then400, label %else442
+
+merge399:                                         ; preds = %else442, %merge437
+  %i443 = load i32* %i72
+  %tmp444 = add i32 %i443, 1
+  store i32 %tmp444, i32* %i72
   br label %while346
 
-merge401:                                         ; preds = %while346
-  %pete402 = load { { { i32 }*, i32 }, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }, { i32 } }* %pete
-  %graph_display = call i32 @display({ { { i32 }*, i32 }, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }, { i32 } } %pete402)
+then400:                                          ; preds = %merge392
+  %tmp401 = getelementptr inbounds { { i32 }*, i32 }* %petenodes, i32 0, i32 0
+  %tmpar402 = load { i32 }** %tmp401
+  %ptr403 = getelementptr inbounds { i32 }* %tmpar402, i32 9
+  %item404 = load { i32 }* %ptr403
+  %p9 = alloca { i32 }
+  store { i32 } %item404, { i32 }* %p9
+  %pete405 = load { { { i32 }*, i32 }, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }, { i32 } }* %pete
+  %g406 = alloca { { { i32 }*, i32 }, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }, { i32 } }
+  store { { { i32 }*, i32 }, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }, { i32 } } %pete405, { { { i32 }*, i32 }, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }, { i32 } }* %g406
+  %ptr407 = getelementptr inbounds { { { i32 }*, i32 }, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }, { i32 } }* %g406, i32 0, i32 2
+  %tmp408 = load { i32 }* %ptr407
+  %38 = alloca { { i32 }*, { i32 }*, i1, { i32 } }
+  %ptr409 = getelementptr inbounds { { i32 }*, { i32 }*, i1, { i32 } }* %38, i32 0, i32 0
+  store { i32 }* %pi353, { i32 }** %ptr409
+  %ptr410 = getelementptr inbounds { { i32 }*, { i32 }*, i1, { i32 } }* %38, i32 0, i32 1
+  store { i32 }* %p9, { i32 }** %ptr410
+  %ptr411 = getelementptr inbounds { { i32 }*, { i32 }*, i1, { i32 } }* %38, i32 0, i32 2
+  store i1 false, i1* %ptr411
+  %ptr412 = getelementptr inbounds { { i32 }*, { i32 }*, i1, { i32 } }* %38, i32 0, i32 3
+  store { i32 } %tmp408, { i32 }* %ptr412
+  %39 = load { { i32 }*, { i32 }*, i1, { i32 } }* %38
+  %strct413 = alloca { { { i32 }*, i32 }, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }, { i32 } }
+  store { { { i32 }*, i32 }, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }, { i32 } } %pete405, { { { i32 }*, i32 }, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }, { i32 } }* %strct413
+  %ptr414 = getelementptr inbounds { { { i32 }*, i32 }, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }, { i32 } }* %strct413, i32 0, i32 1
+  %nodes415 = load { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }* %ptr414
+  %strct416 = alloca { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }
+  %strct417 = alloca { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }
+  store { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 } %nodes415, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }* %strct417
+  %tmp418 = getelementptr inbounds { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }* %strct417, i32 0, i32 1
+  %len419 = load i32* %tmp418
+  %tmp420 = getelementptr inbounds { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }* %strct417, i32 0, i32 0
+  %lst421 = load { { i32 }*, { i32 }*, i1, { i32 } }** %tmp420
+  %len422 = add i32 1, %len419
+  %tmp423 = getelementptr inbounds { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }* %strct416, i32 0, i32 1
+  store i32 %len422, i32* %tmp423
+  %lst424 = alloca { { i32 }*, { i32 }*, i1, { i32 } }, i32 %len422
+  %ptr425 = getelementptr inbounds { { i32 }*, { i32 }*, i1, { i32 } }* %lst424, i32 %len419
+  store { { i32 }*, { i32 }*, i1, { i32 } } %39, { { i32 }*, { i32 }*, i1, { i32 } }* %ptr425
+  %ind426 = alloca i32
+  store i32 0, i32* %ind426
+  br label %checklimits427
+
+checklimits427:                                   ; preds = %assignment428, %then400
+  %tmp435 = load i32* %ind426
+  %comp436 = icmp slt i32 %tmp435, %len419
+  br i1 %comp436, label %assignment428, label %merge437
+
+assignment428:                                    ; preds = %checklimits427
+  %i429 = load i32* %ind426
+  %ptr430 = getelementptr inbounds { { i32 }*, { i32 }*, i1, { i32 } }* %lst421, i32 %i429
+  %ptr431 = getelementptr inbounds { { i32 }*, { i32 }*, i1, { i32 } }* %lst424, i32 %i429
+  %tmp432 = load { { i32 }*, { i32 }*, i1, { i32 } }* %ptr430
+  store { { i32 }*, { i32 }*, i1, { i32 } } %tmp432, { { i32 }*, { i32 }*, i1, { i32 } }* %ptr431
+  %tmp433 = load i32* %ind426
+  %inc434 = add i32 %tmp433, 1
+  store i32 %inc434, i32* %ind426
+  br label %checklimits427
+
+merge437:                                         ; preds = %checklimits427
+  %tmp438 = getelementptr inbounds { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }* %strct416, i32 0, i32 0
+  store { { i32 }*, { i32 }*, i1, { i32 } }* %lst424, { { i32 }*, { i32 }*, i1, { i32 } }** %tmp438
+  %strct439 = load { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }* %strct416
+  %tmp440 = getelementptr inbounds { { { i32 }*, i32 }, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }, { i32 } }* %strct413, i32 0, i32 1
+  store { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 } %strct439, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }* %tmp440
+  %g441 = load { { { i32 }*, i32 }, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }, { i32 } }* %strct413
+  store { { { i32 }*, i32 }, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }, { i32 } } %g441, { { { i32 }*, i32 }, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }, { i32 } }* %pete
+  br label %merge399
+
+else442:                                          ; preds = %merge392
+  br label %merge399
+
+merge447:                                         ; preds = %while346
+  %pete448 = load { { { i32 }*, i32 }, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }, { i32 } }* %pete
+  %graph_display = call i32 @display({ { { i32 }*, i32 }, { { { i32 }*, { i32 }*, i1, { i32 } }*, i32 }, { i32 } } %pete448)
   ret void
 }
 

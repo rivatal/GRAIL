@@ -82,7 +82,7 @@ int display_graph(Node_info* info, int directed)
        fprintf(fp,"%d\t%f\t%f\n",i,x,y);
       
     }
-    for(int i = 5; i < info->num_nodes; i++) 
+    for(int i = 5; i < info->num_nodes - 1 ; i++) 
     {
        x =(0.5*cos(PI/2 + ((2*PI)/5)*i));
        y =(0.5*sin(PI/2 + ((2*PI)/5)*i));
@@ -92,8 +92,8 @@ int display_graph(Node_info* info, int directed)
    
     for(int i = 0; i < info->num_edges; i++) 
     {
-        fprintf(fe,"%d\t%d\t%d\t%d\t%d\n", info->from[i], 
-        info->to[i],info->weights[i],-1,1);
+        fprintf(fe,"%d\t%d\t%d\t%d\t%d\n", info->from[i] - 1, 
+        info->to[i] - 1,info->weights[i],-1,1);
     }    
 
     fclose(fp);
