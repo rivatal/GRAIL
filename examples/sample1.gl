@@ -4,5 +4,4 @@ main(){
   	g = (c -- d) with {distance: 1};
 	c.station = "168th"; 
 	size(c.service);
-	
 }

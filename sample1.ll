@@ -6,15 +6,11 @@
 @fmt3 = private unnamed_addr constant [4 x i8] c"%f\0A\00"
 @fmt4 = private unnamed_addr constant [4 x i8] c"%d\0A\00"
 @fmt5 = private unnamed_addr constant [4 x i8] c"%f\0A\00"
-@fmt6 = private unnamed_addr constant [4 x i8] c"%d\0A\00"
-@fmt7 = private unnamed_addr constant [4 x i8] c"%f\0A\00"
-@fmt8 = private unnamed_addr constant [4 x i8] c"%d\0A\00"
-@fmt9 = private unnamed_addr constant [4 x i8] c"%f\0A\00"
 @str = private unnamed_addr constant [2 x i8] c"1\00"
-@str10 = private unnamed_addr constant [16 x i8] c"49th St Station\00"
-@str11 = private unnamed_addr constant [2 x i8] c"1\00"
-@str12 = private unnamed_addr constant [17 x i8] c"116th St Station\00"
-@str13 = private unnamed_addr constant [6 x i8] c"168th\00"
+@str6 = private unnamed_addr constant [16 x i8] c"49th St Station\00"
+@str7 = private unnamed_addr constant [2 x i8] c"1\00"
+@str8 = private unnamed_addr constant [17 x i8] c"116th St Station\00"
+@str9 = private unnamed_addr constant [6 x i8] c"168th\00"
 
 declare i32 @printf(i8*, ...)
 
@@ -27,25 +23,11 @@ entry:
   ret i32 1
 }
 
-define void @"display!2"({ { { i32, float, i8*, float, { i32*, i32 }, i8* }*, i32 }, { { { i32, float, i8*, float, { i32*, i32 }, i8* }*, { i32, float, i8*, float, { i32*, i32 }, i8* }*, i1, { i32 } }*, i32 }, { i32 } } %x) {
-entry:
-  %x1 = alloca { { { i32, float, i8*, float, { i32*, i32 }, i8* }*, i32 }, { { { i32, float, i8*, float, { i32*, i32 }, i8* }*, { i32, float, i8*, float, { i32*, i32 }, i8* }*, i1, { i32 } }*, i32 }, { i32 } }
-  store { { { i32, float, i8*, float, { i32*, i32 }, i8* }*, i32 }, { { { i32, float, i8*, float, { i32*, i32 }, i8* }*, { i32, float, i8*, float, { i32*, i32 }, i8* }*, i1, { i32 } }*, i32 }, { i32 } } %x, { { { i32, float, i8*, float, { i32*, i32 }, i8* }*, i32 }, { { { i32, float, i8*, float, { i32*, i32 }, i8* }*, { i32, float, i8*, float, { i32*, i32 }, i8* }*, i1, { i32 } }*, i32 }, { i32 } }* %x1
-  ret void
-}
-
-define i32 @"size!3"({ i32*, i32 } %x) {
+define i32 @"size!2"({ i32*, i32 } %x) {
 entry:
   %x1 = alloca { i32*, i32 }
   store { i32*, i32 } %x, { i32*, i32 }* %x1
   ret i32 1
-}
-
-define void @"display!4"({ { { i32, float, i8*, float, { i32*, i32 }, i8* }*, i32 }, { { { i32, float, i8*, float, { i32*, i32 }, i8* }*, { i32, float, i8*, float, { i32*, i32 }, i8* }*, i1, { i32 } }*, i32 }, { i32 } } %x) {
-entry:
-  %x1 = alloca { { { i32, float, i8*, float, { i32*, i32 }, i8* }*, i32 }, { { { i32, float, i8*, float, { i32*, i32 }, i8* }*, { i32, float, i8*, float, { i32*, i32 }, i8* }*, i1, { i32 } }*, i32 }, { i32 } }
-  store { { { i32, float, i8*, float, { i32*, i32 }, i8* }*, i32 }, { { { i32, float, i8*, float, { i32*, i32 }, i8* }*, { i32, float, i8*, float, { i32*, i32 }, i8* }*, i1, { i32 } }*, i32 }, { i32 } } %x, { { { i32, float, i8*, float, { i32*, i32 }, i8* }*, i32 }, { { { i32, float, i8*, float, { i32*, i32 }, i8* }*, { i32, float, i8*, float, { i32*, i32 }, i8* }*, i1, { i32 } }*, i32 }, { i32 } }* %x1
-  ret void
 }
 
 define void @main() {
@@ -83,7 +65,7 @@ entry:
   %ptr12 = getelementptr inbounds { i32, float, i8*, float, { i32*, i32 }, i8* }* %0, i32 0, i32 4
   store { i32*, i32 } %lst7, { i32*, i32 }* %ptr12
   %ptr13 = getelementptr inbounds { i32, float, i8*, float, { i32*, i32 }, i8* }* %0, i32 0, i32 5
-  store i8* getelementptr inbounds ([16 x i8]* @str10, i32 0, i32 0), i8** %ptr13
+  store i8* getelementptr inbounds ([16 x i8]* @str6, i32 0, i32 0), i8** %ptr13
   %1 = load { i32, float, i8*, float, { i32*, i32 }, i8* }* %0
   %c = alloca { i32, float, i8*, float, { i32*, i32 }, i8* }
   store { i32, float, i8*, float, { i32*, i32 }, i8* } %1, { i32, float, i8*, float, { i32*, i32 }, i8* }* %c
@@ -114,13 +96,13 @@ entry:
   %ptr27 = getelementptr inbounds { i32, float, i8*, float, { i32*, i32 }, i8* }* %2, i32 0, i32 1
   store float 0x4043C7AE20000000, float* %ptr27
   %ptr28 = getelementptr inbounds { i32, float, i8*, float, { i32*, i32 }, i8* }* %2, i32 0, i32 2
-  store i8* getelementptr inbounds ([2 x i8]* @str11, i32 0, i32 0), i8** %ptr28
+  store i8* getelementptr inbounds ([2 x i8]* @str7, i32 0, i32 0), i8** %ptr28
   %ptr29 = getelementptr inbounds { i32, float, i8*, float, { i32*, i32 }, i8* }* %2, i32 0, i32 3
   store float 0x4052DD2F20000000, float* %ptr29
   %ptr30 = getelementptr inbounds { i32, float, i8*, float, { i32*, i32 }, i8* }* %2, i32 0, i32 4
   store { i32*, i32 } %lst25, { i32*, i32 }* %ptr30
   %ptr31 = getelementptr inbounds { i32, float, i8*, float, { i32*, i32 }, i8* }* %2, i32 0, i32 5
-  store i8* getelementptr inbounds ([17 x i8]* @str12, i32 0, i32 0), i8** %ptr31
+  store i8* getelementptr inbounds ([17 x i8]* @str8, i32 0, i32 0), i8** %ptr31
   %3 = load { i32, float, i8*, float, { i32*, i32 }, i8* }* %2
   %d = alloca { i32, float, i8*, float, { i32*, i32 }, i8* }
   store { i32, float, i8*, float, { i32*, i32 }, i8* } %3, { i32, float, i8*, float, { i32*, i32 }, i8* }* %d
@@ -175,16 +157,12 @@ entry:
   %g57 = alloca { { { i32, float, i8*, float, { i32*, i32 }, i8* }*, i32 }, { { { i32, float, i8*, float, { i32*, i32 }, i8* }*, { i32, float, i8*, float, { i32*, i32 }, i8* }*, i1, { i32 } }*, i32 }, { i32 } }
   store { { { i32, float, i8*, float, { i32*, i32 }, i8* }*, i32 }, { { { i32, float, i8*, float, { i32*, i32 }, i8* }*, { i32, float, i8*, float, { i32*, i32 }, i8* }*, i1, { i32 } }*, i32 }, { i32 } } %g56, { { { i32, float, i8*, float, { i32*, i32 }, i8* }*, i32 }, { { { i32, float, i8*, float, { i32*, i32 }, i8* }*, { i32, float, i8*, float, { i32*, i32 }, i8* }*, i1, { i32 } }*, i32 }, { i32 } }* %g57
   %ptr58 = getelementptr inbounds { i32, float, i8*, float, { i32*, i32 }, i8* }* %c, i32 0, i32 5
-  store i8* getelementptr inbounds ([6 x i8]* @str13, i32 0, i32 0), i8** %ptr58
+  store i8* getelementptr inbounds ([6 x i8]* @str9, i32 0, i32 0), i8** %ptr58
   %ext_val = getelementptr inbounds { i32, float, i8*, float, { i32*, i32 }, i8* }* %c, i32 0, i32 4
   %10 = load { i32*, i32 }* %ext_val
   %strct59 = alloca { i32*, i32 }
   store { i32*, i32 } %10, { i32*, i32 }* %strct59
   %tmp = getelementptr inbounds { i32*, i32 }* %strct59, i32 0, i32 1
   %len = load i32* %tmp
-  %g60 = load { { { i32, float, i8*, float, { i32*, i32 }, i8* }*, i32 }, { { { i32, float, i8*, float, { i32*, i32 }, i8* }*, { i32, float, i8*, float, { i32*, i32 }, i8* }*, i1, { i32 } }*, i32 }, { i32 } }* %g57
-  %graph_display = call i32 @display({ { { i32, float, i8*, float, { i32*, i32 }, i8* }*, i32 }, { { { i32, float, i8*, float, { i32*, i32 }, i8* }*, { i32, float, i8*, float, { i32*, i32 }, i8* }*, i1, { i32 } }*, i32 }, { i32 } } %g60)
   ret void
 }
-
-declare i32 @display({ { { i32, float, i8*, float, { i32*, i32 }, i8* }*, i32 }, { { { i32, float, i8*, float, { i32*, i32 }, i8* }*, { i32, float, i8*, float, { i32*, i32 }, i8* }*, i1, { i32 } }*, i32 }, { i32 } })
