@@ -95,6 +95,32 @@ let format_sast_codegen (ast : Ast.afunc) : Ast.sast_afunc =
       body = astmts
     }
 
+(*Interpreter for debugging purposes*)
+(* let rec interpreter (ast: Ast.sast_afunc list) : Ast.sast_afunc list =
+  print_string "> ";
+  let input = Lexing.from_channel stdin in
+    try
+      (*do for func*)
+       let ast = List.map format_sast_codegen (grail [] (input)) in ast (* in interpreter (pre_ast @ ast) *)
+    with
+    | Failure(msg) ->
+      if msg = "lexing: empty token" then [] @ interpreter (ast)
+      else (print_endline msg; [] @ interpreter(ast))
+    | _ -> print_endline "Syntax Error"; [] @  interpreter (ast)
+ 
+    let say() = 
+      let str = "Welcome to Grail, the awesomest language!\n"  in 
+      print_string str
+
+      let rec display (input: Ast.sast_afunc list) : unit = 
+      match input with
+      [] -> ()
+      | h :: t ->
+      print_string (string_of_func h); 
+      display t;;
+
+      say();
+      let l = interpreter([]) in display l *)
       
    let compile() = 
    let file = 
@@ -111,4 +137,10 @@ let format_sast_codegen (ast : Ast.afunc) : Ast.sast_afunc =
    print_string (Llvm.string_of_llmodule m);;
    compile()
 
+(*  
+    let sast = List.map format_sast_codegen (grail [] file) in   let m = Codegen.translate sast in
+   Llvm_analysis.assert_valid_module m; print_string 
 
+   (Llvm.string_of_llmodule m);; 
+   compile(); 
+ *)
