@@ -1,5 +1,5 @@
-set xr [-1:1]   
-set yr [-1:1]
+set xr [-2:2]   
+set yr [-2:2]
 
 set size square   
 flePnts = 'pnts.dat'
@@ -19,4 +19,3 @@ plot \
     loadEdges using 1:2 with lines lc rgb "black" lw 2 notitle, \
     flePnts using 2:3:(0.1) with circles fill solid lc rgb "black" notitle, \
     flePnts using 2:3:1 with labels tc rgb "white" font "Arial Bold" notitle, \
-    loadWeights using 1:2:3 with labels tc rgb "red" center font "Arial Bold" notitle

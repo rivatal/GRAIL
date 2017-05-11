@@ -13,12 +13,7 @@
 #define _GNU_SOURCE
 #define MAX 50
 #define MAX_NODE_STORE 1000
-/*
-%struct.15 = type { { %struct.6*, i32 }, { %struct.10*, i32 }, %struct.9 }
-%struct.6 = type { i32 }
-%struct.10 = type { %struct.6*, %struct.6*, i1, %struct.9 }
-%struct.9 = type { i32 }
-*/
+
 
 typedef struct {
     int key;
@@ -82,7 +77,7 @@ int display_graph(Node_info* info, int directed)
        fprintf(fp,"%d\t%f\t%f\n",i,x,y);
       
     }
-    for(int i = 5; i < info->num_nodes; i++) 
+    for(int i = 5; i < info->num_nodes - 1 ; i++) 
     {
        x =(0.5*cos(PI/2 + ((2*PI)/5)*i));
        y =(0.5*sin(PI/2 + ((2*PI)/5)*i));
@@ -92,8 +87,8 @@ int display_graph(Node_info* info, int directed)
    
     for(int i = 0; i < info->num_edges; i++) 
     {
-        fprintf(fe,"%d\t%d\t%d\t%d\t%d\n", info->from[i], 
-        info->to[i],info->weights[i],-1,1);
+        fprintf(fe,"%d\t%d\t%d\t%d\t%d\n", info->from[i] - 1, 
+        info->to[i] - 1,info->weights[i],-1,1);
     }    
 
     fclose(fp);
@@ -134,24 +129,6 @@ int get_mapping_node_addr(node* n1) {
       return -1;
 }
 
-/*
-int sample_display(int x) 
-{
-    Node_info n1;
-    n1.num_nodes = 4;
-    n1.num_edges = 3;
-    int arr[] = {0,1,2,3};
-    memcpy(n1.nodes,arr,sizeof(arr));
-    int arr2[] = {0,1,3};
-    memcpy(n1.from,arr2,sizeof(arr2));
-    int arr3[] = {1,3,2};
-    memcpy(n1.to,arr3,sizeof(arr3));
-    int arr4[] = {20,50,30};
-    memcpy(n1.weights,arr4,sizeof(arr4));
-    return display_graph(&n1);
-    
-}
-*/
 int fill_edge_info(int* to, int* from, int* weight, edge* edges, int size,int default_weight) {
 
    int directed = 0;
