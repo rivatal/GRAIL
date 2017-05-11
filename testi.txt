@@ -38,8 +38,7 @@ test-list-3...[0;32mOK [0m
 test-list-4...[0;32mOK [0m
 test-list-rec...[0;32mOK [0m
 test-main-1...[0;32mOK [0m
-test-node-1...[0;31mFAILED [0m
-  test-node-1.out differs
+test-node-1...[0;32mOK [0m
 test-print-2...[0;32mOK [0m
 test-print-3...[0;32mOK [0m
 test-print...[0;32mOK [0m
@@ -67,19 +66,11 @@ fail-func-3...[0;32mOK [0m
 fail-func-4...[0;32mOK [0m
 fail-func-5...[0;32mOK [0m
 fail-func-arg-num...[0;32mOK [0m
-fail-function-return...[0;31mFAILED [0m
-  failed: ./grail.native < tests/new_tests/fail-function-return.gl 2> fail-function-return.err >> testall.log did not report an error
 fail-if-1...[0;32mOK [0m
 fail-if-2...[0;32mOK [0m
 fail-if-3...[0;32mOK [0m
 fail-list-1...[0;32mOK [0m
-fail-nomain...[0;31mFAILED [0m
-  failed: ./grail.native < tests/new_tests/fail-nomain.gl 2> fail-nomain.err >> testall.log did not report an error
 fail-record-1...[0;32mOK [0m
-fail-return-1...[0;31mFAILED [0m
-  failed: ./grail.native < tests/new_tests/fail-return-1.gl 2> fail-return-1.err >> testall.log did not report an error
 fail-return-2...[0;32mOK [0m
-fail-return-twice...[0;31mFAILED [0m
-  failed: ./grail.native < tests/new_tests/fail-return-twice.gl 2> fail-return-twice.err >> testall.log did not report an error
 fail-while-1...[0;32mOK [0m
 fail-while-2...[0;32mOK [0m
