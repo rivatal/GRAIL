@@ -36,8 +36,6 @@ test-list-1...[0;32mOK [0m
 test-list-2...[0;32mOK [0m
 test-list-3...[0;32mOK [0m
 test-list-4...[0;32mOK [0m
-test-list-5...[0;31mFAILED [0m
-  ./grail.native failed on ./grail.native < tests/new_tests/test-list-5.gl > test-list-5.ll
 test-list-rec...[0;32mOK [0m
 test-main-1...[0;32mOK [0m
 test-node-1...[0;31mFAILED [0m
